@@ -25,16 +25,14 @@ Core/Src \
 Core/Startup \
 Core/ThreadSafe \
 Drivers/STM32F4xx_HAL_Driver/Src \
-FATFS/App \
-FATFS/Target \
-Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src \
-Middlewares/ST/STM32_USB_Host_Library/Core/Src \
-Middlewares/Third_Party/FatFs/src \
-Middlewares/Third_Party/FatFs/src/option \
-Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
-Middlewares/Third_Party/FreeRTOS/Source \
-Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
-Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang \
-USB_HOST/App \
-USB_HOST/Target \
+Middlewares/FatFs/Config/Src \
+Middlewares/FatFs/src \
+Middlewares/FatFs/src/option \
+Middlewares/FreeRTOS/Source/CMSIS_RTOS \
+Middlewares/FreeRTOS/Source \
+Middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+Middlewares/FreeRTOS/Source/portable/MemMang \
+Middlewares/STM32_USB_Host_Library/Class/MSC/Src \
+Middlewares/STM32_USB_Host_Library/Config/Src \
+Middlewares/STM32_USB_Host_Library/Core/Src \
 

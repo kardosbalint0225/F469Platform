@@ -9,18 +9,16 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include USB_HOST/Target/subdir.mk
--include USB_HOST/App/subdir.mk
--include Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/subdir.mk
--include Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/subdir.mk
--include Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/subdir.mk
--include Middlewares/Third_Party/FreeRTOS/Source/subdir.mk
--include Middlewares/Third_Party/FatFs/src/option/subdir.mk
--include Middlewares/Third_Party/FatFs/src/subdir.mk
--include Middlewares/ST/STM32_USB_Host_Library/Core/Src/subdir.mk
--include Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/subdir.mk
--include FATFS/Target/subdir.mk
--include FATFS/App/subdir.mk
+-include Middlewares/STM32_USB_Host_Library/Core/Src/subdir.mk
+-include Middlewares/STM32_USB_Host_Library/Config/Src/subdir.mk
+-include Middlewares/STM32_USB_Host_Library/Class/MSC/Src/subdir.mk
+-include Middlewares/FreeRTOS/Source/portable/MemMang/subdir.mk
+-include Middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F/subdir.mk
+-include Middlewares/FreeRTOS/Source/CMSIS_RTOS/subdir.mk
+-include Middlewares/FreeRTOS/Source/subdir.mk
+-include Middlewares/FatFs/src/option/subdir.mk
+-include Middlewares/FatFs/src/subdir.mk
+-include Middlewares/FatFs/Config/Src/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/ThreadSafe/subdir.mk
 -include Core/Startup/subdir.mk
