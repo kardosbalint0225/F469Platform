@@ -20,12 +20,12 @@ static void TIM2_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
   * @retval None
   * @note	This function is called by the FreeRTOS kernel
   */
-void vConfigureTimerForRunTimeStats( void )
+void run_time_stats_timer_init( void )
 {
 	TIM2_Init();
 }
 
-void vDeinitRunTimeStatsTimer(void)
+void run_time_stats_timer_deinit(void)
 {
 	TIM2_Deinit();
 }
@@ -38,10 +38,10 @@ void vDeinitRunTimeStatsTimer(void)
   */
 static void TIM2_Init(void)
 {
-	RCC_ClkInitTypeDef    clkconfig;
-	uint32_t              uwTimclock = 0;
-	uint32_t              uwPrescalerValue = 0;
-	uint32_t              pFLatency;
+	RCC_ClkInitTypeDef clkconfig;
+	uint32_t           uwTimclock = 0;
+	uint32_t           uwPrescalerValue = 0;
+	uint32_t           pFLatency;
 
 	runtime_stats_timer = 0;
 
@@ -58,7 +58,15 @@ static void TIM2_Init(void)
 	HAL_RCC_GetClockConfig(&clkconfig, &pFLatency);
 
 	/* Compute TIM2 clock */
-	uwTimclock = 2*HAL_RCC_GetPCLK1Freq();
+	if (RCC_HCLK_DIV1 == clkconfig.APB1CLKDivider)
+	{
+        uwTimclock = HAL_RCC_GetPCLK1Freq();
+	}
+	else
+	{
+        uwTimclock = 2UL * HAL_RCC_GetPCLK1Freq();
+	}
+
 	/* Compute the prescaler value to have TIM2 counter clock equal to 1MHz */
 	uwPrescalerValue = (uint32_t) ((uwTimclock / 1000000U) - 1U);
 

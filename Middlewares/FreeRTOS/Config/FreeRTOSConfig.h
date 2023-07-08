@@ -179,10 +179,10 @@ extern uint32_t SystemCoreClock;
 #define configCOMMAND_INT_MAX_OUTPUT_SIZE 			  ( 512 ) // this size is convenient but a bit big
 
 /**< Run-time statistics */
-extern void vConfigureTimerForRunTimeStats( void );
+extern void run_time_stats_timer_init( void );
 extern volatile uint32_t runtime_stats_timer;
 
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() 	  vConfigureTimerForRunTimeStats()
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() 	  run_time_stats_timer_init()
 #define portGET_RUN_TIME_COUNTER_VALUE()         	  ( runtime_stats_timer )
 
 ///**< SystemView related defines */

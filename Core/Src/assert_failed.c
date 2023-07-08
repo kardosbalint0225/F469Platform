@@ -32,9 +32,6 @@ static void assert_failed_printf(const char * format, ...)
 	__HAL_RCC_DMA1_CLK_DISABLE();
 	__HAL_RCC_DMA1_FORCE_RESET();
 	__HAL_RCC_DMA1_RELEASE_RESET();
-	__HAL_RCC_DMA2_CLK_DISABLE();
-	__HAL_RCC_DMA2_FORCE_RESET();
-	__HAL_RCC_DMA2_RELEASE_RESET();
 
 	__HAL_RCC_USART3_CLK_ENABLE();
 	__HAL_RCC_USART3_FORCE_RESET();
@@ -53,8 +50,6 @@ static void assert_failed_printf(const char * format, ...)
 	HAL_UART_Init(&huart);
 
 	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOB_FORCE_RESET();
-	__HAL_RCC_GPIOB_RELEASE_RESET();
 	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10 | GPIO_PIN_11);
 
 	hgpio.Pin               = GPIO_PIN_10 | GPIO_PIN_11;
