@@ -10,10 +10,6 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
-//extern HCD_HandleTypeDef hhcd_USB_OTG_FS;
-//extern DMA2D_HandleTypeDef hdma2d;
-//extern DSI_HandleTypeDef hdsi;
-//extern LTDC_HandleTypeDef hltdc;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim6;
 
@@ -110,36 +106,4 @@ void TIM6_DAC_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&htim6);
 }
-
-///**
-//  * @brief This function handles USB On The Go FS global interrupt.
-//  */
-//void OTG_FS_IRQHandler(void)
-//{
-//  HAL_HCD_IRQHandler(&hhcd_USB_OTG_FS);
-//}
-
-///**
-//  * @brief This function handles LTDC global interrupt.
-//  */
-//void LTDC_IRQHandler(void)
-//{
-//  HAL_LTDC_IRQHandler(&hltdc);
-//}
-
-///**
-//  * @brief This function handles DMA2D global interrupt.
-//  */
-//void DMA2D_IRQHandler(void)
-//{
-//  HAL_DMA2D_IRQHandler(&hdma2d);
-//}
-
-///**
-//  * @brief This function handles DSI global interrupt.
-//  */
-//void DSI_IRQHandler(void)
-//{
-//  HAL_DSI_IRQHandler(&hdsi);
-//}
 

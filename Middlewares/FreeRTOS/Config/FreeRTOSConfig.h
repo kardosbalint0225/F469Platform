@@ -175,19 +175,15 @@ extern uint32_t SystemCoreClock;
 //#define INCLUDE_xSemaphoreGetMutexHolder            ( 1 ) // default INCLUDE_xQueueGetMutexHolder
 #define INCLUDE_xQueueGetMutexHolder                  ( 1 ) // default 0 (FreeRTOS.h)
 
-/**< FreeRTOS + CLI */
-#define configCOMMAND_INT_MAX_OUTPUT_SIZE 			  ( 512 ) // this size is convenient but a bit big
 
+/*********************************************************************************************************/
 /**< Run-time statistics */
 extern void run_time_stats_timer_init( void );
 extern volatile uint32_t runtime_stats_timer;
 
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() 	  run_time_stats_timer_init()
 #define portGET_RUN_TIME_COUNTER_VALUE()         	  ( runtime_stats_timer )
-
-///**< SystemView related defines */
-//#include "SEGGER_SYSVIEW_FreeRTOS.h"
-//#define INCLUDE_pxTaskGetStackStart                   ( 1 )
+/*********************************************************************************************************/
 
 #endif /* FREERTOS_CONFIG_H */
 

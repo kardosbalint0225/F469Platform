@@ -4,7 +4,6 @@
  *  Created on: 2022. jul. 13.
  *      Author: Balint
  */
-#include "gpio_defs.h"
 #include "stm32f4xx_hal.h"
 
 #ifdef  USE_FULL_ASSERT
