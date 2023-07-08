@@ -26,42 +26,42 @@ extern uint32_t SystemCoreClock;
 #define configCPU_CLOCK_HZ                            ( SystemCoreClock )   
 //#define configSYSTICK_CLOCK_HZ                        configCPU_CLOCK_HZ
 #define configTICK_RATE_HZ                            ( (TickType_t)1000 )  
-//#define configINITIAL_TICK_COUNT                    default 0 (FreeRTOS.h)
+//#define configINITIAL_TICK_COUNT                          // default 0 (FreeRTOS.h)
 #define configMAX_PRIORITIES                          ( 7 )                 
 #define configMINIMAL_STACK_SIZE                      ( (uint16_t)128 )
-//#define configMINIMAL_SECURE_STACK_SIZE             ? (used in tasks.c)
-#define configMAX_TASK_NAME_LEN                       ( 16 ) // default 16 (FreeRTOS.h)               
+//#define configMINIMAL_SECURE_STACK_SIZE                   // ? (used in tasks.c)
+#define configMAX_TASK_NAME_LEN                       ( 16 )// default 16 (FreeRTOS.h)
 #define configUSE_16_BIT_TICKS                        ( 0 )
 #define configIDLE_SHOULD_YIELD                       ( 1 ) // default 1 (FreeRTOS.h) 
-//#define configIDLE_TASK_NAME                        default "IDLE" (task.c)
+//#define configIDLE_TASK_NAME                              // default "IDLE" (task.c)
 #define configUSE_TASK_NOTIFICATIONS                  ( 1 ) // default 1 (FreeRTOS.h)
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES         ( 1 ) // default 1 (FreeRTOS.h)
 #define configUSE_MUTEXES                             ( 1 ) // default 0 (FreeRTOS.h)
 #define configUSE_RECURSIVE_MUTEXES                   ( 1 ) // default 0 (FreeRTOS.h)
 #define configUSE_COUNTING_SEMAPHORES                 ( 1 ) // default 0 (FreeRTOS.h)
-#define configUSE_ALTERNATIVE_API                     ( 0 ) /* Deprecated */ // default 0 (FreeRTOS.h)
+#define configUSE_ALTERNATIVE_API                     ( 0 ) // default 0 (FreeRTOS.h)
 #define configQUEUE_REGISTRY_SIZE                     ( 8 ) // default 0 (FreeRTOS.h)
-#define configUSE_QUEUE_SETS                          ( 0 )	/**< Build fails. SystemView related issue */ // default 0 (FreeRTOS.h)
+#define configUSE_QUEUE_SETS                          ( 0 )	// default 0 (FreeRTOS.h)
 #define configUSE_TIME_SLICING                        ( 1 ) // default 1 (FreeRTOS.h)
 #define configUSE_NEWLIB_REENTRANT                    ( 0 ) // default 0 (FreeRTOS.h)
 #define configENABLE_BACKWARD_COMPATIBILITY           ( 0 ) // default 1 (FreeRTOS.h)
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS       ( 5 ) // default 0 (FreeRTOS.h)
 #define configSTACK_DEPTH_TYPE                        uint16_t // default uint16_t (FreeRTOS.h)
-//#define configRECORD_STACK_HIGH_ADDRESS             default 0 (FreeRTOS.h)
+//#define configRECORD_STACK_HIGH_ADDRESS                   // default 0 (FreeRTOS.h)
 #define configMESSAGE_BUFFER_LENGTH_TYPE              size_t // default size_t (FreeRTOS.h)
-//#define configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES   default 0 (projdefs.h)
-//#define configEXPECTED_IDLE_TIME_BEFORE_SLEEP       default 2 (FreeRTOS.h)
-//#define configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING default empty (FreeRTOS.h)
-//#define configLIST_VOLATILE                         default empty (list.h)
-//#define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H   default 0 (FreeRTOS.h)
-//#define configPRE_SLEEP_PROCESSING                  default empty (FreeRTOS.h)
-//#define configPOST_SLEEP_PROCESSING                 default empty (FreeRTOS.h)
-//#define configUSE_TASK_FPU_SUPPORT                  default 1 (FreeRTOS.h)
-//#define configENABLE_TRUSTZONE                      default 1 (FreeRTOS.h) ARMv8M
-//#define configRUN_FREERTOS_SECURE_ONLY              default 0 (FreeRTOS.h)
-//#define configRUN_ADDITIONAL_TESTS                  default 0 (FreeRTOS.h)
-//#define configSUPPORT_CROSS_MODULE_OPTIMISATION     ? (list.h)
-//#define configTASK_RETURN_ADDRESS                   default prvTaskExitError (port.c)
+//#define configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES         // default 0 (projdefs.h)
+//#define configEXPECTED_IDLE_TIME_BEFORE_SLEEP             // default 2 (FreeRTOS.h)
+//#define configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING     // default empty (FreeRTOS.h)
+//#define configLIST_VOLATILE                               // default empty (list.h)
+//#define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H         // default 0 (FreeRTOS.h)
+//#define configPRE_SLEEP_PROCESSING                        // default empty (FreeRTOS.h)
+//#define configPOST_SLEEP_PROCESSING                       // default empty (FreeRTOS.h)
+//#define configUSE_TASK_FPU_SUPPORT                        // default 1 (FreeRTOS.h)
+//#define configENABLE_TRUSTZONE                            // default 1 (FreeRTOS.h) ARMv8M
+//#define configRUN_FREERTOS_SECURE_ONLY                    // default 0 (FreeRTOS.h)
+//#define configRUN_ADDITIONAL_TESTS                        // default 0 (FreeRTOS.h)
+//#define configSUPPORT_CROSS_MODULE_OPTIMISATION           // ? (list.h)
+//#define configTASK_RETURN_ADDRESS                         // default prvTaskExitError (port.c)
 
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION               ( 1 ) // default 0 (FreeRTOS.h)
@@ -69,7 +69,7 @@ extern uint32_t SystemCoreClock;
 #define configTOTAL_HEAP_SIZE                         ( (size_t)0x10000 )
 #define configAPPLICATION_ALLOCATED_HEAP              ( 1 ) // default 0 (FreeRTOS.h)
 #define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP     ( 0 ) // default 0 (FreeRTOS.h)
-//#define configADJUSTED_HEAP_SIZE                    heap_1 and heap_2 defines it accordingly
+//#define configADJUSTED_HEAP_SIZE                          // heap_1 and heap_2 defines it accordingly
 
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                           ( 0 )
@@ -82,8 +82,7 @@ extern uint32_t SystemCoreClock;
 #define configGENERATE_RUN_TIME_STATS                 ( 1 ) // default 0 (FreeRTOS.h)
 #define configUSE_TRACE_FACILITY                      ( 1 ) // default 0 (FreeRTOS.h)
 #define configUSE_STATS_FORMATTING_FUNCTIONS          ( 1 ) // default 0 (FreeRTOS.h)
-//#include "printf.h"
-//#define configRUN_TIME_COUNTER_TYPE                 default uint32_t (FreeRTOS.h)
+//#define configRUN_TIME_COUNTER_TYPE                       // default uint32_t (FreeRTOS.h)
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                         ( 0 ) // default 0 (FreeRTOS.h)
@@ -94,7 +93,7 @@ extern uint32_t SystemCoreClock;
 #define configTIMER_TASK_PRIORITY                     ( 3 )
 #define configTIMER_QUEUE_LENGTH                      ( 10 )
 #define configTIMER_TASK_STACK_DEPTH                  ( configMINIMAL_STACK_SIZE * 2)
-//#define configTIMER_SERVICE_TASK_NAME               default "Tmr Svc" (timers.c)
+//#define configTIMER_SERVICE_TASK_NAME                     // default "Tmr Svc" (timers.c)
 
 /* FreeRTOS POSIX dependencies */
 #define configUSE_POSIX_ERRNO                         ( 1 ) // default 0 (FreeRTOS.h)
@@ -139,14 +138,14 @@ extern uint32_t SystemCoreClock;
 #define xPortSysTickHandler                           SysTick_Handler
 
 /* Define to trap errors during development. */
-//#define configASSERT_DEFINED                        FreeRTOS.h sets it according to configASSERT
+//#define configASSERT_DEFINED                        // FreeRTOS.h sets it according to configASSERT
 #define configASSERT( x )                         	  assert_param( ( x ) ) // default empty (FreeRTOS.h)
 
-//#define configMIN                                   FreeRTOS.h provides this MIN macro
-//#define configMAX                                   FreeRTOS.h provides this MAX macro
-//#define configPRECONDITION                          default configASSERT (FreeRTOS.h)
-//#define configPRECONDITION_DEFINED                  default 0
-//#define configPRINTF                                default empty (FreeRTOS.h)
+//#define configMIN                                   // FreeRTOS.h provides this MIN macro
+//#define configMAX                                   // FreeRTOS.h provides this MAX macro
+//#define configPRECONDITION                          // default configASSERT (FreeRTOS.h)
+//#define configPRECONDITION_DEFINED                  // default 0
+//#define configPRINTF                                // default empty (FreeRTOS.h)
 
 /* FreeRTOS MPU specific definitions. */
 #define configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS ( 0 ) // default 0 (FreeRTOS.h)
