@@ -1,33 +1,17 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file    stm32f4xx_hal_timebase_TIM.c
   * @brief   HAL time base based on the hardware TIM.
   ******************************************************************************
-  * @attention
   *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
-
-/* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_tim.h"
 
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef        htim6;
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
+TIM_HandleTypeDef htim6;
+void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
 /**
   * @brief  This function configures the TIM6 as a time base source.
@@ -45,7 +29,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 
   uint32_t              uwPrescalerValue = 0U;
   uint32_t              pFLatency;
-  HAL_StatusTypeDef     status;
+  HAL_StatusTypeDef     ret;
 
   /* Enable TIM6 clock */
   __HAL_RCC_TIM6_CLK_ENABLE();
@@ -83,31 +67,28 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
-  status = HAL_TIM_Base_Init(&htim6);
-  if (status == HAL_OK)
-  {
-    /* Start the TIM time Base generation in interrupt mode */
-    status = HAL_TIM_Base_Start_IT(&htim6);
-    if (status == HAL_OK)
-    {
-    /* Enable the TIM6 global Interrupt */
-        HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
-      /* Configure the SysTick IRQ priority */
-      if (TickPriority < (1UL << __NVIC_PRIO_BITS))
-      {
-        /* Configure the TIM IRQ priority */
-        HAL_NVIC_SetPriority(TIM6_DAC_IRQn, TickPriority, 0U);
-        uwTickPrio = TickPriority;
-      }
-      else
-      {
-        status = HAL_ERROR;
-      }
-    }
-  }
+  ret = HAL_TIM_Base_Init(&htim6);
+  assert_param(HAL_OK == ret);
 
- /* Return function status */
-  return status;
+  ret = HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM6_PeriodElapsedCallback);
+  assert_param(HAL_OK == ret);
+
+  /* Start the TIM time Base generation in interrupt mode */
+  ret = HAL_TIM_Base_Start_IT(&htim6);
+  assert_param(HAL_OK == ret);
+
+  /* Enable the TIM6 global Interrupt */
+  HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
+
+  /* Configure the SysTick IRQ priority */
+  assert_param(TickPriority < (1UL << __NVIC_PRIO_BITS));
+
+  /* Configure the TIM IRQ priority */
+  HAL_NVIC_SetPriority(TIM6_DAC_IRQn, TickPriority, 0U);
+  uwTickPrio = TickPriority;
+
+  /* Return function status */
+  return ret;
 }
 
 /**
@@ -132,5 +113,18 @@ void HAL_ResumeTick(void)
 {
   /* Enable TIM6 Update interrupt */
   __HAL_TIM_ENABLE_IT(&htim6, TIM_IT_UPDATE);
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  HAL_IncTick();
 }
 
