@@ -43,7 +43,7 @@ extern uint32_t SystemCoreClock;
 #define configQUEUE_REGISTRY_SIZE                     ( 8 ) // default 0 (FreeRTOS.h)
 #define configUSE_QUEUE_SETS                          ( 0 )	// default 0 (FreeRTOS.h)
 #define configUSE_TIME_SLICING                        ( 1 ) // default 1 (FreeRTOS.h)
-#define configUSE_NEWLIB_REENTRANT                    ( 0 ) // default 0 (FreeRTOS.h)
+#define configUSE_NEWLIB_REENTRANT                    ( 1 ) // default 0 (FreeRTOS.h)
 #define configENABLE_BACKWARD_COMPATIBILITY           ( 0 ) // default 1 (FreeRTOS.h)
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS       ( 5 ) // default 0 (FreeRTOS.h)
 #define configSTACK_DEPTH_TYPE                        uint16_t // default uint16_t (FreeRTOS.h)
