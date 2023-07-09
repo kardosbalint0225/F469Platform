@@ -55,7 +55,7 @@ static void assert_failed_printf(const char * format, ...)
 	hgpio.Mode              = GPIO_MODE_AF_PP;
 	hgpio.Pull              = GPIO_NOPULL;
 	hgpio.Speed             = GPIO_SPEED_FREQ_VERY_HIGH;
-	hgpio.Alternate         = GPIO_AF7_USART2;
+	hgpio.Alternate         = GPIO_AF7_USART3;
 	HAL_GPIO_Init(GPIOB, &hgpio);
 
 	va_list va;

@@ -112,6 +112,8 @@ extern volatile uint32_t runtime_stats_timer;
 #define INCLUDE_xTaskResumeFromISR                    ( 1 )
 #define INCLUDE_xQueueGetMutexHolder                  ( 1 )
 
+#define configCOMMAND_INT_MAX_OUTPUT_SIZE             ( 512 )
+
 
 #endif /* FREERTOS_CONFIG_H */
 

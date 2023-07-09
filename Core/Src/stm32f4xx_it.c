@@ -10,8 +10,10 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
-extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim6;
+extern UART_HandleTypeDef huart3;
+extern DMA_HandleTypeDef  hdma_usart3_tx;
+extern TIM_HandleTypeDef  htim2;
+extern TIM_HandleTypeDef  htim6;
 
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
@@ -90,6 +92,22 @@ void DebugMon_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f4xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles DMA1 stream3 global interrupt.
+  */
+void DMA1_Stream3_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart3_tx);
+}
+
+/**
+  * @brief This function handles USART3 global interrupt.
+  */
+void USART3_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart3);
+}
 
 /**
   * @brief This function handles TIM2 global interrupt
