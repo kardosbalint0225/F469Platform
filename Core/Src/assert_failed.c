@@ -28,10 +28,6 @@ static void assert_failed_printf(const char * format, ...)
 	GPIO_InitTypeDef   hgpio = {0};
 	UART_HandleTypeDef huart = {0};
 
-	__HAL_RCC_DMA1_CLK_DISABLE();
-	__HAL_RCC_DMA1_FORCE_RESET();
-	__HAL_RCC_DMA1_RELEASE_RESET();
-
 	__HAL_RCC_USART3_CLK_ENABLE();
 	__HAL_RCC_USART3_FORCE_RESET();
 	__HAL_RCC_USART3_RELEASE_RESET();

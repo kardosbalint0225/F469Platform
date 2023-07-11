@@ -5,7 +5,9 @@
  *      Author: Balint
  */
 #include "uart_console.h"
+#include "uart_console_config.h"
 #include "stm32f4xx_hal.h"
+
 #include <string.h>
 
 #include "FreeRTOS.h"
@@ -14,317 +16,327 @@
 #include "semphr.h"
 
 typedef struct {
-	uint8_t *pbuf;
-	uint16_t size;
+    uint8_t *pbuf;
+    uint16_t size;
 } uart_tx_data_t;
 
-static SemaphoreHandle_t uart_tx_complete_semaphore_handle = NULL;
-static StaticSemaphore_t uart_tx_complete_semaphore_storage;
+static SemaphoreHandle_t h_uart_tx_cplt_semphr = NULL;
+static StaticSemaphore_t uart_tx_cplt_semphr_storage;
 
-#define UART_RX_QUEUE_LENGTH						8
-static StaticQueue_t uart_rx_queue_struct;
-static uint8_t		 uart_rx_queue_storage[UART_RX_QUEUE_LENGTH * sizeof(uint8_t)];
-static QueueHandle_t uart_rx_queue_handle = NULL;
+static StaticQueue_t     uart_rx_queue_struct;
+static uint8_t		     uart_rx_queue_storage[UART_CONSOLE_RX_QUEUE_LENGTH * sizeof(uint8_t)];
+static QueueHandle_t     h_uart_rx_queue = NULL;
 
-#define UART_TX_AVAILABLE_QUEUE_LENGTH				16
-static StaticQueue_t uart_tx_available_struct;
-static uint8_t       uart_tx_available_queue_storage[UART_TX_AVAILABLE_QUEUE_LENGTH * sizeof(uint8_t *)];
-static QueueHandle_t uart_tx_available_queue_handle	= NULL;
+static StaticQueue_t     uart_tx_avail_struct;
+static uint8_t           uart_tx_avail_queue_storage[UART_CONSOLE_TX_AVAIL_QUEUE_LENGTH * sizeof(uint8_t *)];
+static QueueHandle_t     h_uart_tx_avail_queue = NULL;
 
-#define UART_TX_READY_QUEUE_LENGTH					UART_TX_AVAILABLE_QUEUE_LENGTH
-static StaticQueue_t uart_tx_ready_struct;
-static uint8_t		 uart_tx_ready_queue_storage[UART_TX_READY_QUEUE_LENGTH * sizeof(uart_tx_data_t)];
-static QueueHandle_t uart_tx_ready_queue_handle = NULL;
+static StaticQueue_t     uart_tx_ready_struct;
+static uint8_t		     uart_tx_ready_queue_storage[UART_CONSOLE_TX_READY_QUEUE_LENGTH * sizeof(uart_tx_data_t)];
+static QueueHandle_t     h_uart_tx_ready_queue = NULL;
 
-#define UART_WRITE_TASK_PRIORITY					2
-#define UART_WRITE_TASK_STACKSIZE					(configMINIMAL_STACK_SIZE)
-static StackType_t   uart_write_task_stack[UART_WRITE_TASK_STACKSIZE];
-static StaticTask_t  uart_write_task_tcb;
-static TaskHandle_t  uart_write_task_handle = NULL;
+static StackType_t       uart_console_write_task_stack[UART_CONSOLE_WRITE_TASK_STACKSIZE];
+static StaticTask_t      uart_console_write_task_tcb;
+static TaskHandle_t      h_uart_console_write_task = NULL;
 
-UART_HandleTypeDef huart3;
-DMA_HandleTypeDef  hdma_usart3_tx;
+UART_HandleTypeDef       h_uart_console;
+DMA_HandleTypeDef        h_dma_uart_console_tx;
 
-static uint8_t uart_tx_buffer[configCOMMAND_INT_MAX_OUTPUT_SIZE*UART_TX_AVAILABLE_QUEUE_LENGTH];
-static uint8_t uart_rx_buffer[4];
+static uint8_t           uart_tx_buffer[UART_CONSOLE_TX_BUFFER_DEPTH * UART_CONSOLE_TX_AVAIL_QUEUE_LENGTH];
+static uint8_t           uart_rx_buffer;
 
-static void UART3_Init(void);
-static void UART3_Deinit(void);
-static void UART3_MspInit(UART_HandleTypeDef* huart);
-static void UART3_MspDeInit(UART_HandleTypeDef* huart);
-static void UART3_TxCpltCallback(UART_HandleTypeDef *huart);
-static void UART3_RxCpltCallback(UART_HandleTypeDef *huart);
+static const TickType_t  dma_tx_max_time_ms = (TickType_t)((1000.0f * (((float)(10 * UART_CONSOLE_TX_BUFFER_DEPTH)) / 115200.0f)) + 0.5f);
+
+static uint32_t          uart_console_error;
+
+static void uartx_init(void);
+static void uartx_deinit(void);
+static void uartx_msp_init(UART_HandleTypeDef *huart);
+static void uartx_msp_deinit(UART_HandleTypeDef *huart);
+static void uartx_tx_cplt_callback(UART_HandleTypeDef *huart);
+static void uartx_rx_cplt_callback(UART_HandleTypeDef *huart);
 
 /**
   * @brief  UART writer gatekeeper task
   * @param  params not used
   * @retval None
-  * @note	Task that performs the UART TX related jobs.
+  * @note   Task that performs the UART TX related jobs.
   */
 static void uart_console_write_task(void *params)
 {
-	(void)params;
+    (void)params;
 
-	BaseType_t ret;
-	HAL_StatusTypeDef hal_status;
-	uint8_t *uart_tx_pending = NULL;
+    BaseType_t ret;
+    HAL_StatusTypeDef hal_status;
+    uint8_t *uart_tx_pending = NULL;
 
-	uart_tx_data_t uart_tx_data = {
-		.pbuf = NULL,
-		.size = 0,
-	};
+    uart_tx_data_t uart_tx_data = {
+	    .pbuf = NULL,
+	    .size = 0,
+    };
 
-	for ( ;; )
-	{
-		ret = xQueueReceive(uart_tx_ready_queue_handle, &uart_tx_data, portMAX_DELAY);
-		assert_param(pdPASS == ret);
+    const TickType_t ticks_to_wait = pdMS_TO_TICKS(2UL * dma_tx_max_time_ms);
 
-		hal_status = HAL_UART_Transmit_DMA(&huart3, uart_tx_data.pbuf, uart_tx_data.size);
-		assert_param(HAL_OK == hal_status);
-		uart_tx_pending = uart_tx_data.pbuf;
+    for ( ;; )
+    {
+        ret = xQueueReceive(h_uart_tx_ready_queue, &uart_tx_data, portMAX_DELAY);
+        uart_console_error |= (pdPASS != ret) ? UART_CONSOLE_ERROR_TX_READY_QUEUE_RECEIVE : 0UL;
+        assert_param(0UL == uart_console_error);
 
-		ret = xSemaphoreTake(uart_tx_complete_semaphore_handle, portMAX_DELAY);
-		assert_param(pdPASS == ret);
+        hal_status = HAL_UART_Transmit_DMA(&h_uart_console, uart_tx_data.pbuf, uart_tx_data.size);
+        uart_console_error |= (HAL_OK != hal_status) ? UART_CONSOLE_ERROR_UART_TRANSMIT_DMA : 0UL;
+        assert_param(0UL == uart_console_error);
+        uart_tx_pending = uart_tx_data.pbuf;
 
-		ret = xQueueSend(uart_tx_available_queue_handle, &uart_tx_pending, 0);
-		assert_param(pdPASS == ret);
-	}
+        ret = xSemaphoreTake(h_uart_tx_cplt_semphr, ticks_to_wait);
+        uart_console_error |= (pdPASS != ret) ? UART_CONSOLE_ERROR_TX_CPLT_SEMPHR_TAKE : 0UL;
+        assert_param(0UL == uart_console_error);
+
+        ret = xQueueSend(h_uart_tx_avail_queue, &uart_tx_pending, 0);
+        uart_console_error |= (pdPASS != ret) ? UART_CONSOLE_ERROR_TX_AVAIL_QUEUE_SEND : 0UL;
+        assert_param(0UL == uart_console_error);
+    }
 }
 
 /**
   * @brief  Initializes the UART Console
   * @param  None
   * @retval None
-  * @note	This function initializes the UART2 peripheral,
-  * 		creates the UART writer task, queues and semaphores
+  * @note   This function initializes the UART peripheral,
+  *         creates the UART writer task, queues and semaphores
   */
 void uart_console_init(void)
 {
-	UART3_Init();
+	BaseType_t ret;
+	uart_console_error = 0UL;
 
-	uart_tx_complete_semaphore_handle = xSemaphoreCreateBinaryStatic(&uart_tx_complete_semaphore_storage);
-	assert_param(NULL != uart_tx_complete_semaphore_handle);
-	xSemaphoreTake(uart_tx_complete_semaphore_handle, 0);
+    uartx_init();
 
-	uart_tx_available_queue_handle = xQueueCreateStatic(
-									    UART_TX_AVAILABLE_QUEUE_LENGTH,
-										sizeof(uint8_t *),
-										uart_tx_available_queue_storage,
-										&uart_tx_available_struct);
-	assert_param(NULL != uart_tx_available_queue_handle);
+    h_uart_tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&uart_tx_cplt_semphr_storage);
+    uart_console_error |= (NULL == h_uart_tx_cplt_semphr) ? UART_CONSOLE_ERROR_TX_CPLT_SEMPHR_CREATE : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	uart_tx_ready_queue_handle = xQueueCreateStatic(
-								    UART_TX_READY_QUEUE_LENGTH,
-									sizeof(uart_tx_data_t),
-									uart_tx_ready_queue_storage,
-									&uart_tx_ready_struct);
-	assert_param(NULL != uart_tx_ready_queue_handle);
+    h_uart_tx_avail_queue = xQueueCreateStatic(UART_CONSOLE_TX_AVAIL_QUEUE_LENGTH,
+                                               sizeof(uint8_t *),
+                                               uart_tx_avail_queue_storage,
+                                               &uart_tx_avail_struct);
+    uart_console_error |= (NULL == h_uart_tx_avail_queue) ? UART_CONSOLE_ERROR_TX_AVAIL_QUEUE_CREATE : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	uart_rx_queue_handle = xQueueCreateStatic(
-						      UART_RX_QUEUE_LENGTH,
-							  sizeof(uint8_t),
-							  uart_rx_queue_storage,
-							  &uart_rx_queue_struct);
-	assert_param(NULL != uart_rx_queue_handle);
+    h_uart_tx_ready_queue = xQueueCreateStatic(UART_CONSOLE_TX_READY_QUEUE_LENGTH,
+                                               sizeof(uart_tx_data_t),
+                                               uart_tx_ready_queue_storage,
+                                               &uart_tx_ready_struct);
+    uart_console_error |= (NULL == h_uart_tx_ready_queue) ? UART_CONSOLE_ERROR_TX_READY_QUEUE_CREATE : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	for (uint8_t i = 0; i < UART_TX_AVAILABLE_QUEUE_LENGTH; i++) {
-		uint8_t *buffer_address = &uart_tx_buffer[i*configCOMMAND_INT_MAX_OUTPUT_SIZE];
-		xQueueSend(uart_tx_available_queue_handle, &buffer_address, 0);
-	}
+    h_uart_rx_queue = xQueueCreateStatic(UART_CONSOLE_RX_QUEUE_LENGTH,
+                                         sizeof(uint8_t),
+                                         uart_rx_queue_storage,
+                                         &uart_rx_queue_struct);
+    uart_console_error |= (NULL == h_uart_rx_queue) ? UART_CONSOLE_ERROR_RX_QUEUE_CREATE : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	uart_write_task_handle = xTaskCreateStatic(
-							    uart_console_write_task,
-								"UART write",
-								UART_WRITE_TASK_STACKSIZE,
-								NULL,
-								UART_WRITE_TASK_PRIORITY,
-								uart_write_task_stack,
-								&uart_write_task_tcb);
-	assert_param(NULL != uart_write_task_handle);
+    for (uint8_t i = 0; i < UART_CONSOLE_TX_AVAIL_QUEUE_LENGTH; i++) {
+        uint8_t *buffer_address = &uart_tx_buffer[i * UART_CONSOLE_TX_BUFFER_DEPTH];
+        ret = xQueueSend(h_uart_tx_avail_queue, &buffer_address, 0);
+        uart_console_error |= (pdPASS != ret) ? UART_CONSOLE_ERROR_TX_AVAIL_QUEUE_INIT : 0UL;
+        assert_param(0UL == uart_console_error);
+    }
 
-	HAL_StatusTypeDef hal_status = HAL_UART_Receive_IT(&huart3, &uart_rx_buffer[0], 1);
-	assert_param(HAL_OK == hal_status);
+    h_uart_console_write_task = xTaskCreateStatic(uart_console_write_task,
+                                                  "UART write",
+                                                  UART_CONSOLE_WRITE_TASK_STACKSIZE,
+                                                  NULL,
+                                                  UART_CONSOLE_WRITE_TASK_PRIORITY,
+                                                  uart_console_write_task_stack,
+                                                  &uart_console_write_task_tcb);
+    uart_console_error |= (NULL == h_uart_console_write_task) ? UART_CONSOLE_ERROR_WRITE_TASK_CREATE : 0UL;
+    assert_param(0UL == uart_console_error);
+
+    HAL_StatusTypeDef hal_status = HAL_UART_Receive_IT(&h_uart_console, &uart_rx_buffer, 1);
+    uart_console_error |= (HAL_OK != hal_status) ? UART_CONSOLE_ERROR_UART_RECEIVE_IT : 0UL;
+    assert_param(0UL == uart_console_error);
 }
 
 /**
   * @brief  Deinitializes the UART Console
   * @param  None
   * @retval None
-  * @note	This function deinitializes the UART3peripheral
-  * 		and deletes the UART writer task, queues and semaphores
+  * @note   This function deinitializes the UART peripheral
+  *         and deletes the UART writer task, queues and semaphores
   */
 void uart_console_deinit(void)
 {
-	UART3_Deinit();
+    uartx_deinit();
 
-	vTaskDelete(uart_write_task_handle);
-	vQueueDelete(uart_tx_available_queue_handle);
-	vQueueDelete(uart_tx_ready_queue_handle);
-	vQueueDelete(uart_rx_queue_handle);
-	vSemaphoreDelete(uart_tx_complete_semaphore_handle);
+    vTaskDelete(h_uart_console_write_task);
+    vQueueDelete(h_uart_tx_avail_queue);
+    vQueueDelete(h_uart_tx_ready_queue);
+    vQueueDelete(h_uart_rx_queue);
+    vSemaphoreDelete(h_uart_tx_cplt_semphr);
 
-	uart_write_task_handle            = NULL;
-	uart_tx_available_queue_handle    = NULL;
-	uart_tx_ready_queue_handle        = NULL;
-	uart_rx_queue_handle              = NULL;
-	uart_tx_complete_semaphore_handle = NULL;
+    h_uart_console_write_task = NULL;
+    h_uart_tx_avail_queue     = NULL;
+    h_uart_tx_ready_queue     = NULL;
+    h_uart_rx_queue           = NULL;
+    h_uart_tx_cplt_semphr     = NULL;
 }
 
 /**
-  * @brief  Initializes the UART3 peripheral
+  * @brief  Initializes the UART peripheral
   * @param  None
   * @retval None
-  * @note	The communication is configured 115200 Baudrate 8N1 with no
-  * 		flowcontrol.
+  * @note   The communication is configured 115200 Baudrate 8N1 with no
+  *         flowcontrol.
   */
-static void UART3_Init(void)
+static void uartx_init(void)
 {
-	huart3.Instance          = USART3;
-	huart3.Init.BaudRate     = 115200;
-	huart3.Init.WordLength   = UART_WORDLENGTH_8B;
-	huart3.Init.StopBits     = UART_STOPBITS_1;
-	huart3.Init.Parity       = UART_PARITY_NONE;
-	huart3.Init.Mode         = UART_MODE_TX_RX;
-	huart3.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
-	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+    h_uart_console.Instance          = UART_CONSOLE_USARTx;
+    h_uart_console.Init.BaudRate     = 115200;
+    h_uart_console.Init.WordLength   = UART_WORDLENGTH_8B;
+    h_uart_console.Init.StopBits     = UART_STOPBITS_1;
+    h_uart_console.Init.Parity       = UART_PARITY_NONE;
+    h_uart_console.Init.Mode         = UART_MODE_TX_RX;
+    h_uart_console.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
+    h_uart_console.Init.OverSampling = UART_OVERSAMPLING_16;
 
-	HAL_StatusTypeDef ret;
+    HAL_StatusTypeDef ret;
 
-	ret = HAL_UART_RegisterCallback(&huart3, HAL_UART_MSPINIT_CB_ID, UART3_MspInit);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_RegisterCallback(&h_uart_console, HAL_UART_MSPINIT_CB_ID, uartx_msp_init);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_REGISTER_MSPINIT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	ret = HAL_UART_RegisterCallback(&huart3, HAL_UART_MSPDEINIT_CB_ID, UART3_MspDeInit);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_RegisterCallback(&h_uart_console, HAL_UART_MSPDEINIT_CB_ID, uartx_msp_deinit);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_REGISTER_MSPDEINIT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	ret = HAL_UART_Init(&huart3);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_Init(&h_uart_console);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_UART_INIT : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	ret = HAL_UART_RegisterCallback(&huart3, HAL_UART_TX_COMPLETE_CB_ID, UART3_TxCpltCallback);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_RegisterCallback(&h_uart_console, HAL_UART_TX_COMPLETE_CB_ID, uartx_tx_cplt_callback);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_REGISTER_TX_CPLT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	ret = HAL_UART_RegisterCallback(&huart3, HAL_UART_RX_COMPLETE_CB_ID, UART3_RxCpltCallback);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_RegisterCallback(&h_uart_console, HAL_UART_RX_COMPLETE_CB_ID, uartx_rx_cplt_callback);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_REGISTER_RX_CPLT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
+}
+
+static void uartx_msp_init(UART_HandleTypeDef *huart)
+{
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    UART_CONSOLE_USARTx_CLK_ENABLE();
+    UART_CONSOLE_DMAx_CLK_ENABLE();
+    UART_CONSOLE_GPIOx_CLK_ENABLE();
+
+    GPIO_InitStruct.Pin       = UART_CONSOLE_UARTx_TX_PIN | UART_CONSOLE_UARTx_RX_PIN;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = UART_CONSOLE_GPIO_AFx_USARTx;
+    HAL_GPIO_Init(UART_CONSOLE_GPIOx_PORT, &GPIO_InitStruct);
+
+    h_dma_uart_console_tx.Instance                 = UART_CONSOLE_DMAx_STREAMx;
+    h_dma_uart_console_tx.Init.Channel             = UART_CONSOLE_DMA_CHANNELx;
+    h_dma_uart_console_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+    h_dma_uart_console_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    h_dma_uart_console_tx.Init.MemInc              = DMA_MINC_ENABLE;
+    h_dma_uart_console_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    h_dma_uart_console_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    h_dma_uart_console_tx.Init.Mode                = DMA_NORMAL;
+    h_dma_uart_console_tx.Init.Priority            = DMA_PRIORITY_LOW;
+    h_dma_uart_console_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+
+    HAL_StatusTypeDef ret = HAL_DMA_Init(&h_dma_uart_console_tx);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_DMA_INIT : 0UL;
+    assert_param(0UL == uart_console_error);
+
+    __HAL_LINKDMA(huart, hdmatx, h_dma_uart_console_tx);
+
+    HAL_NVIC_SetPriority(UART_CONSOLE_USARTx_IRQn, UART_CONSOLE_USARTx_IRQ_PRIORITY, 0);
+    HAL_NVIC_EnableIRQ(UART_CONSOLE_USARTx_IRQn);
+
+    HAL_NVIC_SetPriority(UART_CONSOLE_DMAx_STREAMx_IRQn, UART_CONSOLE_DMAx_STREAMx_IRQ_PRIORITY, 0);
+    HAL_NVIC_EnableIRQ(UART_CONSOLE_DMAx_STREAMx_IRQn);
 }
 
 /**
-  * @brief  Initializes the UART3 peripheral low-level
-  * @param  uartHandle
-  * @retval None
-  * @note	This function is called by the HAL library
-  * @note	DMA1 Stream3 is used for TX. UART TX and DMA priority
-  * 		are set to 14 but possibly can be set to 15
-  */
-static void UART3_MspInit(UART_HandleTypeDef* huart)
-{
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-	__HAL_RCC_USART3_CLK_ENABLE();
-	__HAL_RCC_DMA1_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-
-	GPIO_InitStruct.Pin       = GPIO_PIN_10 | GPIO_PIN_11;
-	GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull      = GPIO_NOPULL;
-	GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	hdma_usart3_tx.Instance                 = DMA1_Stream3;
-	hdma_usart3_tx.Init.Channel             = DMA_CHANNEL_4;
-	hdma_usart3_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
-	hdma_usart3_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
-	hdma_usart3_tx.Init.MemInc              = DMA_MINC_ENABLE;
-	hdma_usart3_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-	hdma_usart3_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-	hdma_usart3_tx.Init.Mode                = DMA_NORMAL;
-	hdma_usart3_tx.Init.Priority            = DMA_PRIORITY_LOW;
-	hdma_usart3_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-
-	HAL_StatusTypeDef ret = HAL_DMA_Init(&hdma_usart3_tx);
-	assert_param(HAL_OK == ret);
-
-	__HAL_LINKDMA(huart, hdmatx, hdma_usart3_tx);
-
-	HAL_NVIC_SetPriority(USART3_IRQn, 14, 0);
-	HAL_NVIC_EnableIRQ(USART3_IRQn);
-
-	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 14, 0);
-	HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
-}
-
-/**
-  * @brief  Deinitializes the UART3 peripheral
+  * @brief  Deinitializes the UART peripheral
   * @param  None
   * @retval None
-  * @note	-
+  * @note   -
   *
   */
-static void UART3_Deinit(void)
+static void uartx_deinit(void)
 {
-	HAL_StatusTypeDef ret;
+    HAL_StatusTypeDef ret;
 
-	ret = HAL_UART_UnRegisterCallback(&huart3, HAL_UART_TX_COMPLETE_CB_ID);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_UnRegisterCallback(&h_uart_console, HAL_UART_TX_COMPLETE_CB_ID);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_UNREGISTER_TX_CPLT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	ret = HAL_UART_DeInit(&huart3);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_UnRegisterCallback(&h_uart_console, HAL_UART_RX_COMPLETE_CB_ID);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_UNREGISTER_RX_CPLT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	ret = HAL_UART_UnRegisterCallback(&huart3, HAL_UART_MSPINIT_CB_ID);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_DeInit(&h_uart_console);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_UART_DEINIT : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	ret = HAL_UART_UnRegisterCallback(&huart3, HAL_UART_MSPDEINIT_CB_ID);
-	assert_param(HAL_OK == ret);
+    ret = HAL_UART_UnRegisterCallback(&h_uart_console, HAL_UART_MSPINIT_CB_ID);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_UNREGISTER_MSPINIT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
+
+    ret = HAL_UART_UnRegisterCallback(&h_uart_console, HAL_UART_MSPDEINIT_CB_ID);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_UNREGISTER_MSPDEINIT_CB : 0UL;
+    assert_param(0UL == uart_console_error);
+}
+
+static void uartx_msp_deinit(UART_HandleTypeDef *huart)
+{
+	UART_CONSOLE_USARTx_CLK_DISABLE();
+
+    HAL_GPIO_DeInit(UART_CONSOLE_GPIOx_PORT, UART_CONSOLE_UARTx_TX_PIN | UART_CONSOLE_UARTx_RX_PIN);
+
+    HAL_StatusTypeDef ret;
+    ret = HAL_DMA_DeInit(huart->hdmatx);
+    uart_console_error |= (HAL_OK != ret) ? UART_CONSOLE_ERROR_DMA_DEINIT : 0UL;
+    assert_param(0UL == uart_console_error);
+
+    HAL_NVIC_DisableIRQ(UART_CONSOLE_USARTx_IRQn);
+    HAL_NVIC_DisableIRQ(UART_CONSOLE_DMAx_STREAMx_IRQn);
 }
 
 /**
-  * @brief  Deinitializes the UART3 peripheral low-level
-  * @param  uartHandle
-  * @retval None
-  * @note	This function is called by the HAL library
-  * @note 	It wont disable the DMA1 peripheral clock since the
-  * 		DMA1 might be used by other peripherals
-  * @note	It wont disable the GPIOB peripheral clock since the
-  * 		GPIOB might be used by other peripherals
-  */
-static void UART3_MspDeInit(UART_HandleTypeDef* huart)
-{
-	__HAL_RCC_USART3_CLK_DISABLE();
-
-	HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10 | GPIO_PIN_11);
-
-	HAL_DMA_DeInit(huart->hdmatx);
-
-	HAL_NVIC_DisableIRQ(USART3_IRQn);
-	HAL_NVIC_DisableIRQ(DMA1_Stream3_IRQn);
-}
-
-/**
-  * @brief  UART3 Transfer complete callback
+  * @brief  UART Transfer complete callback
   * @param  huart
   * @retval None
-  * @note	This function is called by the HAL library
-  * 		when the DMA1 is finished transferring data
+  * @note   This function is called by the HAL library
+  *         when the DMA is finished transferring data
   */
-static void UART3_TxCpltCallback(UART_HandleTypeDef *huart)
+static void uartx_tx_cplt_callback(UART_HandleTypeDef *huart)
 {
-	portBASE_TYPE higher_priority_task_woken = pdFALSE;
-	xSemaphoreGiveFromISR(uart_tx_complete_semaphore_handle, &higher_priority_task_woken);
-	portYIELD_FROM_ISR(higher_priority_task_woken);
+    portBASE_TYPE higher_priority_task_woken = pdFALSE;
+    xSemaphoreGiveFromISR(h_uart_tx_cplt_semphr, &higher_priority_task_woken);
+    portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
 /**
-  * @brief  UART3 Receive complete callback
+  * @brief  UART Receive complete callback
   * @param  huart
   * @retval None
-  * @note	This function is called by the HAL library
-  * 		when a character is arrived.
+  * @note   This function is called by the HAL library
+  *         when a character is arrived.
   */
-static void UART3_RxCpltCallback(UART_HandleTypeDef *huart)
+static void uartx_rx_cplt_callback(UART_HandleTypeDef *huart)
 {
-	portBASE_TYPE higher_priority_task_woken = pdFALSE;
-	xQueueSendFromISR(uart_rx_queue_handle, &uart_rx_buffer[0], &higher_priority_task_woken);
-	HAL_UART_Receive_IT(&huart3, &uart_rx_buffer[0], 1);
-	portYIELD_FROM_ISR(higher_priority_task_woken);
+    portBASE_TYPE higher_priority_task_woken = pdFALSE;
+    xQueueSendFromISR(h_uart_rx_queue, &uart_rx_buffer, &higher_priority_task_woken);
+    HAL_UART_Receive_IT(&h_uart_console, &uart_rx_buffer, 1);
+    portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
 /**
@@ -337,23 +349,25 @@ static void UART3_RxCpltCallback(UART_HandleTypeDef *huart)
  */
 int __uart_console_write(char *buf, int len)
 {
-	uart_tx_data_t data = {
-		.pbuf = NULL,
-		.size = 0,
-	};
+    uart_tx_data_t data = {
+        .pbuf = NULL,
+        .size = 0,
+    };
 
-	BaseType_t ret;
-	const TickType_t ticks_to_wait = pdMS_TO_TICKS(200);
+    BaseType_t ret;
+    const TickType_t ticks_to_wait = pdMS_TO_TICKS(2UL * dma_tx_max_time_ms);
 
-	ret = xQueueReceive(uart_tx_available_queue_handle, &data.pbuf, ticks_to_wait);
-	assert_param(pdTRUE == ret);
+    ret = xQueueReceive(h_uart_tx_avail_queue, &data.pbuf, ticks_to_wait);
+    uart_console_error |= (pdPASS != ret) ? UART_CONSOLE_ERROR_TX_AVAIL_QUEUE_RECEIVE : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	memcpy(data.pbuf, (uint8_t *)buf, len);
-	data.size = len;
+    memcpy(data.pbuf, (uint8_t *)buf, len);
+    data.size = len;
 
-	ret = xQueueSend(uart_tx_ready_queue_handle, &data, ticks_to_wait);
-	assert_param(pdTRUE == ret);
+    ret = xQueueSend(h_uart_tx_ready_queue, &data, ticks_to_wait);
+    uart_console_error |= (pdPASS != ret) ? UART_CONSOLE_ERROR_TX_READY_QUEUE_SEND : 0UL;
+    assert_param(0UL == uart_console_error);
 
-	return len;
+    return len;
 }
 

@@ -10,8 +10,8 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
-extern UART_HandleTypeDef huart3;
-extern DMA_HandleTypeDef  hdma_usart3_tx;
+extern UART_HandleTypeDef h_uart_console;
+extern DMA_HandleTypeDef  h_dma_uart_console_tx;
 extern TIM_HandleTypeDef  htim2;
 extern TIM_HandleTypeDef  htim6;
 
@@ -98,7 +98,7 @@ void DebugMon_Handler(void)
   */
 void DMA1_Stream3_IRQHandler(void)
 {
-  HAL_DMA_IRQHandler(&hdma_usart3_tx);
+  HAL_DMA_IRQHandler(&h_dma_uart_console_tx);
 }
 
 /**
@@ -106,7 +106,7 @@ void DMA1_Stream3_IRQHandler(void)
   */
 void USART3_IRQHandler(void)
 {
-  HAL_UART_IRQHandler(&huart3);
+  HAL_UART_IRQHandler(&h_uart_console);
 }
 
 /**
