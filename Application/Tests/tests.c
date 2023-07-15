@@ -42,14 +42,18 @@ static void tests_runner_task(void * params)
 {
 	for ( ;; )
 	{
-		int size = 6;
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < 10; i++)
 		{
-			char *pbuf = test_strings[i];
-			int len = strlen(pbuf);
-			__uart_console_write(pbuf, len);
+			int size = 6;
+			for (int i = 0; i < size; i++)
+			{
+				char *pbuf = test_strings[i];
+				int len = strlen(pbuf);
+				__uart_console_write(pbuf, len);
+			}
+			vTaskDelay(500);
 		}
-		vTaskDelay(500);
+		assert_param(0);
 	}
 }
 

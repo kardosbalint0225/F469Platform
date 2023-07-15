@@ -4,14 +4,16 @@
  *  Created on: 2022. apr. 20.
  *      Author: Balint
  */
+#include "runtime_stats_timer.h"
 #include "stm32f4xx_hal.h"
 
 TIM_HandleTypeDef htim2;
 volatile uint32_t runtime_stats_timer;
+static uint32_t   runtime_stats_timer_error;
 
-static void TIM2_Init(void);
-static void TIM2_Deinit(void);
-static void TIM2_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+static void tim2_init(void);
+static void tim2_deinit(void);
+static void tim2_period_elapsed_callback(TIM_HandleTypeDef *htim);
 
 /**
   * @brief  Configures a dedicated Timer peripheral for
@@ -20,14 +22,14 @@ static void TIM2_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
   * @retval None
   * @note	This function is called by the FreeRTOS kernel
   */
-void run_time_stats_timer_init( void )
+void runtime_stats_timer_init(void)
 {
-	TIM2_Init();
+	tim2_init();
 }
 
-void run_time_stats_timer_deinit(void)
+void runtime_stats_timer_deinit(void)
 {
-	TIM2_Deinit();
+	tim2_deinit();
 }
 
 /**
@@ -36,14 +38,15 @@ void run_time_stats_timer_deinit(void)
   * @retval None
   * @note   The TIM2 interrupt priority level is set to 11
   */
-static void TIM2_Init(void)
+static void tim2_init(void)
 {
 	RCC_ClkInitTypeDef clkconfig;
-	uint32_t           uwTimclock = 0;
-	uint32_t           uwPrescalerValue = 0;
+	uint32_t           uwTimclock = 0UL;
+	uint32_t           uwPrescalerValue = 0UL;
 	uint32_t           pFLatency;
 
-	runtime_stats_timer = 0;
+	runtime_stats_timer = 0UL;
+	runtime_stats_timer_error = 0UL;
 
 	/*Configure the TIM2 IRQ priority */
 	HAL_NVIC_SetPriority(TIM2_IRQn, 11, 0);
@@ -88,14 +91,17 @@ static void TIM2_Init(void)
 
 	HAL_StatusTypeDef ret;
 	ret = HAL_TIM_Base_Init(&htim2);
-	assert_param(HAL_OK == ret);
+	runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_INIT : 0UL;
+	assert_param(0UL == runtime_stats_timer_error);
 
-	ret = HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM2_PeriodElapsedCallback);
-	assert_param(HAL_OK == ret);
+	ret = HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PERIOD_ELAPSED_CB_ID, tim2_period_elapsed_callback);
+	runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_REGISTER_PERIOD_ELAPSED_CB : 0UL;
+	assert_param(0UL == runtime_stats_timer_error);
 
 	/* Start the TIM time Base generation in interrupt mode */
 	ret = HAL_TIM_Base_Start_IT(&htim2);
-	assert_param(HAL_OK == ret);
+	runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_START_IT : 0UL;
+	assert_param(0UL == runtime_stats_timer_error);
 }
 
 /**
@@ -104,22 +110,25 @@ static void TIM2_Init(void)
   * @retval None
   * @note
   */
-static void TIM2_Deinit(void)
+static void tim2_deinit(void)
 {
 	HAL_StatusTypeDef ret;
 
 	/* Stop the TIM time Base generation in interrupt mode */
 	ret = HAL_TIM_Base_Stop_IT(&htim2);
-	assert_param(HAL_OK == ret);
+	runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_STOP_IT : 0UL;
+	assert_param(0UL == runtime_stats_timer_error);
 
 	/* Disable the TIM2 global Interrupt */
 	HAL_NVIC_DisableIRQ(TIM2_IRQn);
 
 	ret = HAL_TIM_UnRegisterCallback(&htim2, HAL_TIM_PERIOD_ELAPSED_CB_ID);
-	assert_param(HAL_OK == ret);
+	runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_UNREGISTER_PERIOD_ELAPSED_CB : 0UL;
+	assert_param(0UL == runtime_stats_timer_error);
 
 	ret = HAL_TIM_Base_DeInit(&htim2);
-	assert_param(HAL_OK == ret);
+	runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_DEINIT : 0UL;
+	assert_param(0UL == runtime_stats_timer_error);
 
 	/* Disable TIM2 clock */
 	__HAL_RCC_TIM2_CLK_DISABLE();
@@ -138,7 +147,7 @@ static void TIM2_Deinit(void)
   * 		interrupt in every 0.1 ms the run time stats can be more
   * 		accurately calculated.
   */
-static void TIM2_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+static void tim2_period_elapsed_callback(TIM_HandleTypeDef *htim)
 {
 	runtime_stats_timer++;
 }

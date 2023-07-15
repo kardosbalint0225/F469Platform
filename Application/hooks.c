@@ -1,7 +1,6 @@
 /**
   ******************************************************************************
   * File Name          : hooks.c
-  * Description        : Code for freertos applications
   ******************************************************************************
   *
   *
@@ -16,31 +15,31 @@
 #include "uart_console.h"
 
 #if RUN_TESTS
-	#include "tests.h"
+    #include "tests.h"
 #endif
 
 
 /* GetIdleTaskMemory prototype (linked to static allocation support) */
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
-                                    StackType_t  **ppxIdleTaskStackBuffer,
-                                    uint32_t      *pulIdleTaskStackSize );
+void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
+                                   StackType_t  **ppxIdleTaskStackBuffer,
+                                   uint32_t      *pulIdleTaskStackSize);
 
 /* GetTimerTaskMemory prototype (linked to static allocation support) */
-void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer,
-                                     StackType_t  **ppxTimerTaskStackBuffer,
-                                     uint32_t      *pulTimerTaskStackSize );
+void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
+                                    StackType_t  **ppxTimerTaskStackBuffer,
+                                    uint32_t      *pulTimerTaskStackSize);
 
 /* Hook prototypes */
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName);
 void vApplicationMallocFailedHook(void);
-void vApplicationDaemonTaskStartupHook( void );
+void vApplicationDaemonTaskStartupHook(void);
 
-void vApplicationDaemonTaskStartupHook( void )
+void vApplicationDaemonTaskStartupHook(void)
 {
-	GPIO_Init();
-	RTC_Init();
+    GPIO_Init();
+    rtc_init();
 
-	uart_console_init();
+    uart_console_init();
 #if RUN_TESTS
     start_tests();
 #endif
@@ -48,12 +47,12 @@ void vApplicationDaemonTaskStartupHook( void )
 
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
-	(void)xTask;
-	(void)pcTaskName;
+    (void)xTask;
+    (void)pcTaskName;
     /* Run time stack overflow checking is performed if
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
     called if a stack overflow is detected. */
-	assert_param( 0 );
+    assert_param(0);
 }
 
 void vApplicationMallocFailedHook(void)
@@ -68,7 +67,7 @@ void vApplicationMallocFailedHook(void)
     FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
     to query the size of free heap space that remains (although it does not
     provide information on how the remaining heap might be fragmented). */
-    assert_param( 0 );
+    assert_param(0);
 }
 
 /* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
@@ -78,9 +77,9 @@ void vApplicationMallocFailedHook(void)
 static StaticTask_t xIdleTaskTCB;
 static StackType_t  uxIdleTaskStack[configMINIMAL_STACK_SIZE];
 
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
-                                    StackType_t  **ppxIdleTaskStackBuffer,
-                                    uint32_t      *pulIdleTaskStackSize )
+void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
+                                   StackType_t  **ppxIdleTaskStackBuffer,
+                                   uint32_t      *pulIdleTaskStackSize)
 {
     *ppxIdleTaskTCBBuffer   = &xIdleTaskTCB;
     *ppxIdleTaskStackBuffer = &uxIdleTaskStack[0];
@@ -94,9 +93,9 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
 static StaticTask_t xTimerTaskTCB;
 static StackType_t  uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
 
-void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer,
-                                     StackType_t  **ppxTimerTaskStackBuffer,
-                                     uint32_t      *pulTimerTaskStackSize )
+void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
+                                    StackType_t  **ppxTimerTaskStackBuffer,
+                                    uint32_t      *pulTimerTaskStackSize)
 {
     *ppxTimerTaskTCBBuffer   = &xTimerTaskTCB;
     *ppxTimerTaskStackBuffer = &uxTimerTaskStack[0];
