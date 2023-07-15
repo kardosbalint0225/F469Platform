@@ -11,8 +11,8 @@
 #include "task.h"
 
 #include "stm32f4xx_hal.h"
+#include "sysclk.h"
 
-void SystemClock_Config(void);
 
 /**
   * @brief  The application entry point.
@@ -21,7 +21,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   HAL_Init();
-  SystemClock_Config();
+  sysclk_init();
 
   vTaskStartScheduler();
 

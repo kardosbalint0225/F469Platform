@@ -5,15 +5,20 @@
  *      Author: Balint
  */
 #include "stm32f4xx_hal.h"
+#include "sysclk.h"
+
+static uint32_t sysclk_error;
 
 /**
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void)
+void sysclk_init(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  sysclk_error = 0UL;
 
   /** Configure the main internal regulator output voltage
   */
@@ -36,12 +41,14 @@ void SystemClock_Config(void)
 
   HAL_StatusTypeDef ret;
   ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
-  assert_param(HAL_OK == ret);
+  sysclk_error |= (HAL_OK != ret) ? SYSCLK_ERROR_RCC_OSC_CONFIG : 0UL;
+  assert_param(0UL == sysclk_error);
 
   /** Activate the Over-Drive mode
   */
   ret = HAL_PWREx_EnableOverDrive();
-  assert_param(HAL_OK == ret);
+  sysclk_error |= (HAL_OK != ret) ? SYSCLK_ERROR_PWR_ENABLE_OVERDRIVE : 0UL;
+  assert_param(0UL == sysclk_error);
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
@@ -53,6 +60,12 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
   ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5);
-  assert_param(HAL_OK == ret);
+  sysclk_error |= (HAL_OK != ret) ? SYSCLK_ERROR_RCC_CLOCK_CONFIG : 0UL;
+  assert_param(0UL == sysclk_error);
+}
+
+uint32_t sysclk_get_error(void)
+{
+	return sysclk_error;
 }
 

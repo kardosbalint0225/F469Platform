@@ -64,7 +64,7 @@ extern uint32_t SystemCoreClock;
 
 #include "runtime_stats_timer.h"
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() 	  runtime_stats_timer_init()
-#define portGET_RUN_TIME_COUNTER_VALUE()         	  ( runtime_stats_timer )
+#define portGET_RUN_TIME_COUNTER_VALUE()         	  runtime_stats_timer_get_count()
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                         ( 0 )

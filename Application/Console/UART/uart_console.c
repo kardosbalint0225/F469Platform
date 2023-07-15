@@ -310,6 +310,11 @@ static void uartx_msp_deinit(UART_HandleTypeDef *huart)
     HAL_NVIC_DisableIRQ(UART_CONSOLE_DMAx_STREAMx_IRQn);
 }
 
+uint32_t uart_console_get_error(void)
+{
+	return uart_console_error;
+}
+
 /**
   * @brief  UART Transfer complete callback
   * @param  huart

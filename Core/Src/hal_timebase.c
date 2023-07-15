@@ -10,7 +10,10 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_tim.h"
 
+#include "hal_timebase.h"
+
 TIM_HandleTypeDef htim6;
+static uint32_t hal_timebase_error;
 void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
 /**
@@ -30,6 +33,8 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   uint32_t              uwPrescalerValue = 0U;
   uint32_t              pFLatency;
   HAL_StatusTypeDef     ret;
+
+  hal_timebase_error = 0UL;
 
   /* Enable TIM6 clock */
   __HAL_RCC_TIM6_CLK_ENABLE();
@@ -68,14 +73,17 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
   ret = HAL_TIM_Base_Init(&htim6);
-  assert_param(HAL_OK == ret);
+  hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_TIM_BASE_INIT : 0UL;
+  assert_param(0UL == hal_timebase_error);
 
   ret = HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM6_PeriodElapsedCallback);
-  assert_param(HAL_OK == ret);
+  hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_REGISTER_PERIOD_ELAPSED_CB : 0UL;
+  assert_param(0UL == hal_timebase_error);
 
   /* Start the TIM time Base generation in interrupt mode */
   ret = HAL_TIM_Base_Start_IT(&htim6);
-  assert_param(HAL_OK == ret);
+  hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_TIM_BASE_START_IT : 0UL;
+  assert_param(0UL == hal_timebase_error);
 
   /* Enable the TIM6 global Interrupt */
   HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
@@ -85,7 +93,6 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 
   /* Configure the TIM IRQ priority */
   HAL_NVIC_SetPriority(TIM6_DAC_IRQn, TickPriority, 0U);
-  uwTickPrio = TickPriority;
 
   /* Return function status */
   return ret;
@@ -126,5 +133,10 @@ void HAL_ResumeTick(void)
 void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   HAL_IncTick();
+}
+
+uint32_t hal_timebase_get_error(void)
+{
+	return hal_timebase_error;
 }
 

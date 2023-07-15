@@ -7,9 +7,9 @@
 #include "runtime_stats_timer.h"
 #include "stm32f4xx_hal.h"
 
-TIM_HandleTypeDef htim2;
-volatile uint32_t runtime_stats_timer;
-static uint32_t   runtime_stats_timer_error;
+TIM_HandleTypeDef        htim2;
+static uint32_t          runtime_stats_timer_error;
+static volatile uint32_t runtime_stats_timer;
 
 static void tim2_init(void);
 static void tim2_deinit(void);
@@ -30,6 +30,16 @@ void runtime_stats_timer_init(void)
 void runtime_stats_timer_deinit(void)
 {
 	tim2_deinit();
+}
+
+uint32_t runtime_stats_timer_get_count(void)
+{
+	return runtime_stats_timer;
+}
+
+uint32_t runtime_stats_timer_get_error(void)
+{
+	return runtime_stats_timer_error;
 }
 
 /**

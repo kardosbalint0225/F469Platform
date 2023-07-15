@@ -18,11 +18,13 @@ enum _RUNTIME_STATS_TIMER_ERROR
 	RUNTIME_STATS_TIMER_ERROR_TIM_BASE_STOP_IT             = 0x00000008UL,
 	RUNTIME_STATS_TIMER_ERROR_UNREGISTER_PERIOD_ELAPSED_CB = 0x00000010UL,
 	RUNTIME_STATS_TIMER_ERROR_TIM_BASE_DEINIT              = 0x00000020UL,
+
+	RUNTIME_STATS_TIMER_ERROR_UINT_MAX                     = 0xFFFFFFFFUL,
 };
 
-extern volatile uint32_t runtime_stats_timer;
-
-void runtime_stats_timer_init(void);
-void runtime_stats_timer_deinit(void);
+void     runtime_stats_timer_init(void);
+void     runtime_stats_timer_deinit(void);
+uint32_t runtime_stats_timer_get_count(void);
+uint32_t runtime_stats_timer_get_error(void);
 
 #endif /* _RUN_TIME_STATS_TIMER_H_ */

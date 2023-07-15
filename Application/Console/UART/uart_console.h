@@ -8,6 +8,8 @@
 #ifndef _UART_CONSOLE_H_
 #define _UART_CONSOLE_H_
 
+#include <stdint.h>
+
 enum _UART_CONSOLE_ERROR
 {
     UART_CONSOLE_ERROR_TX_CPLT_SEMPHR_CREATE   = 0x00000001UL,
@@ -35,11 +37,14 @@ enum _UART_CONSOLE_ERROR
 	UART_CONSOLE_ERROR_UART_TRANSMIT_DMA       = 0x00400000UL,
     UART_CONSOLE_ERROR_TX_CPLT_SEMPHR_TAKE     = 0x00800000UL,
 	UART_CONSOLE_ERROR_TX_AVAIL_QUEUE_SEND     = 0x01000000UL,
+
+	UART_CONSOLE_ERROR_UINT_MAX                = 0xFFFFFFFFUL,
 };
 
-void uart_console_init(void);
-void uart_console_deinit(void);
-int  __uart_console_write(char *buf, int len);
+void     uart_console_init(void);
+void     uart_console_deinit(void);
+int      __uart_console_write(char *buf, int len);
+uint32_t uart_console_get_error(void);
 
 #endif /* _UART_CONSOLE_H_ */
 

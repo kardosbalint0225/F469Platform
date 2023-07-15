@@ -31,14 +31,17 @@ enum _RTC_ERROR
 	RTC_ERROR_RCC_PERIPHCLKCONFIG_NO_CLK = 0x00000200UL,
     RTC_ERROR_RTC_GET_TIME               = 0x00000400UL,
     RTC_ERROR_RTC_GET_DATE               = 0x00000800UL,
+
+	RTC_ERROR_UINT_MAX                   = 0xFFFFFFFFUL,
 };
 
-void rtc_init(void);
-void rtc_deinit(void);
-void rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds);
-void rtc_set_time(uint8_t hours, uint8_t minutes, uint8_t seconds);
-void rtc_get_date(uint8_t *day, uint8_t *month, uint8_t *year, uint8_t *weekday);
-void rtc_set_date(uint8_t day, uint8_t month, uint8_t year);
+void     rtc_init(void);
+void     rtc_deinit(void);
+void     rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds);
+void     rtc_set_time(uint8_t hours, uint8_t minutes, uint8_t seconds);
+void     rtc_get_date(uint8_t *day, uint8_t *month, uint8_t *year, uint8_t *weekday);
+void     rtc_set_date(uint8_t day, uint8_t month, uint8_t year);
+uint32_t rtc_get_error(void);
 
 #ifdef __cplusplus
 }

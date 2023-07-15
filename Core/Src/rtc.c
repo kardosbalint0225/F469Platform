@@ -138,6 +138,11 @@ static void rtc_msp_deinit(RTC_HandleTypeDef* hrtc)
 	__HAL_RCC_RTC_DISABLE();
 }
 
+uint32_t rtc_get_error(void)
+{
+	return rtc_error;
+}
+
 /**
   * @brief  Gets the current time from the RTC peripheral
   * @param	hours points where the hours value can be stored
