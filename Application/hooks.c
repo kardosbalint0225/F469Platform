@@ -13,6 +13,7 @@
 #include "gpio.h"
 #include "rtc.h"
 #include "uart_console.h"
+#include "cli.h"
 
 #if RUN_TESTS
     #include "tests.h"
@@ -38,8 +39,8 @@ void vApplicationDaemonTaskStartupHook(void)
 {
     GPIO_Init();
     rtc_init();
-
     uart_console_init();
+    cli_init();
 #if RUN_TESTS
     start_tests();
 #endif

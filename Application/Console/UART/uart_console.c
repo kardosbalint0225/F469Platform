@@ -25,7 +25,7 @@ static StaticSemaphore_t uart_tx_cplt_semphr_storage;
 
 static StaticQueue_t     uart_rx_queue_struct;
 static uint8_t		     uart_rx_queue_storage[UART_CONSOLE_RX_QUEUE_LENGTH * sizeof(uint8_t)];
-static QueueHandle_t     h_uart_rx_queue = NULL;
+       QueueHandle_t     h_uart_rx_queue = NULL;
 
 static StaticQueue_t     uart_tx_avail_struct;
 static uint8_t           uart_tx_avail_queue_storage[UART_CONSOLE_TX_AVAIL_QUEUE_LENGTH * sizeof(uint8_t *)];
@@ -145,7 +145,7 @@ void uart_console_init(void)
     }
 
     h_uart_console_write_task = xTaskCreateStatic(uart_console_write_task,
-                                                  "UART write",
+                                                  "UART Write",
                                                   UART_CONSOLE_WRITE_TASK_STACKSIZE,
                                                   NULL,
                                                   UART_CONSOLE_WRITE_TASK_PRIORITY,

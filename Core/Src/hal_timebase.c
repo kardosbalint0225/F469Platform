@@ -34,6 +34,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   uint32_t              pFLatency;
   HAL_StatusTypeDef     ret;
 
+  uwTickPrio = TickPriority;
   hal_timebase_error = 0UL;
 
   /* Enable TIM6 clock */
