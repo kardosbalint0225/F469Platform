@@ -21,7 +21,6 @@
 
 extern QueueHandle_t h_uart_rx_queue;
 
-// CLI buffer
 static EmbeddedCli *cli;
 static CLI_UINT cli_buffer[BYTES_TO_CLI_UINTS(CLI_BUFFER_SIZE)];
 
@@ -39,6 +38,13 @@ static void cli_io_read_task(void *params);
 static void cli_process_task(void *params);
 static void cli_write_char(EmbeddedCli *cli, char c);
 
+/**
+  * @brief  Initializes the CLI
+  * @param  None
+  * @retval None
+  * @note   This function creates two tasks one for IO read and one for
+  *         the processing of received characters.
+  */
 void cli_init(void)
 {
 	cli = NULL;
@@ -81,6 +87,12 @@ void cli_init(void)
     cli_command_clear_terminal(cli, NULL, NULL);
 }
 
+/**
+  * @brief  Deinitializes the Command-Line Interface
+  * @param  None
+  * @retval None
+  * @note   This function deletes the CLI related IO read and process tasks.
+  */
 void cli_deinit(void)
 {
 	vTaskDelete(h_cli_io_read_task);
@@ -90,6 +102,12 @@ void cli_deinit(void)
 	//TODO: deinit command bindings
 }
 
+/**
+  * @brief  Task responsible for receiving characters and passing them to the Embedded CLI library
+  * @param  params (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_io_read_task(void *params)
 {
 	(void)params;
@@ -105,6 +123,12 @@ static void cli_io_read_task(void *params)
 	}
 }
 
+/**
+  * @brief  Task responsible for processing the received characters
+  * @param  params (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_process_task(void *params)
 {
 	(void)params;
@@ -116,16 +140,37 @@ static void cli_process_task(void *params)
 	}
 }
 
+/**
+  * @brief  Writes single character to the console
+  * @param  cli Pointer to the CLI instance
+  * @param  c   character to write to the console
+  * @retval None
+  * @note   -
+  */
 static void cli_write_char(EmbeddedCli *cli, char c)
 {
 	__uart_console_write(&c, 1);
 }
 
+/**
+  * @brief  Returns the pointer to the CLI instance
+  * @param  None
+  * @retval pointer to the cli instance
+  * @note   -
+  */
 EmbeddedCli *cli_get_pointer(void)
 {
     return cli;
 }
 
+/**
+  * @brief
+  * @param
+  * @retval 0 if no error occured
+  *         positive value indicates error where each bit
+  *         corresponds to a specific error defined in _CLI_ERROR
+  * @note   -
+  */
 uint32_t cli_get_error(void)
 {
 	return cli_error;
