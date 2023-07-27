@@ -161,6 +161,12 @@ static CliCommandBinding sysinfo_binding = {
 	.binding = cli_command_sysinfo
 };
 
+/**
+  * @brief  Adds the command bindings to the cli instance
+  * @param  None
+  * @retval None
+  * @note   -
+  */
 void cli_init_command_bindings(void)
 {
 	EmbeddedCli *cli = cli_get_pointer();
@@ -174,6 +180,14 @@ void cli_init_command_bindings(void)
 	embeddedCliAddBinding(cli, sysinfo_binding);
 }
 
+/**
+  * @brief  Clears the terminal
+  * @param  cli (not used)
+  * @param  args (not used)
+  * @param  context (not used)
+  * @retval None
+  * @note   -
+  */
 void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
 {
 	(void)cli;
@@ -184,6 +198,15 @@ void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
 	__uart_console_write((char *)clear_string, sizeof(clear_string));
 }
 
+/**
+  * @brief  Function that is executed when runtimestats command entered
+  *         Displays the absolute and relative times of each task
+  * @param  cli (not used)
+  * @param  args (not used)
+  * @param  context (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context)
 {
 	(void)cli;
@@ -200,6 +223,15 @@ static void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *contex
 	__uart_console_write(cli_output_buffer, len);
 }
 
+/**
+  * @brief  Function that is executed when taskstats command entered
+  *         Displays the state, priority and stack usage of each task
+  * @param  cli (not used)
+  * @param  args (not used)
+  * @param  context (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context)
 {
 	(void)cli;
@@ -216,6 +248,15 @@ static void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context)
 	__uart_console_write(cli_output_buffer, len);
 }
 
+/**
+  * @brief  Function that is executed when date command entered
+  *         Displays the current date set to the RTC
+  * @param  cli (not used)
+  * @param  args (not used)
+  * @param  context (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 {
 	(void)cli;
@@ -237,6 +278,15 @@ static void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 	__uart_console_write(cli_output_buffer, len);
 }
 
+/**
+  * @brief  Function that is executed when time command entered
+  *         Displays the current time set to the RTC
+  * @param  cli (not used)
+  * @param  args (not used)
+  * @param  context (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 {
 	(void)cli;
@@ -258,6 +308,15 @@ static void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 	__uart_console_write(cli_output_buffer, len);
 }
 
+/**
+  * @brief  Function that is executed when setdate command entered
+  *         Sets the current date to the RTC
+  * @param  cli (not used)
+  * @param  args command argument holding the date to be set
+  * @param  context (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
 {
 	(void)cli;
@@ -306,6 +365,15 @@ static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
 	__uart_console_write(cli_output_buffer, len);
 }
 
+/**
+  * @brief  Function that is executed when settime command entered
+  *         Sets the current time to the RTC
+  * @param  cli (not used)
+  * @param  args command argument holding the time to be set
+  * @param  context (not used)
+  * @retval None
+  * @note   -
+  */
 static void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
 {
 	(void)cli;
@@ -358,8 +426,7 @@ static void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
  * @param   s the input character
  * @retval  true if the argument is a number
  * @retval  false otherwise
- * @note    This is a helper function of the is_time_command_valid
- *          and is_date_command_valid
+ * @note    -
  */
 static bool is_number(const char s)
 {
@@ -367,13 +434,13 @@ static bool is_number(const char s)
 }
 
 /**
- * @brief  Checks whether the set-time command string is valid or not
+ * @brief  Checks whether the settime command string is valid or not
  *
- * @param  time_string the string containing the argument of the set-time command
+ * @param  time_string the string containing the argument of the settime command
  * @param  len the length of the time_string
  * @retval true if the time command string is valid (hh:mm:ss format)
  * @retval false otherwise
- * @note   This is a helper function of the set_time_command
+ * @note   -
  */
 static bool is_time_command_string_valid(const char *time_string, const uint32_t len)
 {
@@ -403,13 +470,12 @@ static bool is_time_command_string_valid(const char *time_string, const uint32_t
 }
 
 /**
- * @brief  Checks whether the set-date command string is valid or not
+ * @brief  Checks whether the setdate command string is valid or not
  *
- * @param  date_string the string containing the argument of the set-date command
+ * @param  date_string the string containing the argument of the setdate command
  * @param  len the length of the date_string
  * @retval true if the date command string is valid (yyyy.mm.dd. format)
  * @retval false otherwise
- * @note   This is a helper function of the set_date_command
  */
 static bool is_date_command_string_valid(const char *date_string, const uint32_t len)
 {
@@ -446,7 +512,7 @@ static bool is_date_command_string_valid(const char *date_string, const uint32_t
  * @param  sec  where the sec value can be stored
  * @param  time_string the string to be extracted
  * @retval None
- * @note   This is a helper function of the set_time_command
+ * @note   -
  */
 static void convert_string_to_time(uint8_t *hour, uint8_t *min, uint8_t *sec, const char *time_string)
 {
@@ -468,7 +534,7 @@ static void convert_string_to_time(uint8_t *hour, uint8_t *min, uint8_t *sec, co
  * @param  year  where the year value can be stored
  * @param  date_string the string to be extracted
  * @retval None
- * @note   This is a helper function of the set_date_command
+ * @note   -
  */
 static void convert_string_to_date(uint8_t *day, uint8_t *month, uint8_t *year, const char *date_string)
 {
@@ -484,16 +550,19 @@ static void convert_string_to_date(uint8_t *day, uint8_t *month, uint8_t *year, 
 
 /**
   * @brief  Function that is executed when the sysinfo command is entered.
-  * @param  pbuf    output buffer where the command related string messages can be written
-  * @param  max_len maximum length of the command related string message
-  * @param  command command string including the command and its parameters
-  * @retval pdTRUE if this function has to be called another time in order to finish the
-  *         command related task,
-  *         pdFALSE if this function has finished executing
-  * @note
+  *         Displays system related informations (versions, clock states)
+  * @param  cli (not used)
+  * @param  args (not used)
+  * @param  context (not used)
+  * @retval None
+  * @note   -
   */
 static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
 {
+	(void)cli;
+	(void)args;
+	(void)context;
+
 	int len;
 
 	len = snprintf(cli_output_buffer,

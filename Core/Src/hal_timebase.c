@@ -136,6 +136,14 @@ void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   HAL_IncTick();
 }
 
+/**
+  * @brief  Gets the current error state of the HAL Timebase
+  * @param  None
+  * @retval 0 if no error occured
+  *         positive value indicates error where each bit
+  *         corresponds to a specific error defined in _HAL_TIMEBASE_ERROR
+  * @note   -
+  */
 uint32_t hal_timebase_get_error(void)
 {
 	return hal_timebase_error;

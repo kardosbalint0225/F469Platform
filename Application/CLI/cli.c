@@ -164,8 +164,8 @@ EmbeddedCli *cli_get_pointer(void)
 }
 
 /**
-  * @brief
-  * @param
+  * @brief  Gets the current error state of the CLI
+  * @param  None
   * @retval 0 if no error occured
   *         positive value indicates error where each bit
   *         corresponds to a specific error defined in _CLI_ERROR

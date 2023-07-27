@@ -64,6 +64,14 @@ void sysclk_init(void)
   assert_param(0UL == sysclk_error);
 }
 
+/**
+  * @brief  Gets the current error state of the Sysclk
+  * @param  None
+  * @retval 0 if no error occured
+  *         positive value indicates error where each bit
+  *         corresponds to a specific error defined in _SYSCLK_ERROR
+  * @note   -
+  */
 uint32_t sysclk_get_error(void)
 {
 	return sysclk_error;

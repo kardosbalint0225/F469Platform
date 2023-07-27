@@ -27,16 +27,36 @@ void runtime_stats_timer_init(void)
 	tim2_init();
 }
 
+/**
+  * @brief  Deinitializes the Runtime Stats Timer
+  * @param  None
+  * @retval None
+  * @note	-
+  */
 void runtime_stats_timer_deinit(void)
 {
 	tim2_deinit();
 }
 
+/**
+  * @brief  Returns the current timer value of the Runtime Stats Timer
+  * @param  None
+  * @retval 32-bit unsigned timer count ( count * 0.1 ms elapsed)
+  * @note	-
+  */
 uint32_t runtime_stats_timer_get_count(void)
 {
 	return runtime_stats_timer;
 }
 
+/**
+  * @brief  Gets the current error state of the Runtime stats Timer
+  * @param  None
+  * @retval 0 if no error occured
+  *         positive value indicates error where each bit
+  *         corresponds to a specific error defined in _RUNTIME_STATS_TIMER_ERROR
+  * @note   -
+  */
 uint32_t runtime_stats_timer_get_error(void)
 {
 	return runtime_stats_timer_error;
