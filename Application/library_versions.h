@@ -7,4 +7,3 @@
 #define EMBEDDED_CLI_VERSION           "v0.1.3"
 
 #endif /* __LIBRARY_VERSIONS_H__ */
-

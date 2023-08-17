@@ -1,11 +1,11 @@
 /**
-  ******************************************************************************
-  * File Name          : hooks.c
-  ******************************************************************************
-  *
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * File Name          : hooks.c
+ ******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -22,13 +22,13 @@
 
 /* GetIdleTaskMemory prototype (linked to static allocation support) */
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
-                                   StackType_t  **ppxIdleTaskStackBuffer,
-                                   uint32_t      *pulIdleTaskStackSize);
+                                   StackType_t **ppxIdleTaskStackBuffer,
+                                   uint32_t *pulIdleTaskStackSize);
 
 /* GetTimerTaskMemory prototype (linked to static allocation support) */
 void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
-                                    StackType_t  **ppxTimerTaskStackBuffer,
-                                    uint32_t      *pulTimerTaskStackSize);
+                                    StackType_t **ppxTimerTaskStackBuffer,
+                                    uint32_t *pulTimerTaskStackSize);
 
 /* Hook prototypes */
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName);
@@ -51,23 +51,23 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
     (void)xTask;
     (void)pcTaskName;
     /* Run time stack overflow checking is performed if
-    configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
-    called if a stack overflow is detected. */
+       configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
+       called if a stack overflow is detected. */
     assert_param(0);
 }
 
 void vApplicationMallocFailedHook(void)
 {
     /* vApplicationMallocFailedHook() will only be called if
-    configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h. It is a hook
-    function that will get called if a call to pvPortMalloc() fails.
-    pvPortMalloc() is called internally by the kernel whenever a task, queue,
-    timer or semaphore is created. It is also called by various parts of the
-    demo application. If heap_1.c or heap_2.c are used, then the size of the
-    heap available to pvPortMalloc() is defined by configTOTAL_HEAP_SIZE in
-    FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
-    to query the size of free heap space that remains (although it does not
-    provide information on how the remaining heap might be fragmented). */
+       configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h. It is a hook
+       function that will get called if a call to pvPortMalloc() fails.
+       pvPortMalloc() is called internally by the kernel whenever a task, queue,
+       timer or semaphore is created. It is also called by various parts of the
+       demo application. If heap_1.c or heap_2.c are used, then the size of the
+       heap available to pvPortMalloc() is defined by configTOTAL_HEAP_SIZE in
+       FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
+       to query the size of free heap space that remains (although it does not
+       provide information on how the remaining heap might be fragmented). */
     assert_param(0);
 }
 
@@ -76,15 +76,15 @@ void vApplicationMallocFailedHook(void)
  * used by the Idle task.
  * */
 static StaticTask_t xIdleTaskTCB;
-static StackType_t  uxIdleTaskStack[configMINIMAL_STACK_SIZE];
+static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
 
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
-                                   StackType_t  **ppxIdleTaskStackBuffer,
-                                   uint32_t      *pulIdleTaskStackSize)
+                                   StackType_t **ppxIdleTaskStackBuffer,
+                                   uint32_t *pulIdleTaskStackSize)
 {
-    *ppxIdleTaskTCBBuffer   = &xIdleTaskTCB;
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
     *ppxIdleTaskStackBuffer = &uxIdleTaskStack[0];
-    *pulIdleTaskStackSize   = configMINIMAL_STACK_SIZE;
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
 }
 
 /* configSUPPORT_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
@@ -92,15 +92,13 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
  * to provide the memory that is used by the Timer service task.
  * */
 static StaticTask_t xTimerTaskTCB;
-static StackType_t  uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
+static StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
 
 void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
-                                    StackType_t  **ppxTimerTaskStackBuffer,
-                                    uint32_t      *pulTimerTaskStackSize)
+                                    StackType_t **ppxTimerTaskStackBuffer,
+                                    uint32_t *pulTimerTaskStackSize)
 {
-    *ppxTimerTaskTCBBuffer   = &xTimerTaskTCB;
+    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
     *ppxTimerTaskStackBuffer = &uxTimerTaskStack[0];
-    *pulTimerTaskStackSize   = configTIMER_TASK_STACK_DEPTH;
+    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
-
-

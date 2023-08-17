@@ -1,13 +1,13 @@
 /**
-  ******************************************************************************
-  * @file    rtc.h
-  * @brief   This file contains all the function prototypes for
-  *          the rtc.c file
-  ******************************************************************************
-  *
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    rtc.h
+ * @brief   This file contains all the function prototypes for
+ *          the rtc.c file
+ ******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
 #ifndef __RTC_H__
 #define __RTC_H__
 
@@ -28,11 +28,11 @@ enum _RTC_ERROR
     RTC_ERROR_RTC_DEINIT                 = 0x00000040UL,
     RTC_ERROR_UNREGISTER_MSPINIT_CB      = 0x00000080UL,
     RTC_ERROR_UNREGISTER_MSPDEINIT_CB    = 0x00000100UL,
-	RTC_ERROR_RCC_PERIPHCLKCONFIG_NO_CLK = 0x00000200UL,
+    RTC_ERROR_RCC_PERIPHCLKCONFIG_NO_CLK = 0x00000200UL,
     RTC_ERROR_RTC_GET_TIME               = 0x00000400UL,
     RTC_ERROR_RTC_GET_DATE               = 0x00000800UL,
 
-	RTC_ERROR_UINT_MAX                   = 0xFFFFFFFFUL,
+    RTC_ERROR_UINT_MAX                   = 0xFFFFFFFFUL,
 };
 
 void     rtc_init(void);
@@ -48,4 +48,3 @@ uint32_t rtc_get_error(void);
 #endif
 
 #endif /* __RTC_H__ */
-
