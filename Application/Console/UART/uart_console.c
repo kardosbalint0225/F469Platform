@@ -376,3 +376,4 @@ int __uart_console_write(char *buf, int len)
 
     return len;
 }
+

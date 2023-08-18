@@ -33,3 +33,4 @@
 #define UART_CONSOLE_DMAx_STREAMx_IRQ_PRIORITY    14
 
 #endif /* _UART_CONSOLE_CONFIG_H_ */
+

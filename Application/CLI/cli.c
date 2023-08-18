@@ -175,3 +175,4 @@ uint32_t cli_get_error(void)
 {
     return cli_error;
 }
+

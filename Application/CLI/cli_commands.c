@@ -836,3 +836,4 @@ static uint32_t find(const uint32_t *array, const uint32_t size, const uint32_t 
 
     return index;
 }
+

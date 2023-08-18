@@ -210,3 +210,4 @@
 #define STLK_TX_GPIO_Port                           GPIOB
 
 #endif /* _GPIO_DEFS_H_ */
+

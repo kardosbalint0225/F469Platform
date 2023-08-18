@@ -28,3 +28,4 @@ uint32_t runtime_stats_timer_get_count(void);
 uint32_t runtime_stats_timer_get_error(void);
 
 #endif /* _RUN_TIME_STATS_TIMER_H_ */
+

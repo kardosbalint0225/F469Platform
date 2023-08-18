@@ -47,3 +47,4 @@ int      __uart_console_write(char *buf, int len);
 uint32_t uart_console_get_error(void);
 
 #endif /* _UART_CONSOLE_H_ */
+

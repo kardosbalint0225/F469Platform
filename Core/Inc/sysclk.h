@@ -23,3 +23,4 @@ void     sysclk_init(void);
 uint32_t sysclk_get_error(void);
 
 #endif /* _SYSCLK_H_ */
+

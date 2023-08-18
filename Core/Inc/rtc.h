@@ -48,3 +48,4 @@ uint32_t rtc_get_error(void);
 #endif
 
 #endif /* __RTC_H__ */
+

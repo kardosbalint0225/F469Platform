@@ -26,3 +26,4 @@ uint32_t     cli_get_error(void);
 EmbeddedCli *cli_get_pointer(void);
 
 #endif /* _CLI_H_ */
+

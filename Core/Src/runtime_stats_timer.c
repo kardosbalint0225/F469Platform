@@ -181,3 +181,4 @@ static void tim2_period_elapsed_callback(TIM_HandleTypeDef *htim)
 {
     runtime_stats_timer++;
 }
+

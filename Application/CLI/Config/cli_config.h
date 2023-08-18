@@ -28,3 +28,4 @@
 #define CLI_PROCESS_TASK_STACK_SIZE    (32 * configMINIMAL_STACK_SIZE)
 
 #endif /* _CLI_CONFIG_H_ */
+

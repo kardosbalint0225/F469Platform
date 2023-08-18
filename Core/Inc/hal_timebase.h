@@ -25,3 +25,4 @@ enum _HAL_TIMEBASE_ERROR
 uint32_t hal_timebase_get_error(void);
 
 #endif /* _STM32F4XX_HAL_TIMEBASE_TIM_H_ */
+

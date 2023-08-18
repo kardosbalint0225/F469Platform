@@ -255,3 +255,4 @@ void rtc_set_date(uint8_t day, uint8_t month, uint8_t year)
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_DATE : 0UL;
     assert_param(0UL == rtc_error);
 }
+

@@ -148,3 +148,4 @@ uint32_t hal_timebase_get_error(void)
 {
     return hal_timebase_error;
 }
+

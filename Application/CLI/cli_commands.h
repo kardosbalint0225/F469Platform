@@ -14,3 +14,4 @@ void cli_init_command_bindings(void);
 void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context);
 
 #endif /* _COMMANDS_H_ */
+
