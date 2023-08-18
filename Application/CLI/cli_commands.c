@@ -4,7 +4,6 @@
  *  Created on: 2023. jul. 15.
  *      Author: Balint
  */
-#include "embedded_cli.h"
 #include "cli_commands.h"
 #include "cli_config.h"
 #include "cli.h"
