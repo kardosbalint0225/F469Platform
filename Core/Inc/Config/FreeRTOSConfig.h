@@ -18,12 +18,12 @@
 
 extern uint32_t SystemCoreClock;
 
-#define configUSE_PREEMPTION                          ( 1 )                 
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION       ( 1 )                 
+#define configUSE_PREEMPTION                          ( 1 )
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION       ( 1 )
 #define configUSE_TICKLESS_IDLE                       ( 0 )
-#define configCPU_CLOCK_HZ                            ( SystemCoreClock )   
-#define configTICK_RATE_HZ                            ( (TickType_t)1000 )  
-#define configMAX_PRIORITIES                          ( 7 )                 
+#define configCPU_CLOCK_HZ                            ( SystemCoreClock )
+#define configTICK_RATE_HZ                            ( (TickType_t)1000 )
+#define configMAX_PRIORITIES                          ( 7 )
 #define configMINIMAL_STACK_SIZE                      ( (uint16_t)128 )
 #define configMAX_TASK_NAME_LEN                       ( 16 )
 #define configUSE_16_BIT_TICKS                        ( 0 )
@@ -63,8 +63,8 @@ extern uint32_t SystemCoreClock;
 #define configUSE_STATS_FORMATTING_FUNCTIONS          ( 1 )
 
 #include "runtime_stats_timer.h"
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() 	  runtime_stats_timer_init()
-#define portGET_RUN_TIME_COUNTER_VALUE()         	  runtime_stats_timer_get_count()
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      runtime_stats_timer_init()
+#define portGET_RUN_TIME_COUNTER_VALUE()              runtime_stats_timer_get_count()
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                         ( 0 )
@@ -79,8 +79,8 @@ extern uint32_t SystemCoreClock;
 /* Interrupt nesting behaviour configuration. */
 #define configLIBRARY_LOWEST_INTERRUPT_PRIORITY       ( 15 )
 #define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY  ( 5 )
-#define configKERNEL_INTERRUPT_PRIORITY 		      ( configLIBRARY_LOWEST_INTERRUPT_PRIORITY      << (8 - __NVIC_PRIO_BITS) )
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY 	      ( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - __NVIC_PRIO_BITS) )
+#define configKERNEL_INTERRUPT_PRIORITY               ( configLIBRARY_LOWEST_INTERRUPT_PRIORITY      << (8 - __NVIC_PRIO_BITS) )
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY          ( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - __NVIC_PRIO_BITS) )
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
  * standard names. */
@@ -89,7 +89,7 @@ extern uint32_t SystemCoreClock;
 #define xPortSysTickHandler                           SysTick_Handler
 
 /* Define to trap errors during development. */
-#define configASSERT( x )                         	  assert_param( ( x ) )
+#define configASSERT( x )                             assert_param( ( x ) )
 
 /* Optional functions - most linkers will remove unused functions anyway. */
 #define INCLUDE_vTaskPrioritySet                      ( 1 )
