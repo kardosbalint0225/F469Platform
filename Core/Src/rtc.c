@@ -17,7 +17,7 @@ static void rtc_msp_init(RTC_HandleTypeDef * hrtc);
 static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc);
 
 static uint32_t rtc_error;
-
+//TODO: weekday handling
 /**
  * @brief  Initializes the RTC peripheral
  * @param  None
@@ -138,6 +138,14 @@ static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc)
     __HAL_RCC_RTC_DISABLE();
 }
 
+/**
+ * @brief  Gets the current error state of the RTC
+ * @param  None
+ * @retval 0 if no error occured
+ *         positive value indicates error where each bit
+ *         corresponds to a specific error defined in _RTC_ERROR
+ * @note   -
+ */
 uint32_t rtc_get_error(void)
 {
     return rtc_error;

@@ -1,35 +1,17 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    stm32f4xx_hal_conf_template.h
-  * @author  MCD Application Team
-  * @brief   HAL configuration template file.
-  *          This file should be copied to the application folder and renamed
-  *          to stm32f4xx_hal_conf.h.
+  * @file    stm32f4xx_hal_conf.h
   ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
+  * 
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
-
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32F4xx_HAL_CONF_H
 #define __STM32F4xx_HAL_CONF_H
 
 #ifdef __cplusplus
  extern "C" {
 #endif
-
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
 
 /* ########################## Module Selection ############################## */
 /**
@@ -117,9 +99,9 @@
   */
 #if !defined  (LSI_VALUE)
  #define LSI_VALUE  32000U       /*!< LSI Typical Value in Hz*/
-#endif /* LSI_VALUE */                      /*!< Value of the Internal Low Speed oscillator in Hz
-                                             The real value may vary depending on the variations
-                                             in voltage and temperature.*/
+#endif /* LSI_VALUE */           /*!< Value of the Internal Low Speed oscillator in Hz
+                                      The real value may vary depending on the variations
+                                      in voltage and temperature.*/
 /**
   * @brief External Low Speed oscillator (LSE) value.
   */
@@ -222,7 +204,7 @@
 /* Section 2: PHY configuration section */
 
 /* DP83848_PHY_ADDRESS Address*/
-#define DP83848_PHY_ADDRESS           0x01U
+#define DP83848_PHY_ADDRESS             0x01U
 /* PHY Reset delay these values are based on a 1 ms Systick interrupt*/
 #define PHY_RESET_DELAY                 0x000000FFU
 /* PHY Configuration delay */

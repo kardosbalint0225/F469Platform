@@ -226,6 +226,13 @@ static void uartx_init(void)
     assert_param(0UL == uart_console_error);
 }
 
+/**
+ * @brief  Initializes the UARTx MSP
+ * @param  huart pointer to the UART_HandleTypeDef structure
+ * @retval None
+ * @note   This function initializes the GPIOs corresponding the UART peripheral,
+ *         the DMA stream and enables the DMA and UART interrupts
+ */
 static void uartx_msp_init(UART_HandleTypeDef *huart)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -296,6 +303,13 @@ static void uartx_deinit(void)
     assert_param(0UL == uart_console_error);
 }
 
+/**
+ * @brief  Deinitializes the UARTx MSP
+ * @param  huart pointer to the UART_HandleTypeDef structure
+ * @retval None
+ * @note   This function deinitializes the GPIOs corresponding the UART peripheral,
+ *         the DMA stream and disables the DMA and UART interrupts
+ */
 static void uartx_msp_deinit(UART_HandleTypeDef *huart)
 {
     UART_CONSOLE_USARTx_CLK_DISABLE();
@@ -311,6 +325,14 @@ static void uartx_msp_deinit(UART_HandleTypeDef *huart)
     HAL_NVIC_DisableIRQ(UART_CONSOLE_DMAx_STREAMx_IRQn);
 }
 
+/**
+ * @brief  Gets the current error state of the UART Console
+ * @param  None
+ * @retval 0 if no error occured
+ *         positive value indicates error where each bit
+ *         corresponds to a specific error defined in _UART_CONSOLE_ERROR
+ * @note   -
+ */
 uint32_t uart_console_get_error(void)
 {
     return uart_console_error;
