@@ -158,7 +158,7 @@ uint32_t rtc_get_error(void)
  * @param  seconds points where the seconds value can be stored
  * @retval None
  */
-void rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds)
+void rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subseconds)
 {
     RTC_TimeTypeDef stime = {0};
     RTC_DateTypeDef sdate = {0};
@@ -172,9 +172,25 @@ void rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds)
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
     assert_param(0UL == rtc_error);
 
-    *hours = stime.Hours;
-    *minutes = stime.Minutes;
-    *seconds = stime.Seconds;
+    if (NULL != hours)
+    {
+        *hours = stime.Hours;
+    }
+
+    if (NULL != minutes)
+    {
+        *minutes = stime.Minutes;
+    }
+
+    if (NULL != seconds)
+    {
+        *seconds = stime.Seconds;
+    }
+
+    if (NULL != subseconds)
+    {
+        *subseconds = stime.SubSeconds;
+    }
 }
 
 /**
@@ -184,7 +200,7 @@ void rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds)
  * @param  year points where the year value can be stored
  * @retval None
  */
-void rtc_get_date(uint8_t *day, uint8_t *month, uint8_t *year, uint8_t *weekday)
+void rtc_get_date(uint8_t *day, uint8_t *month, uint32_t *year, uint8_t *weekday)
 {
     RTC_TimeTypeDef stime = {0};
     RTC_DateTypeDef sdate = {0};
@@ -198,10 +214,25 @@ void rtc_get_date(uint8_t *day, uint8_t *month, uint8_t *year, uint8_t *weekday)
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
     assert_param(0UL == rtc_error);
 
-    *day = sdate.Date;
-    *month = sdate.Month;
-    *year = sdate.Year;
-    *weekday = sdate.WeekDay;
+    if (NULL != day)
+    {
+        *day = sdate.Date;
+    }
+
+    if (NULL != month)
+    {
+        *month = sdate.Month;
+    }
+
+    if (NULL != year)
+    {
+        *year = sdate.Year + 2000;
+    }
+
+    if (NULL != weekday)
+    {
+        *weekday = sdate.WeekDay;
+    }
 }
 
 /**
@@ -241,7 +272,7 @@ void rtc_set_time(uint8_t hours, uint8_t minutes, uint8_t seconds)
  * @param  year value to be set
  * @retval None
  */
-void rtc_set_date(uint8_t day, uint8_t month, uint8_t year)
+void rtc_set_date(uint8_t day, uint8_t month, uint32_t year)
 {
     RTC_TimeTypeDef stime = {0};
     RTC_DateTypeDef sdate = {0};
@@ -257,7 +288,7 @@ void rtc_set_date(uint8_t day, uint8_t month, uint8_t year)
 
     sdate.Date = day;
     sdate.Month = month;
-    sdate.Year = year;
+    sdate.Year = year - 2000;
 
     ret = HAL_RTC_SetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_DATE : 0UL;

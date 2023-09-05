@@ -37,10 +37,10 @@ enum _RTC_ERROR
 
 void     rtc_init(void);
 void     rtc_deinit(void);
-void     rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds);
+void     rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subseconds);
 void     rtc_set_time(uint8_t hours, uint8_t minutes, uint8_t seconds);
-void     rtc_get_date(uint8_t *day, uint8_t *month, uint8_t *year, uint8_t *weekday);
-void     rtc_set_date(uint8_t day, uint8_t month, uint8_t year);
+void     rtc_get_date(uint8_t *day, uint8_t *month, uint32_t *year, uint8_t *weekday);
+void     rtc_set_date(uint8_t day, uint8_t month, uint32_t year);
 uint32_t rtc_get_error(void);
 
 #ifdef __cplusplus

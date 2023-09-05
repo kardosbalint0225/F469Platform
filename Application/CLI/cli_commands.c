@@ -95,7 +95,7 @@ static bool is_number(const char s);
 static bool is_time_command_string_valid(const char *time_string, const uint32_t len);
 static bool is_date_command_string_valid(const char *date_string, const uint32_t len);
 static void convert_string_to_time(uint8_t *hour, uint8_t *min, uint8_t *sec, const char *time_string);
-static void convert_string_to_date(uint8_t *day, uint8_t *month, uint8_t *year, const char *date_string);
+static void convert_string_to_date(uint8_t *day, uint8_t *month, uint32_t *year, const char *date_string);
 static uint32_t find(const uint32_t *array, const uint32_t size, const uint32_t value);
 
 static CliCommandBinding clear_binding = {
@@ -266,13 +266,13 @@ static void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 
     uint8_t day;
     uint8_t month;
-    uint8_t year;
+    uint32_t year;
     uint8_t weekday;
     rtc_get_date(&day, &month, &year, &weekday);
     int len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),
-                       "\r\n    %04d.%02d.%02d.\r\n",
-                       (2000 + year),
+                       "\r\n    %04lu.%02d.%02d.\r\n",
+                       year,
                        month,
                        day);
     assert_param(len > 0);
@@ -297,7 +297,8 @@ static void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
     uint8_t hours;
     uint8_t minutes;
     uint8_t seconds;
-    rtc_get_time(&hours, &minutes, &seconds);
+    uint32_t subseconds;
+    rtc_get_time(&hours, &minutes, &seconds, &subseconds);
 
     int len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),
@@ -346,7 +347,7 @@ static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
     {
         uint8_t day;
         uint8_t month;
-        uint8_t year;
+        uint32_t year;
         uint8_t weekday;
 
         convert_string_to_date(&day, &month, &year, date_to_set);
@@ -356,8 +357,8 @@ static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
 
         len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),
-                       "\r\n    Date set to: %04d.%02d.%02d.\r\n",
-                       (2000 + year), month, day);
+                       "\r\n    Date set to: %04lu.%02d.%02d.\r\n",
+                       year, month, day);
     }
     else
     {
@@ -408,11 +409,12 @@ static void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
         uint8_t hours;
         uint8_t minutes;
         uint8_t seconds;
+        uint32_t subseconds;
 
         convert_string_to_time(&hours, &minutes, &seconds, time_to_set);
 
         rtc_set_time(hours, minutes, seconds);
-        rtc_get_time(&hours, &minutes, &seconds);
+        rtc_get_time(&hours, &minutes, &seconds, &subseconds);
 
         len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),
@@ -555,14 +557,17 @@ static void convert_string_to_time(uint8_t *hour, uint8_t *min, uint8_t *sec, co
  * @retval None
  * @note   -
  */
-static void convert_string_to_date(uint8_t *day, uint8_t *month, uint8_t *year, const char *date_string)
+static void convert_string_to_date(uint8_t *day, uint8_t *month, uint32_t *year, const char *date_string)
 {
     assert_param(day);
     assert_param(month);
     assert_param(year);
     assert_param(date_string);
 
-    *year = (uint8_t)((date_string[2] - '0') * 10) + (uint8_t)(date_string[3] - '0');
+    *year = (uint32_t)((date_string[0] - '0') * 1000) +
+            (uint32_t)((date_string[1] - '0') * 100) +
+            (uint32_t)((date_string[2] - '0') * 10) +
+            (uint32_t)((date_string[3] - '0') * 1);
     *month = (uint8_t)((date_string[5] - '0') * 10) + (uint8_t)(date_string[6] - '0');
     *day = (uint8_t)((date_string[8] - '0') * 10) + (uint8_t)(date_string[9] - '0');
 }
