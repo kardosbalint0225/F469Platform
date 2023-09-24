@@ -9,12 +9,6 @@
 #include "semphr.h"
 #include "task.h"
 
-SemaphoreHandle_t h_rtc_mutex;
-StaticSemaphore_t rtc_mutex_buffer;
-
-SemaphoreHandle_t h_fs_mutex;
-StaticSemaphore_t fs_mutex_buffer;
-
 struct __lock {
     SemaphoreHandle_t   sem;
 };
@@ -42,9 +36,6 @@ static void init_retarget_locks(void)
     __lock___tz_mutex.sem               = xSemaphoreCreateMutex();
     __lock___dd_hash_mutex.sem          = xSemaphoreCreateMutex();
     __lock___arc4random_mutex.sem       = xSemaphoreCreateMutex();
-
-    h_rtc_mutex = xSemaphoreCreateMutexStatic(&rtc_mutex_buffer);
-    h_fs_mutex = xSemaphoreCreateMutexStatic(&fs_mutex_buffer);
 }
 
 void __retarget_lock_init(_LOCK_T *lock_ptr)

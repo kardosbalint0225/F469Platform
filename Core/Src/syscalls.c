@@ -25,29 +25,63 @@
 #include "semphr.h"
 
 #include "rtc.h"
-#include "rtc_utils.h"
-
-typedef struct _FIL
-{
-    /* data */
-} FIL;
-
-#define MAX_FILE_DESCRIPTORS 16
-static FIL file_descriptor[MAX_FILE_DESCRIPTORS] = { };
-
-static void rtc_lock(void);
-static void rtc_unlock(void);
-static void fs_lock(void);
-static void fs_unlock(void);
-static FIL *get_descr(struct _reent *r, int fd);
-
 
 char *__env[1] = { 0 };
 char **environ = __env;
 
-void initialise_monitor_handles()
-{
+/**
+ * Pointer to the current high watermark of the heap usage
+ */
+static uint8_t *__sbrk_heap_end = NULL;
+extern uint8_t _end; /* Symbol defined in the linker script */
+extern uint8_t _estack; /* Symbol defined in the linker script */
+extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script */
 
+/**
+ * @brief _sbrk() allocates memory to the newlib heap and is used by malloc
+ *        and others from the C library
+ *
+ * @verbatim
+ * ############################################################################
+ * #  .data  #  .bss  #       newlib heap       #          MSP stack          #
+ * #         #        #                         # Reserved by _Min_Stack_Size #
+ * ############################################################################
+ * ^-- RAM start      ^-- _end                             _estack, RAM end --^
+ * @endverbatim
+ *
+ * This implementation starts allocating at the '_end' linker symbol
+ * The '_Min_Stack_Size' linker symbol reserves a memory for the MSP stack
+ * The implementation considers '_estack' linker symbol to be RAM end
+ * NOTE: If the MSP stack, at any point during execution, grows larger than the
+ * reserved size, please increase the '_Min_Stack_Size'.
+ *
+ * @param  ptr Pointer to the global data block, which holds errno
+ * @param  incr Memory size
+ * @return Pointer to allocated memory
+ */
+void *_sbrk_r(struct _reent *ptr, ptrdiff_t incr)
+{
+    const uint32_t stack_limit = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
+    const uint8_t *max_heap = (uint8_t *)stack_limit;
+    uint8_t *prev_heap_end;
+
+    /* Initialize heap end at first call */
+    if (NULL == __sbrk_heap_end)
+    {
+        __sbrk_heap_end = &_end;
+    }
+
+    /* Protect heap from growing into the reserved MSP stack */
+    if (__sbrk_heap_end + incr > max_heap)
+    {
+        ptr->_errno = ENOMEM;
+        return (void *)-1;
+    }
+
+    prev_heap_end = __sbrk_heap_end;
+    __sbrk_heap_end += incr;
+
+    return (void *)prev_heap_end;
 }
 
 /**
@@ -131,24 +165,7 @@ int _wait_r(struct _reent *ptr, int *status)
  */
 int _getpid_r(struct _reent *ptr)
 {
-    taskENTER_CRITICAL();
-
-    TaskHandle_t h_current_task = xTaskGetCurrentTaskHandle();
-    int task_id;
-
-    if (NULL == h_current_task)
-    {
-        ptr->_errno = ESRCH;
-        task_id = -1;
-    }
-    else
-    {
-        task_id = (int)uxTaskGetTaskNumber(h_current_task);
-    }
-
-    taskEXIT_CRITICAL();
-
-    return task_id;
+    return 1;
 }
 
 /**
@@ -190,6 +207,241 @@ int _isatty_r(struct _reent *ptr, int fd)
 }
 
 /**
+ * @brief  Open a file
+ *
+ * This is a wrapper around @c vfs_open
+ *
+ * @param  ptr   pointer to reent structure
+ * @param  name  file name to open
+ * @param  flags flags, see man 3p open
+ * @param  mode  mode, file creation mode if the file is created when opening
+ *
+ * @return fd number (>= 0) on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+int _open_r(struct _reent *ptr, const char *name, int flags, int mode)
+{
+    int fd = vfs_open(name, flags, mode);
+    if (fd < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -fd;
+        return -1;
+    }
+    return fd;
+}
+
+/**
+ * @brief  Read bytes from an open file
+ *
+ * This is a wrapper around @c vfs_read
+ *
+ * @param  ptr    pointer to reent structure
+ * @param  fd     open file descriptor obtained from @c open()
+ * @param  dest   destination buffer
+ * @param  count  maximum number of bytes to read
+ *
+ * @return number of bytes read on success
+ * @return -1 on error, @c r->_errno set to a constant from errno.h to indicate the error
+ */
+_ssize_t _read_r(struct _reent *ptr, int fd, void *dest, size_t count)
+{
+    int res = vfs_read(fd, dest, count);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -res;
+        return -1;
+    }
+    return res;
+}
+
+/**
+ * @brief  Write bytes to an open file
+ *
+ * This is a wrapper around @c vfs_write
+ *
+ * @param  ptr    pointer to reent structure
+ * @param  fd     open file descriptor obtained from @c open()
+ * @param  src    source data buffer
+ * @param  count  maximum number of bytes to write
+ *
+ * @return number of bytes written on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+_ssize_t _write_r(struct _reent *r, int fd, const void *src, size_t count)
+{
+    int res = vfs_write(fd, src, count);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        r->_errno = -res;
+        return -1;
+    }
+    return res;
+}
+
+/**
+ * @brief  Close an open file
+ *
+ * This is a wrapper around @c vfs_close
+ *
+ * If this call returns an error, the fd should still be considered invalid and
+ * no further attempt to use it shall be made, not even to retry @c close()
+ *
+ * @param  ptr    pointer to reent structure
+ * @param  fd     open file descriptor obtained from @c open()
+ *
+ * @return 0 on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+int _close_r(struct _reent *ptr, int fd)
+{
+    int res = vfs_close(fd);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -res;
+        return -1;
+    }
+    return res;
+}
+
+/**
+ * @brief  Query or set options on an open file
+ *
+ * This is a wrapper around @c vfs_fcntl
+ *
+ * @param  ptr    pointer to reent structure
+ * @param  fd     open file descriptor obtained from @c open()
+ * @param  cmd    fcntl command, see man 3p fcntl
+ * @param  arg    argument to fcntl command, see man 3p fcntl
+ *
+ * @return 0 on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+int _fcntl_r (struct _reent *ptr, int fd, int cmd, int arg)
+{
+    int res = vfs_fcntl(fd, cmd, arg);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -res;
+        return -1;
+    }
+    return res;
+}
+
+/**
+ * @brief  Seek to position in file
+ *
+ * This is a wrapper around @c vfs_lseek
+ *
+ * @p whence determines the function of the seek and should be set to one of
+ * the following values:
+ *
+ *  - @c SEEK_SET: Seek to absolute offset @p off
+ *  - @c SEEK_CUR: Seek to current location + @p off
+ *  - @c SEEK_END: Seek to end of file + @p off
+ *
+ * @param  ptr      pointer to reent structure
+ * @param  fd       open file descriptor obtained from @c open()
+ * @param  off      seek offset
+ * @param  whence   determines the seek method, see detailed description
+ *
+ * @return the new seek location in the file on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+_off_t _lseek_r(struct _reent *ptr, int fd, _off_t off, int whence)
+{
+    int res = vfs_lseek(fd, off, whence);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -res;
+        return -1;
+    }
+    return res;
+}
+
+/**
+ * @brief  Get status of an open file
+ *
+ * This is a wrapper around @c vfs_fstat
+ *
+ * @param  ptr      pointer to reent structure
+ * @param  fd       open file descriptor obtained from @c open()
+ * @param  buf      pointer to stat struct to fill
+ *
+ * @return 0 on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+int _fstat_r(struct _reent *ptr, int fd, struct stat *buf)
+{
+    int res = vfs_fstat(fd, buf);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -res;
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * @brief  Status of a file (by name)
+ *
+ * This is a wrapper around @c vfs_fstat
+ *
+ * @param  ptr      pointer to reent structure
+ * @param  name     path to file
+ * @param  buf      pointer to stat struct to fill
+ *
+ * @return 0 on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+int _stat_r(struct _reent *ptr, const char *name, struct stat *st)
+{
+    int res = vfs_stat(name, st);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -res;
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * @brief  Unlink (delete) a file
+ *
+ * @param  ptr      pointer to reent structure
+ * @param  path     path to file to be deleted
+ *
+ * @return 0 on success
+ * @return -1 on error, @c ptr->_errno set to a constant from errno.h to indicate the error
+ */
+int _unlink_r(struct _reent *ptr, const char *path)
+{
+    int res = vfs_unlink(path);
+    if (res < 0) {
+        /* vfs returns negative error codes */
+        ptr->_errno = -res;
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * @brief Create a hard link (not implemented).
+ *
+ * Not implemented.
+ *
+ * @return  -1. Sets errno to ENOSYS.
+ */
+int _link_r(struct _reent *ptr, const char *old_name, const char *new_name)
+{
+    (void)old_name;
+    (void)new_name;
+
+    ptr->_errno = ENOSYS;
+
+    return -1;
+}
+
+/**
  * @brief  Return time information on the current process
  *
  * @param  ptr Pointer to the global data block, which holds errno
@@ -199,22 +451,17 @@ int _isatty_r(struct _reent *ptr, int fd)
  */
 clock_t _times_r(struct _reent *ptr, struct tms *ptms)
 {
-    taskENTER_CRITICAL();
-
-    TaskStatus_t task_stats;
-    vTaskGetInfo(NULL, &task_stats, pdFALSE, eRunning);
-
-    taskEXIT_CRITICAL();
+    const TickType_t tick_count = xTaskGetTickCount();
 
     if (NULL != ptms)
     {
-        ptms->tms_utime = task_stats.ulRunTimeCounter;
+        ptms->tms_utime = tick_count;
         ptms->tms_stime = 0;
         ptms->tms_cutime = 0;
         ptms->tms_cstime = 0;
     }
 
-    return task_stats.ulRunTimeCounter;
+    return tick_count;
 }
 
 /**
@@ -230,275 +477,20 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *ptimeval, void *ptimezon
 {
     (void)ptimezone;
 
-    if (NULL == ptimeval)
+    struct tm t;
+    int res = rtc_get_time(&t);
+    if (res < 0)
     {
-        ptr->_errno = EFAULT;
+        ptr->_errno = EIO;
         return -1;
     }
 
-    rtc_lock();
-
-    uint8_t hours, minutes, seconds;
-    uint32_t subseconds;
-    rtc_get_time(&hours, &minutes, &seconds, &subseconds);
-
-    uint8_t day, month, weekday;
-    uint32_t year;
-    rtc_get_date(&day, &month, &year, &weekday);
-
-    rtc_unlock();
-
-    struct tm t;
-    t.tm_sec = (int)seconds;
-    t.tm_min = (int)minutes;
-    t.tm_hour = (int)hours;
-    t.tm_mday = (int)day;
-    t.tm_mon = (int)month;
-    t.tm_year = (int)(year - 1900);
-
-    uint64_t ms = (uint64_t)(1000U * rtc_mktime(&t)) + (uint64_t)subseconds;
-    ptimeval->tv_sec = (time_t)(ms / 1000U);
-    ptimeval->tv_usec = (suseconds_t)(ms % 1000U);
+    if (NULL != ptimeval)
+    {
+        ptimeval->tv_sec = mktime(&t);
+        ptimeval->tv_usec = 0;
+    }
 
     return 0;
 }
-
-/**
- * Pointer to the current high watermark of the heap usage
- */
-static uint8_t *__sbrk_heap_end = NULL;
-
-/**
- * @brief _sbrk() allocates memory to the newlib heap and is used by malloc
- *        and others from the C library
- *
- * @verbatim
- * ############################################################################
- * #  .data  #  .bss  #       newlib heap       #          MSP stack          #
- * #         #        #                         # Reserved by _Min_Stack_Size #
- * ############################################################################
- * ^-- RAM start      ^-- _end                             _estack, RAM end --^
- * @endverbatim
- *
- * This implementation starts allocating at the '_end' linker symbol
- * The '_Min_Stack_Size' linker symbol reserves a memory for the MSP stack
- * The implementation considers '_estack' linker symbol to be RAM end
- * NOTE: If the MSP stack, at any point during execution, grows larger than the
- * reserved size, please increase the '_Min_Stack_Size'.
- *
- * @param  ptr Pointer to the global data block, which holds errno
- * @param  incr Memory size
- * @return Pointer to allocated memory
- */
-void *_sbrk_r(struct _reent *ptr, ptrdiff_t incr)
-{
-    extern uint8_t _end; /* Symbol defined in the linker script */
-    extern uint8_t _estack; /* Symbol defined in the linker script */
-    extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script */
-    const uint32_t stack_limit = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
-    const uint8_t *max_heap = (uint8_t *)stack_limit;
-    uint8_t *prev_heap_end;
-
-    /* Initialize heap end at first call */
-    if (NULL == __sbrk_heap_end)
-    {
-        __sbrk_heap_end = &_end;
-    }
-
-    /* Protect heap from growing into the reserved MSP stack */
-    if (__sbrk_heap_end + incr > max_heap)
-    {
-        ptr->_errno = ENOMEM;
-        return (void *)-1;
-    }
-
-    prev_heap_end = __sbrk_heap_end;
-    __sbrk_heap_end += incr;
-
-    return (void *)prev_heap_end;
-}
-
-/**
- * @brief  Locks the RTC mutex
- *
- * @param  None
- *
- * @note   The rtc mutex is initialized in init_retarget_locks()
- */
-static void rtc_lock(void)
-{
-    extern SemaphoreHandle_t h_rtc_mutex;
-    xSemaphoreTake(h_rtc_mutex, portMAX_DELAY);
-}
-
-/**
- * @brief  Unlocks the RTC mutex
- *
- * @param  None
- *
- * @note   The rtc mutex is initialized in init_retarget_locks()
- */
-static void rtc_unlock(void)
-{
-    extern SemaphoreHandle_t h_rtc_mutex;
-    xSemaphoreGive(h_rtc_mutex);
-}
-
-/**
- * @brief  Locks the filesystem mutex
- *
- * @param  None
- *
- * @note   The fs mutex is initialized in init_retarget_locks()
- */
-static void fs_lock(void)
-{
-    extern SemaphoreHandle_t h_fs_mutex;
-    xSemaphoreTake(h_fs_mutex, portMAX_DELAY);
-}
-
-/**
- * @brief  Unlocks the filesystem mutex
- *
- * @param  None
- *
- * @note   The fs mutex is initialized in init_retarget_locks()
- */
-static void fs_unlock(void)
-{
-    extern SemaphoreHandle_t h_fs_mutex;
-    xSemaphoreGive(h_fs_mutex);
-}
-
-/*
- * @brief Gets the FIL file descriptor based on int fd
- *
- * @param  ptr Pointer to the global data block, which holds errno
- * @param  fd the open file descriptor id
- *
- * @return the corresponding FIL structure based on fd on success,
- *         NULL on error and errno is set to indicate the error
- */
-static FIL *get_descr(struct _reent *ptr, int fd)
-{
-    fd -= 3;
-    if (fd < 0 || fd >= MAX_FILE_DESCRIPTORS) {
-        ptr->_errno = EBADF;
-        return NULL;
-    }
-    return &file_descriptor[fd];
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//int _getpid(void)
-//{
-//    return 1;
-//}
-
-//int _kill(int pid, int sig)
-//{
-//    errno = EINVAL;
-//    return -1;
-//}
-
-//void _exit (int status)
-//{
-//    _kill(status, -1);
-//    while (1)
-//    {
-//    }                   /* Make sure we hang here */
-//}
-
-__attribute__((weak)) int _read(int file, char *ptr, int len)
-{
-    int DataIdx;
-
-    for (DataIdx = 0; DataIdx < len; DataIdx++)
-    {
-//        *ptr++ = __io_getchar();
-    }
-
-    return len;
-}
-
-__attribute__((weak)) int _write(int file, char *ptr, int len)
-{
-    int DataIdx;
-
-    for (DataIdx = 0; DataIdx < len; DataIdx++)
-    {
-//        __io_putchar(*ptr++);
-    }
-    return len;
-}
-
-int _close(int file)
-{
-    return -1;
-}
-
-
-int _fstat(int file, struct stat *st)
-{
-    st->st_mode = S_IFCHR;
-    return 0;
-}
-
-//int _isatty(int file)
-//{
-//    return 1;
-//}
-
-int _lseek(int file, int ptr, int dir)
-{
-    return 0;
-}
-
-int _open(char *path, int flags, ...)
-{
-    /* Pretend like we always fail */
-    return -1;
-}
-
-//int _wait(int *status)
-//{
-//    errno = ECHILD;
-//    return -1;
-//}
-
-int _unlink(char *name)
-{
-    errno = ENOENT;
-    return -1;
-}
-
-//int _times(struct tms *buf)
-//{
-//    return -1;
-//}
-
-int _stat(char *file, struct stat *st)
-{
-    st->st_mode = S_IFCHR;
-    return 0;
-}
-
-int _link(char *old, char *new)
-{
-    errno = EMLINK;
-    return -1;
-}
-
-//int _fork(void)
-//{
-//    errno = EAGAIN;
-//    return -1;
-//}
-
-//int _execve(char *name, char **argv, char **env)
-//{
-//    errno = ENOMEM;
-//    return -1;
-//}
 

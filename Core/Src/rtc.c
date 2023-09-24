@@ -11,13 +11,23 @@
 #include "rtc.h"
 #include "stm32f4xx_hal.h"
 
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "task.h"
+
+/* struct tm counts years since 1900 but RTC has only two-digit year, hence the offset */
+#define YEAR_OFFSET    (_EPOCH_YEAR - 1900)
+
 RTC_HandleTypeDef hrtc;
+static uint32_t rtc_error;
+static SemaphoreHandle_t h_rtc_mutex;
+static StaticSemaphore_t rtc_mutex_buffer;
 
 static void rtc_msp_init(RTC_HandleTypeDef * hrtc);
 static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc);
+static void rtc_lock(void);
+static void rtc_unlock(void);
 
-static uint32_t rtc_error;
-//TODO: weekday handling
 /**
  * @brief  Initializes the RTC peripheral
  * @param  None
@@ -30,6 +40,8 @@ void rtc_init(void)
     HAL_StatusTypeDef ret;
 
     rtc_error = 0UL;
+
+    h_rtc_mutex = xSemaphoreCreateMutexStatic(&rtc_mutex_buffer);
 
     hrtc.Instance = RTC;
     hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
@@ -114,6 +126,8 @@ void rtc_deinit(void)
     ret = HAL_RTC_UnRegisterCallback(&hrtc, HAL_RTC_MSPDEINIT_CB_ID);
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_UNREGISTER_MSPDEINIT_CB : 0UL;
     assert_param(0UL == rtc_error);
+
+    vSemaphoreDelete(h_rtc_mutex);
 }
 
 /**
@@ -152,17 +166,22 @@ uint32_t rtc_get_error(void)
 }
 
 /**
- * @brief  Gets the current time from the RTC peripheral
- * @param  hours points where the hours value can be stored
- * @param  minutes points where the minutes value can be stored
- * @param  seconds points where the seconds value can be stored
- * @retval None
+ * @brief  Set RTC to given time.
+ *
+ * @param  time Pointer to the struct holding the time to set.
+ *
+ * @return  0 for success
+ * @return -1 an error occurred
  */
-void rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subseconds)
+int rtc_set_time(struct tm *time)
 {
+    rtc_tm_normalize(time);
+
     RTC_TimeTypeDef stime = {0};
     RTC_DateTypeDef sdate = {0};
     HAL_StatusTypeDef ret;
+
+    rtc_lock();
 
     ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_TIME : 0UL;
@@ -172,126 +191,83 @@ void rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
     assert_param(0UL == rtc_error);
 
-    if (NULL != hours)
-    {
-        *hours = stime.Hours;
-    }
-
-    if (NULL != minutes)
-    {
-        *minutes = stime.Minutes;
-    }
-
-    if (NULL != seconds)
-    {
-        *seconds = stime.Seconds;
-    }
-
-    if (NULL != subseconds)
-    {
-        *subseconds = stime.SubSeconds;
-    }
-}
-
-/**
- * @brief  Gets the current date from the RTC peripheral
- * @param  day points where the day value can be stored
- * @param  month points where the month value can be stored
- * @param  year points where the year value can be stored
- * @retval None
- */
-void rtc_get_date(uint8_t *day, uint8_t *month, uint32_t *year, uint8_t *weekday)
-{
-    RTC_TimeTypeDef stime = {0};
-    RTC_DateTypeDef sdate = {0};
-    HAL_StatusTypeDef ret;
-
-    ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
-
-    ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
-    assert_param(0UL == rtc_error);
-
-    if (NULL != day)
-    {
-        *day = sdate.Date;
-    }
-
-    if (NULL != month)
-    {
-        *month = sdate.Month;
-    }
-
-    if (NULL != year)
-    {
-        *year = sdate.Year + 2000;
-    }
-
-    if (NULL != weekday)
-    {
-        *weekday = sdate.WeekDay;
-    }
-}
-
-/**
- * @brief  Sets the time to the RTC peripheral
- * @param  hours value to be set
- * @param  minutes value to be set
- * @param  seconds value to be set
- * @retval None
- */
-void rtc_set_time(uint8_t hours, uint8_t minutes, uint8_t seconds)
-{
-    RTC_TimeTypeDef stime = {0};
-    RTC_DateTypeDef sdate = {0};
-    HAL_StatusTypeDef ret;
-
-    ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
-
-    ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
-    assert_param(0UL == rtc_error);
-
-    stime.Hours = hours;
-    stime.Minutes = minutes;
-    stime.Seconds = seconds;
-
-    ret = HAL_RTC_SetTime(&hrtc, &stime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
-}
-
-/**
- * @brief  Sets the date to the RTC peripheral
- * @param  day value to be set
- * @param  month value to be set
- * @param  year value to be set
- * @retval None
- */
-void rtc_set_date(uint8_t day, uint8_t month, uint32_t year)
-{
-    RTC_TimeTypeDef stime = {0};
-    RTC_DateTypeDef sdate = {0};
-    HAL_StatusTypeDef ret;
-
-    ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
-
-    ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
-    assert_param(0UL == rtc_error);
-
-    sdate.Date = day;
-    sdate.Month = month;
-    sdate.Year = year - 2000;
+    sdate.Year = time->tm_year - YEAR_OFFSET;
+    sdate.Month = time->tm_mon + 1;
+    sdate.Date = time->tm_mday;
 
     ret = HAL_RTC_SetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
     rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_DATE : 0UL;
     assert_param(0UL == rtc_error);
+
+    stime.Hours = time->tm_hour;
+    stime.Minutes = time->tm_min;
+    stime.Seconds = time->tm_sec;
+
+    ret = HAL_RTC_SetTime(&hrtc, &stime, RTC_FORMAT_BIN);
+    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_TIME : 0UL;
+    assert_param(0UL == rtc_error);
+
+    rtc_unlock();
+
+    return 0;
 }
+
+/**
+ * @brief  Get current RTC time.
+ *
+ * @param  time Pointer to the struct to write the time to.
+ *
+ * @return  0 for success
+ * @return -1 an error occurred
+ */
+int rtc_get_time(struct tm *time)
+{
+    RTC_TimeTypeDef stime = {0};
+    RTC_DateTypeDef sdate = {0};
+    HAL_StatusTypeDef ret;
+
+    rtc_lock();
+
+    ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
+    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_TIME : 0UL;
+    assert_param(0UL == rtc_error);
+
+    ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
+    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
+    assert_param(0UL == rtc_error);
+
+    rtc_unlock();
+
+    time->tm_year = sdate.Year + YEAR_OFFSET;
+    time->tm_mon = sdate.Month - 1;
+    time->tm_mday = sdate.Date;
+    time->tm_hour = stime.Hours;
+    time->tm_min = stime.Minutes;
+    time->tm_sec = stime.Seconds;
+
+    return 0;
+}
+
+/**
+ * @brief  Locks the RTC mutex
+ */
+static void rtc_lock(void)
+{
+    BaseType_t ret = xSemaphoreTake(h_rtc_mutex, portMAX_DELAY);
+    assert_param(pdPASS == ret);
+}
+
+/**
+ * @brief  Unlocks the RTC mutex
+ */
+static void rtc_unlock(void)
+{
+    BaseType_t ret = xSemaphoreGive(h_rtc_mutex);
+    assert_param(pdPASS == ret);
+}
+
+
+
+
+
 

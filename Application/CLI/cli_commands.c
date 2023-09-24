@@ -264,11 +264,12 @@ static void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
     (void)args;
     (void)context;
 
-    uint8_t day;
-    uint8_t month;
-    uint32_t year;
-    uint8_t weekday;
-    rtc_get_date(&day, &month, &year, &weekday);
+    uint8_t day = 0;
+    uint8_t month = 0;
+    uint32_t year = 0;
+//    uint8_t weekday;
+    //rtc_get_date(&day, &month, &year, &weekday);
+    assert_param(0);
     int len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),
                        "\r\n    %04lu.%02d.%02d.\r\n",
@@ -294,11 +295,12 @@ static void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
     (void)args;
     (void)context;
 
-    uint8_t hours;
-    uint8_t minutes;
-    uint8_t seconds;
-    uint32_t subseconds;
-    rtc_get_time(&hours, &minutes, &seconds, &subseconds);
+    uint8_t hours = 0;
+    uint8_t minutes = 0;
+    uint8_t seconds = 0;
+    //uint32_t subseconds;
+    //rtc_get_time(&hours, &minutes, &seconds, &subseconds);
+    assert_param(0);
 
     int len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),
@@ -348,12 +350,13 @@ static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
         uint8_t day;
         uint8_t month;
         uint32_t year;
-        uint8_t weekday;
+//        uint8_t weekday;
 
         convert_string_to_date(&day, &month, &year, date_to_set);
 
-        rtc_set_date(day, month, year);
-        rtc_get_date(&day, &month, &year, &weekday);
+//        rtc_set_date(day, month, year);
+//        rtc_get_date(&day, &month, &year, &weekday);
+        assert_param(0);
 
         len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),
@@ -409,12 +412,13 @@ static void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
         uint8_t hours;
         uint8_t minutes;
         uint8_t seconds;
-        uint32_t subseconds;
+//        uint32_t subseconds;
 
         convert_string_to_time(&hours, &minutes, &seconds, time_to_set);
 
-        rtc_set_time(hours, minutes, seconds);
-        rtc_get_time(&hours, &minutes, &seconds, &subseconds);
+//        rtc_set_time(hours, minutes, seconds);
+//        rtc_get_time(&hours, &minutes, &seconds, &subseconds);
+        assert_param(0);
 
         len = snprintf(cli_output_buffer,
                        sizeof(cli_output_buffer),

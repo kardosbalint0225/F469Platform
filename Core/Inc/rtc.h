@@ -16,6 +16,10 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <time.h>
+#include "rtc_utils.h"
+
+#define _EPOCH_YEAR    1970U
 
 enum _RTC_ERROR
 {
@@ -35,12 +39,11 @@ enum _RTC_ERROR
     RTC_ERROR_UINT_MAX                   = 0xFFFFFFFFUL,
 };
 
+
 void     rtc_init(void);
 void     rtc_deinit(void);
-void     rtc_get_time(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subseconds);
-void     rtc_set_time(uint8_t hours, uint8_t minutes, uint8_t seconds);
-void     rtc_get_date(uint8_t *day, uint8_t *month, uint32_t *year, uint8_t *weekday);
-void     rtc_set_date(uint8_t day, uint8_t month, uint32_t year);
+int      rtc_set_time(struct tm *time);
+int      rtc_get_time(struct tm *time);
 uint32_t rtc_get_error(void);
 
 #ifdef __cplusplus
