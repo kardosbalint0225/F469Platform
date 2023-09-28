@@ -7,23 +7,25 @@
  *
  ******************************************************************************
  */
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <signal.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/times.h>
 #include <unistd.h>
 #include <reent.h>
+#include <errno.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/unistd.h>
+#include <stdint.h>
+#include <sys/time.h>
+#include <sys/times.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
 
+#include "vfs.h"
 #include "rtc.h"
 
 char *__env[1] = { 0 };
@@ -83,6 +85,28 @@ void *_sbrk_r(struct _reent *ptr, ptrdiff_t incr)
 
     return (void *)prev_heap_end;
 }
+
+/**
+ * @brief Print heap statistics
+ *
+ * If the CPU does not provide its own heap handling and heap_stats function,
+ * but instead uses the newlib_syscall_default function, this function outputs
+ * the heap statistics. If the CPU provides its own heap_stats function, it
+ * should define HAVE_HEAP_STATS in its cpu_conf.h file.
+ */
+#ifndef HAVE_HEAP_STATS
+__attribute__((weak)) void heap_stats(void)
+{
+    struct mallinfo minfo = mallinfo();
+
+    const uint32_t end = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
+    const uint32_t start = (uint32_t)_end;
+    const uint32_t heap_size = end - start;
+
+    printf("heap: %lu (used %d, free %ld) [bytes]\n",
+           heap_size, minfo.uordblks, heap_size - minfo.uordblks);
+}
+#endif /* HAVE_HEAP_STATS */
 
 /**
  * @brief  Fork execution into two threads
@@ -165,6 +189,8 @@ int _wait_r(struct _reent *ptr, int *status)
  */
 int _getpid_r(struct _reent *ptr)
 {
+    (void)ptr;
+
     return 1;
 }
 
@@ -178,6 +204,8 @@ int _getpid_r(struct _reent *ptr)
  */
 void _exit(int status)
 {
+    (void)status;
+
     while (1)
     {
 
