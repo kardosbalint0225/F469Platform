@@ -16,7 +16,7 @@
 #include "cli.h"
 #include "cli_config.h"
 
-#include "uart_console.h"
+#include "stdio_base.h"
 #include "stm32f4xx_hal.h"
 
 extern QueueHandle_t h_uart_rx_queue;
@@ -149,7 +149,7 @@ static void cli_process_task(void *params)
  */
 static void cli_write_char(EmbeddedCli *cli, char c)
 {
-    __uart_console_write(&c, 1);
+    stdio_write(&c, 1);
 }
 
 /**

@@ -12,7 +12,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-#include "uart_console_config.h"
+#include "stdio_uart_config.h"
 
 static uint8_t uart_tx_buffer[256];
 
@@ -30,12 +30,12 @@ static void assert_failed_printf(const char * format, ...)
     GPIO_InitTypeDef hgpio = {0};
     UART_HandleTypeDef huart = {0};
 
-    huart.Instance = UART_CONSOLE_USARTx;
+    huart.Instance = STDIO_UART_USARTx;
     HAL_UART_DeInit(&huart);
 
-    UART_CONSOLE_USARTx_CLK_ENABLE();
-    UART_CONSOLE_USARTx_FORCE_RESET();
-    UART_CONSOLE_USARTx_RELEASE_RESET();
+    STDIO_UART_USARTx_CLK_ENABLE();
+    STDIO_UART_USARTx_FORCE_RESET();
+    STDIO_UART_USARTx_RELEASE_RESET();
 
     huart.Init.BaudRate = 115200;
     huart.Init.WordLength = UART_WORDLENGTH_8B;
@@ -46,15 +46,15 @@ static void assert_failed_printf(const char * format, ...)
     huart.Init.OverSampling = UART_OVERSAMPLING_16;
     HAL_UART_Init(&huart);
 
-    UART_CONSOLE_GPIOx_CLK_ENABLE();
-    HAL_GPIO_DeInit(UART_CONSOLE_GPIOx_PORT, UART_CONSOLE_UARTx_TX_PIN | UART_CONSOLE_UARTx_RX_PIN);
+    STDIO_UART_GPIOx_CLK_ENABLE();
+    HAL_GPIO_DeInit(STDIO_UART_GPIOx_PORT, STDIO_UART_UARTx_TX_PIN | STDIO_UART_UARTx_RX_PIN);
 
-    hgpio.Pin = UART_CONSOLE_UARTx_TX_PIN | UART_CONSOLE_UARTx_RX_PIN;
+    hgpio.Pin = STDIO_UART_UARTx_TX_PIN | STDIO_UART_UARTx_RX_PIN;
     hgpio.Mode = GPIO_MODE_AF_PP;
     hgpio.Pull = GPIO_NOPULL;
     hgpio.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    hgpio.Alternate = UART_CONSOLE_GPIO_AFx_USARTx;
-    HAL_GPIO_Init(UART_CONSOLE_GPIOx_PORT, &hgpio);
+    hgpio.Alternate = STDIO_UART_GPIO_AFx_USARTx;
+    HAL_GPIO_Init(STDIO_UART_GPIOx_PORT, &hgpio);
 
     va_list va;
     va_start(va, format);

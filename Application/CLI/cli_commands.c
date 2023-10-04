@@ -11,7 +11,7 @@
 #include "stm32f4xx_hal.h"
 
 #include "rtc.h"
-#include "uart_console.h"
+#include "stdio_base.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -196,7 +196,7 @@ void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
     (void)context;
 
     const char * const clear_string = "\33[2J";
-    __uart_console_write((char *)clear_string, sizeof(clear_string));
+    stdio_write((char *)clear_string, sizeof(clear_string));
 }
 
 /**
@@ -221,7 +221,7 @@ static void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *contex
     vTaskGetRunTimeStats(cli_output_buffer + len);
 
     len = strnlen(cli_output_buffer, sizeof(cli_output_buffer));
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 }
 
 /**
@@ -246,7 +246,7 @@ static void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context)
     vTaskList(cli_output_buffer + len);
 
     len = strnlen(cli_output_buffer, sizeof(cli_output_buffer));
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 }
 
 /**
@@ -277,7 +277,7 @@ static void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
                        month,
                        day);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 }
 
 /**
@@ -309,7 +309,7 @@ static void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
                        minutes,
                        seconds);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 }
 
 /**
@@ -334,7 +334,7 @@ static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
                        sizeof(cli_output_buffer),
                        "\r\n    Invalid command argument\r\n");
         assert_param(len > 0);
-        __uart_console_write(cli_output_buffer, len);
+        stdio_write(cli_output_buffer, len);
         return;
     }
 
@@ -371,7 +371,7 @@ static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
     }
 
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 }
 
 /**
@@ -396,7 +396,7 @@ static void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
                        sizeof(cli_output_buffer),
                        "\r\n    Invalid command argument\r\n");
         assert_param(len > 0);
-        __uart_console_write(cli_output_buffer, len);
+        stdio_write(cli_output_buffer, len);
         return;
     }
 
@@ -433,7 +433,7 @@ static void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
     }
 
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 }
 
 /**
@@ -598,28 +598,28 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
                    "    FreeRTOS Kernel Version : %s\r\n",
                    FREERTOS_KERNEL_VERSION);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    HAL Driver Version      : %s\r\n",
                    STM32F4XX_HAL_DRIVER_VERSION);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    Embedded CLI Version    : %s\r\n",
                    EMBEDDED_CLI_VERSION);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    CMSIS GCC Version       : %s\r\n",
                    CMSIS_GCC_VERSION);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     uint32_t revid = HAL_GetREVID();
     uint32_t devid = HAL_GetDEVID();
@@ -653,14 +653,14 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
                    "    MCU Revision ID         : 0x%04lx\r\n",
                    revid);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    MCU Device ID           : 0x%3lx\r\n",
                    devid);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
@@ -669,49 +669,49 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
                    uidw1.b3, uidw1.b2, uidw1.b1, uidw1.b0,
                    uidw0.b3, uidw0.b2, uidw0.b1, uidw0.b0);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    HSE State               : %s\r\n",
                    (RCC_HSE_ON == RCC_OscInitStruct.HSEState) ? ("On") : ((RCC_HSE_OFF == RCC_OscInitStruct.HSEState) ? ("Off") : ("Bypass")));
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    LSE State               : %s\r\n",
                    (RCC_LSE_ON == RCC_OscInitStruct.LSEState) ? ("On") : ((RCC_LSE_OFF == RCC_OscInitStruct.LSEState) ? ("Off") : ("Bypass")));
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    HSI State               : %s\r\n",
                    (RCC_HSI_ON == RCC_OscInitStruct.HSIState) ? ("On") : ("Off"));
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    LSI State               : %s\r\n",
                    (RCC_LSI_ON == RCC_OscInitStruct.LSIState) ? ("On") : ("Off"));
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    PLL State               : %s\r\n",
                    (RCC_PLL_ON == RCC_OscInitStruct.PLL.PLLState) ? ("On") : ((RCC_PLL_OFF == RCC_OscInitStruct.PLL.PLLState) ? ("Off") : ("None")));
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    PLL Source              : %s\r\n",
                    (RCC_PLLSOURCE_HSE == RCC_OscInitStruct.PLL.PLLSource) ? ("HSE") : ("HSI"));
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
@@ -719,7 +719,7 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
                    RCC_OscInitStruct.PLL.PLLM, RCC_OscInitStruct.PLL.PLLN,
                    RCC_OscInitStruct.PLL.PLLP, RCC_OscInitStruct.PLL.PLLQ);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     uint32_t sysclk_source_idx = find(hal_sysclk_source, (uint32_t)(sizeof(hal_sysclk_source) / sizeof(uint32_t)), RCC_ClkInitStruct.SYSCLKSource);
     assert_param(0xFFFFFFFFUL != sysclk_source_idx);
@@ -749,77 +749,77 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
                    "    SYSCLK Source           : %s\r\n",
                    sysclk_source[sysclk_source_idx]);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    SYSCLK Frequency        : %lu Hz\r\n",
                    sysclk);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    AHB Prescaler           : %s\r\n",
                    ahbclk_div[ahbclk_div_idx]);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    HCLK Frequency          : %lu Hz\r\n",
                    hclk);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    APB1 Prescaler          : %s\r\n",
                    apbclk_div[apb1clk_div_idx]);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    APB1 (PCLK1) Frequency  : %lu Hz\r\n",
                    pclk1);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    APB2 Prescaler          : %s\r\n",
                    apbclk_div[apb2clk_div_idx]);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    APB2 (PCLK2) Frequency  : %lu Hz\r\n",
                    pclk2);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    SysTick Clock Source    : %s\r\n",
                    (SYSTICK_CLKSOURCE_HCLK == (SYSTICK_CLKSOURCE_HCLK & SysTick->CTRL)) ? ("HCLK") : ("HCLK /8"));
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    RTC Clock source        : %s\r\n",
                    rtc_clksrc[rtc_clksrc_idx]);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 
     len = snprintf(cli_output_buffer,
                    sizeof(cli_output_buffer),
                    "    PLLI2S                  : N = x%lu, R = /%lu\r\n",
                    RCC_PeriphClkInit.PLLI2S.PLLI2SN, RCC_PeriphClkInit.PLLI2S.PLLI2SR);
     assert_param(len > 0);
-    __uart_console_write(cli_output_buffer, len);
+    stdio_write(cli_output_buffer, len);
 }
 
 /**

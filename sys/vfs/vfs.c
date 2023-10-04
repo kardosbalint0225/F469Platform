@@ -27,6 +27,13 @@
 #include "vfs.h"
 #include "clist.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
+#include "debug.h"
+
 /**
  * @brief Automatic mountpoints
  */
@@ -126,12 +133,30 @@ static inline int _find_mount(vfs_mount_t **mountpp, const char *name, const cha
  */
 static inline int _fd_is_valid(int fd);
 
-static mutex_t _mount_mutex = MUTEX_INIT;
-static mutex_t _open_mutex = MUTEX_INIT;
+static SemaphoreHandle_t _mount_mutex = NULL;
+static StaticSemaphore_t _mount_mutex_storage;
+static SemaphoreHandle_t _open_mutex = NULL;
+static StaticSemaphore_t _open_mutex_storage;
+
+void vfs_init(void)
+{
+    _mount_mutex = xSemaphoreCreateMutexStatic(&_mount_mutex_storage);
+    assert_param(NULL != _mount_mutex);
+    _open_mutex = xSemaphoreCreateMutexStatic(&_open_mutex_storage);
+    assert_param(NULL != _open_mutex);
+}
+
+void vfs_deinit(void)
+{
+    vSemaphoreDelete(_mount_mutex);
+    vSemaphoreDelete(_open_mutex);
+    _mount_mutex = NULL;
+    _open_mutex = NULL;
+}
 
 int vfs_close(int fd)
 {
-    DEBUG("vfs_close: %d\n", fd);
+    debug("vfs_close: %d\n", fd);
     int res = _fd_is_valid(fd);
     if (res < 0) {
         return res;
@@ -148,7 +173,7 @@ int vfs_close(int fd)
 
 int vfs_fcntl(int fd, int cmd, int arg)
 {
-    DEBUG("vfs_fcntl: %d, %d, %d\n", fd, cmd, arg);
+    debug("vfs_fcntl: %d, %d, %d\n", fd, cmd, arg);
     int res = _fd_is_valid(fd);
     if (res < 0) {
         return res;
@@ -159,7 +184,7 @@ int vfs_fcntl(int fd, int cmd, int arg)
     switch (cmd) {
         case F_GETFL:
             /* Get file flags */
-            DEBUG("vfs_fcntl: GETFL: %d\n", filp->flags);
+            debug("vfs_fcntl: GETFL: %d\n", filp->flags);
             return filp->flags;
         default:
             break;
@@ -173,7 +198,7 @@ int vfs_fcntl(int fd, int cmd, int arg)
 
 int vfs_fstat(int fd, struct stat *buf)
 {
-    DEBUG_NOT_STDOUT(fd, "vfs_fstat: %d, %p\n", fd, (void *)buf);
+    debug("vfs_fstat: %d, %p\n", fd, (void *)buf);
     if (buf == NULL) {
         return -EFAULT;
     }
@@ -192,7 +217,7 @@ int vfs_fstat(int fd, struct stat *buf)
 
 int vfs_fstatvfs(int fd, struct statvfs *buf)
 {
-    DEBUG("vfs_fstatvfs: %d, %p\n", fd, (void *)buf);
+    debug("vfs_fstatvfs: %d, %p\n", fd, (void *)buf);
     if (buf == NULL) {
         return -EFAULT;
     }
@@ -211,7 +236,7 @@ int vfs_fstatvfs(int fd, struct statvfs *buf)
 
 int vfs_dstatvfs(vfs_DIR *dirp, struct statvfs *buf)
 {
-    DEBUG("vfs_dstatvfs: %p, %p\n", (void*)dirp, (void *)buf);
+    debug("vfs_dstatvfs: %p, %p\n", (void*)dirp, (void *)buf);
     if (buf == NULL) {
         return -EFAULT;
     }
@@ -225,7 +250,7 @@ int vfs_dstatvfs(vfs_DIR *dirp, struct statvfs *buf)
 
 off_t vfs_lseek(int fd, off_t off, int whence)
 {
-    DEBUG("vfs_lseek: %d, %ld, %d\n", fd, (long)off, whence);
+    debug("vfs_lseek: %d, %ld, %d\n", fd, (long)off, whence);
     int res = _fd_is_valid(fd);
     if (res < 0) {
         return res;
@@ -260,7 +285,7 @@ off_t vfs_lseek(int fd, off_t off, int whence)
 
 int vfs_open(const char *name, int flags, mode_t mode)
 {
-    DEBUG("vfs_open: \"%s\", 0x%x, 0%03lo\n", name, flags, (long unsigned int)mode);
+    debug("vfs_open: \"%s\", 0x%x, 0%03lo\n", name, flags, (long unsigned int)mode);
     if (name == NULL) {
         return -EINVAL;
     }
@@ -270,14 +295,16 @@ int vfs_open(const char *name, int flags, mode_t mode)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_open: no matching mount\n");
+        debug("vfs_open: no matching mount\n");
         return res;
     }
-    mutex_lock(&_open_mutex);
+
+    xSemaphoreTake(_open_mutex, portMAX_DELAY);
     int fd = _init_fd(VFS_ANY_FD, mountp->fs->f_op, mountp, flags, NULL);
-    mutex_unlock(&_open_mutex);
+    xSemaphoreGive(_open_mutex);
+
     if (fd < 0) {
-        DEBUG("vfs_open: _init_fd: ERR %d!\n", fd);
+        debug("vfs_open: _init_fd: ERR %d!\n", fd);
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return fd;
@@ -287,19 +314,19 @@ int vfs_open(const char *name, int flags, mode_t mode)
         res = filp->f_op->open(filp, rel_path, flags, mode);
         if (res < 0) {
             /* something went wrong during open */
-            DEBUG("vfs_open: open: ERR %d!\n", res);
+            debug("vfs_open: open: ERR %d!\n", res);
             /* clean up */
             _free_fd(fd);
             return res;
         }
     }
-    DEBUG("vfs_open: opened %d\n", fd);
+    debug("vfs_open: opened %d\n", fd);
     return fd;
 }
 
 ssize_t vfs_read(int fd, void *dest, size_t count)
 {
-    DEBUG("vfs_read: %d, %p, %lu\n", fd, dest, (unsigned long)count);
+    debug("vfs_read: %d, %p, %lu\n", fd, dest, (unsigned long)count);
     if (dest == NULL) {
         return -EFAULT;
     }
@@ -321,7 +348,7 @@ ssize_t vfs_read(int fd, void *dest, size_t count)
 
 ssize_t vfs_write(int fd, const void *src, size_t count)
 {
-    DEBUG_NOT_STDOUT(fd, "vfs_write: %d, %p, %lu\n", fd, src, (unsigned long)count);
+    debug("vfs_write: %d, %p, %lu\n", fd, src, (unsigned long)count);
     if (src == NULL) {
         return -EFAULT;
     }
@@ -359,7 +386,7 @@ ssize_t vfs_write_iol(int fd, const iolist_t *snips)
 
 int vfs_fsync(int fd)
 {
-    DEBUG_NOT_STDOUT(fd, "vfs_fsync: %d\n", fd);
+    debug("vfs_fsync: %d\n", fd);
     int res = _fd_is_valid(fd);
     if (res < 0) {
         return res;
@@ -378,7 +405,7 @@ int vfs_fsync(int fd)
 
 int vfs_opendir(vfs_DIR *dirp, const char *dirname)
 {
-    DEBUG("vfs_opendir: %p, \"%s\"\n", (void *)dirp, dirname);
+    debug("vfs_opendir: %p, \"%s\"\n", (void *)dirp, dirname);
     if ((dirp == NULL) || (dirname == NULL)) {
         return -EINVAL;
     }
@@ -388,7 +415,7 @@ int vfs_opendir(vfs_DIR *dirp, const char *dirname)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_open: no matching mount\n");
+        debug("vfs_open: no matching mount\n");
         return res;
     }
     if (rel_path[0] == '\0') {
@@ -418,7 +445,7 @@ int vfs_opendir(vfs_DIR *dirp, const char *dirname)
 
 int vfs_readdir(vfs_DIR *dirp, vfs_dirent_t *entry)
 {
-    DEBUG("vfs_readdir: %p, %p\n", (void *)dirp, (void *)entry);
+    debug("vfs_readdir: %p, %p\n", (void *)dirp, (void *)entry);
     if ((dirp == NULL) || (entry == NULL)) {
         return -EINVAL;
     }
@@ -432,7 +459,7 @@ int vfs_readdir(vfs_DIR *dirp, vfs_dirent_t *entry)
 
 int vfs_closedir(vfs_DIR *dirp)
 {
-    DEBUG("vfs_closedir: %p\n", (void *)dirp);
+    debug("vfs_closedir: %p\n", (void *)dirp);
     if (dirp == NULL) {
         return -EINVAL;
     }
@@ -466,20 +493,20 @@ static int check_mount(vfs_mount_t *mountp)
     if ((mountp == NULL) || (mountp->fs == NULL) || (mountp->mount_point == NULL)) {
         return -EINVAL;
     }
-    DEBUG("vfs_mount: -> \"%s\" (%p), %p\n",
+    debug("vfs_mount: -> \"%s\" (%p), %p\n",
           mountp->mount_point, (void *)mountp->mount_point, mountp->private_data);
     if (mountp->mount_point[0] != '/') {
-        DEBUG("vfs: check_mount: not absolute mount_point path\n");
+        debug("vfs: check_mount: not absolute mount_point path\n");
         return -EINVAL;
     }
     mountp->mount_point_len = strlen(mountp->mount_point);
-    mutex_lock(&_mount_mutex);
+    xSemaphoreTake(_mount_mutex, portMAX_DELAY);
     /* Check for the same mount in the list of mounts to avoid loops */
     clist_node_t *found = clist_find(&_vfs_mounts_list, &mountp->list_entry);
     if (found != NULL) {
         /* Same mount is already mounted */
-        mutex_unlock(&_mount_mutex);
-        DEBUG("vfs: check_mount: Already mounted\n");
+        xSemaphoreGive(_mount_mutex);
+        debug("vfs: check_mount: Already mounted\n");
         return -EBUSY;
     }
 
@@ -488,12 +515,12 @@ static int check_mount(vfs_mount_t *mountp)
 
 int vfs_format(vfs_mount_t *mountp)
 {
-    DEBUG("vfs_format: %p\n", (void *)mountp);
+    debug("vfs_format: %p\n", (void *)mountp);
     int ret = check_mount(mountp);
     if (ret < 0) {
         return ret;
     }
-    mutex_unlock(&_mount_mutex);
+    xSemaphoreGive(_mount_mutex);
 
     if (mountp->fs->fs_op != NULL) {
         if (mountp->fs->fs_op->format != NULL) {
@@ -507,7 +534,7 @@ int vfs_format(vfs_mount_t *mountp)
 
 int vfs_mount(vfs_mount_t *mountp)
 {
-    DEBUG("vfs_mount: %p\n", (void *)mountp);
+    debug("vfs_mount: %p\n", (void *)mountp);
     int ret = check_mount(mountp);
     if (ret < 0) {
         return ret;
@@ -518,38 +545,38 @@ int vfs_mount(vfs_mount_t *mountp)
             /* yes, a file system driver does not need to implement mount/umount */
             int res = mountp->fs->fs_op->mount(mountp);
             if (res < 0) {
-                DEBUG("vfs_mount: error %d\n", res);
-                mutex_unlock(&_mount_mutex);
+                debug("vfs_mount: error %d\n", res);
+                xSemaphoreGive(_mount_mutex);
                 return res;
             }
         }
     }
     /* Insert last in list. This property is relied on by vfs_iterate_mount_dirs. */
     clist_rpush(&_vfs_mounts_list, &mountp->list_entry);
-    mutex_unlock(&_mount_mutex);
-    DEBUG("vfs_mount: mount done\n");
+    xSemaphoreGive(_mount_mutex);
+    debug("vfs_mount: mount done\n");
     return 0;
 }
 
 int vfs_umount(vfs_mount_t *mountp, bool force)
 {
-    DEBUG("vfs_umount: %p\n", (void *)mountp);
+    debug("vfs_umount: %p\n", (void *)mountp);
     int ret = check_mount(mountp);
     switch (ret) {
     case 0:
-        DEBUG("vfs_umount: not mounted\n");
-        mutex_unlock(&_mount_mutex);
+        debug("vfs_umount: not mounted\n");
+        xSemaphoreGive(_mount_mutex);
         return -EINVAL;
     case -EBUSY:
         /* -EBUSY returned when fs is mounted, just continue */
         break;
     default:
-        DEBUG("vfs_umount: invalid fs\n");
+        debug("vfs_umount: invalid fs\n");
         return -EINVAL;
     }
-    DEBUG("vfs_umount: -> \"%s\" open=%d\n", mountp->mount_point, atomic_load(&mountp->open_files));
+    debug("vfs_umount: -> \"%s\" open=%d\n", mountp->mount_point, atomic_load(&mountp->open_files));
     if (atomic_load(&mountp->open_files) > 0 && !force) {
-        mutex_unlock(&_mount_mutex);
+        xSemaphoreGive(_mount_mutex);
         return -EBUSY;
     }
     if (mountp->fs->fs_op != NULL) {
@@ -557,8 +584,8 @@ int vfs_umount(vfs_mount_t *mountp, bool force)
             int res = mountp->fs->fs_op->umount(mountp);
             if (res < 0) {
                 /* umount failed */
-                DEBUG("vfs_umount: ERR %d!\n", res);
-                mutex_unlock(&_mount_mutex);
+                debug("vfs_umount: ERR %d!\n", res);
+                xSemaphoreGive(_mount_mutex);
                 return res;
             }
         }
@@ -567,17 +594,17 @@ int vfs_umount(vfs_mount_t *mountp, bool force)
     clist_node_t *node = clist_remove(&_vfs_mounts_list, &mountp->list_entry);
     if (node == NULL) {
         /* not found */
-        DEBUG("vfs_umount: ERR not mounted!\n");
-        mutex_unlock(&_mount_mutex);
+        debug("vfs_umount: ERR not mounted!\n");
+        xSemaphoreGive(_mount_mutex);
         return -EINVAL;
     }
-    mutex_unlock(&_mount_mutex);
+    xSemaphoreGive(_mount_mutex);
     return 0;
 }
 
 int vfs_rename(const char *from_path, const char *to_path)
 {
-    DEBUG("vfs_rename: \"%s\", \"%s\"\n", from_path, to_path);
+    debug("vfs_rename: \"%s\", \"%s\"\n", from_path, to_path);
     if ((from_path == NULL) || (to_path == NULL)) {
         return -EINVAL;
     }
@@ -587,12 +614,12 @@ int vfs_rename(const char *from_path, const char *to_path)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_rename: from: no matching mount\n");
+        debug("vfs_rename: from: no matching mount\n");
         return res;
     }
     if ((mountp->fs->fs_op == NULL) || (mountp->fs->fs_op->rename == NULL)) {
         /* rename not supported */
-        DEBUG("vfs_rename: rename not supported by fs!\n");
+        debug("vfs_rename: rename not supported by fs!\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return -EROFS;
@@ -603,27 +630,27 @@ int vfs_rename(const char *from_path, const char *to_path)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_rename: to: no matching mount\n");
+        debug("vfs_rename: to: no matching mount\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return res;
     }
     if (mountp_to != mountp) {
         /* The paths are on different file systems */
-        DEBUG("vfs_rename: from_path and to_path are on different mounts\n");
+        debug("vfs_rename: from_path and to_path are on different mounts\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         atomic_fetch_sub(&mountp_to->open_files, 1);
         return -EXDEV;
     }
     res = mountp->fs->fs_op->rename(mountp, rel_from, rel_to);
-    DEBUG("vfs_rename: rename %p, \"%s\" -> \"%s\"", (void *)mountp, rel_from, rel_to);
+    debug("vfs_rename: rename %p, \"%s\" -> \"%s\"", (void *)mountp, rel_from, rel_to);
     if (res < 0) {
         /* something went wrong during rename */
-        DEBUG(": ERR %d!\n", res);
+        debug(": ERR %d!\n", res);
     }
     else {
-        DEBUG("\n");
+        debug("\n");
     }
     /* remember to decrement the open_files count */
     atomic_fetch_sub(&mountp->open_files, 1);
@@ -635,7 +662,7 @@ int vfs_rename(const char *from_path, const char *to_path)
 
 int vfs_unlink(const char *name)
 {
-    DEBUG("vfs_unlink: \"%s\"\n", name);
+    debug("vfs_unlink: \"%s\"\n", name);
     if (name == NULL) {
         return -EINVAL;
     }
@@ -646,24 +673,24 @@ int vfs_unlink(const char *name)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_unlink: no matching mount\n");
+        debug("vfs_unlink: no matching mount\n");
         return res;
     }
     if ((mountp->fs->fs_op == NULL) || (mountp->fs->fs_op->unlink == NULL)) {
         /* unlink not supported */
-        DEBUG("vfs_unlink: unlink not supported by fs!\n");
+        debug("vfs_unlink: unlink not supported by fs!\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return -EROFS;
     }
     res = mountp->fs->fs_op->unlink(mountp, rel_path);
-    DEBUG("vfs_unlink: unlink %p, \"%s\"", (void *)mountp, rel_path);
+    debug("vfs_unlink: unlink %p, \"%s\"", (void *)mountp, rel_path);
     if (res < 0) {
         /* something went wrong during unlink */
-        DEBUG(": ERR %d!\n", res);
+        debug(": ERR %d!\n", res);
     }
     else {
-        DEBUG("\n");
+        debug("\n");
     }
     /* remember to decrement the open_files count */
     atomic_fetch_sub(&mountp->open_files, 1);
@@ -672,7 +699,7 @@ int vfs_unlink(const char *name)
 
 int vfs_mkdir(const char *name, mode_t mode)
 {
-    DEBUG("vfs_mkdir: \"%s\", 0%03lo\n", name, (long unsigned int)mode);
+    debug("vfs_mkdir: \"%s\", 0%03lo\n", name, (long unsigned int)mode);
     if (name == NULL) {
         return -EINVAL;
     }
@@ -683,24 +710,24 @@ int vfs_mkdir(const char *name, mode_t mode)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_mkdir: no matching mount\n");
+        debug("vfs_mkdir: no matching mount\n");
         return res;
     }
     if ((mountp->fs->fs_op == NULL) || (mountp->fs->fs_op->mkdir == NULL)) {
         /* mkdir not supported */
-        DEBUG("vfs_mkdir: mkdir not supported by fs!\n");
+        debug("vfs_mkdir: mkdir not supported by fs!\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return -EROFS;
     }
     res = mountp->fs->fs_op->mkdir(mountp, rel_path, mode);
-    DEBUG("vfs_mkdir: mkdir %p, \"%s\"", (void *)mountp, rel_path);
+    debug("vfs_mkdir: mkdir %p, \"%s\"", (void *)mountp, rel_path);
     if (res < 0) {
         /* something went wrong during mkdir */
-        DEBUG(": ERR %d!\n", res);
+        debug(": ERR %d!\n", res);
     }
     else {
-        DEBUG("\n");
+        debug("\n");
     }
     /* remember to decrement the open_files count */
     atomic_fetch_sub(&mountp->open_files, 1);
@@ -709,7 +736,7 @@ int vfs_mkdir(const char *name, mode_t mode)
 
 int vfs_rmdir(const char *name)
 {
-    DEBUG("vfs_rmdir: \"%s\"\n", name);
+    debug("vfs_rmdir: \"%s\"\n", name);
     if (name == NULL) {
         return -EINVAL;
     }
@@ -720,24 +747,24 @@ int vfs_rmdir(const char *name)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_rmdir: no matching mount\n");
+        debug("vfs_rmdir: no matching mount\n");
         return res;
     }
     if ((mountp->fs->fs_op == NULL) || (mountp->fs->fs_op->rmdir == NULL)) {
         /* rmdir not supported */
-        DEBUG("vfs_rmdir: rmdir not supported by fs!\n");
+        debug("vfs_rmdir: rmdir not supported by fs!\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return -EROFS;
     }
     res = mountp->fs->fs_op->rmdir(mountp, rel_path);
-    DEBUG("vfs_rmdir: rmdir %p, \"%s\"", (void *)mountp, rel_path);
+    debug("vfs_rmdir: rmdir %p, \"%s\"", (void *)mountp, rel_path);
     if (res < 0) {
         /* something went wrong during rmdir */
-        DEBUG(": ERR %d!\n", res);
+        debug(": ERR %d!\n", res);
     }
     else {
-        DEBUG("\n");
+        debug("\n");
     }
     /* remember to decrement the open_files count */
     atomic_fetch_sub(&mountp->open_files, 1);
@@ -746,7 +773,7 @@ int vfs_rmdir(const char *name)
 
 int vfs_stat(const char *restrict path, struct stat *restrict buf)
 {
-    DEBUG("vfs_stat: \"%s\", %p\n", path, (void *)buf);
+    debug("vfs_stat: \"%s\", %p\n", path, (void *)buf);
     if (path == NULL || buf == NULL) {
         return -EINVAL;
     }
@@ -757,12 +784,12 @@ int vfs_stat(const char *restrict path, struct stat *restrict buf)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_stat: no matching mount\n");
+        debug("vfs_stat: no matching mount\n");
         return res;
     }
     if ((mountp->fs->fs_op == NULL) || (mountp->fs->fs_op->stat == NULL)) {
         /* stat not supported */
-        DEBUG("vfs_stat: stat not supported by fs!\n");
+        debug("vfs_stat: stat not supported by fs!\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return -EPERM;
@@ -776,7 +803,7 @@ int vfs_stat(const char *restrict path, struct stat *restrict buf)
 
 int vfs_statvfs(const char *restrict path, struct statvfs *restrict buf)
 {
-    DEBUG("vfs_statvfs: \"%s\", %p\n", path, (void *)buf);
+    debug("vfs_statvfs: \"%s\", %p\n", path, (void *)buf);
     if (path == NULL || buf == NULL) {
         return -EINVAL;
     }
@@ -787,12 +814,12 @@ int vfs_statvfs(const char *restrict path, struct statvfs *restrict buf)
     /* _find_mount implicitly increments the open_files count on success */
     if (res < 0) {
         /* No mount point maps to the requested file name */
-        DEBUG("vfs_statvfs: no matching mount\n");
+        debug("vfs_statvfs: no matching mount\n");
         return res;
     }
     if ((mountp->fs->fs_op == NULL) || (mountp->fs->fs_op->statvfs == NULL)) {
         /* statvfs not supported */
-        DEBUG("vfs_statvfs: statvfs not supported by fs!\n");
+        debug("vfs_statvfs: statvfs not supported by fs!\n");
         /* remember to decrement the open_files count */
         atomic_fetch_sub(&mountp->open_files, 1);
         return -EPERM;
@@ -806,24 +833,24 @@ int vfs_statvfs(const char *restrict path, struct statvfs *restrict buf)
 
 int vfs_bind(int fd, int flags, const vfs_file_ops_t *f_op, void *private_data)
 {
-    DEBUG("vfs_bind: %d, %d, %p, %p\n", fd, flags, (void*)f_op, private_data);
+    debug("vfs_bind: %d, %d, %p, %p\n", fd, flags, (void*)f_op, private_data);
     if (f_op == NULL) {
         return -EINVAL;
     }
-    mutex_lock(&_open_mutex);
+    xSemaphoreTake(_open_mutex, portMAX_DELAY);
     fd = _init_fd(fd, f_op, NULL, flags, private_data);
-    mutex_unlock(&_open_mutex);
+    xSemaphoreGive(_open_mutex);
     if (fd < 0) {
-        DEBUG("vfs_bind: _init_fd: ERR %d!\n", fd);
+        debug("vfs_bind: _init_fd: ERR %d!\n", fd);
         return fd;
     }
-    DEBUG("vfs_bind: bound %d\n", fd);
+    debug("vfs_bind: bound %d\n", fd);
     return fd;
 }
 
 int vfs_normalize_path(char *buf, const char *path, size_t buflen)
 {
-    DEBUG("vfs_normalize_path: %p, \"%s\" (%p), %lu\n",
+    debug("vfs_normalize_path: %p, \"%s\" (%p), %lu\n",
           (void *)buf, path, (void *)path, (unsigned long)buflen);
     size_t len = 0;
     int npathcomp = 0;
@@ -833,7 +860,7 @@ int vfs_normalize_path(char *buf, const char *path, size_t buflen)
     }
 
     while(path <= path_end) {
-        DEBUG("vfs_normalize_path: + %d \"%.*s\" <- \"%s\" (%p)\n",
+        debug("vfs_normalize_path: + %d \"%.*s\" <- \"%s\" (%p)\n",
               npathcomp, (int)len, buf, path, (void *)path);
         if (path[0] == '\0') {
             break;
@@ -846,11 +873,11 @@ int vfs_normalize_path(char *buf, const char *path, size_t buflen)
             ++path;
             if (path[0] == '/' || path[0] == '\0') {
                 /* skip /./ components */
-                DEBUG("vfs_normalize_path: skip .\n");
+                debug("vfs_normalize_path: skip .\n");
                 continue;
             }
             if (path[0] == '.' && (path[1] == '/' || path[1] == '\0')) {
-                DEBUG("vfs_normalize_path: reduce ../\n");
+                debug("vfs_normalize_path: reduce ../\n");
                 if (len == 0) {
                     /* outside root */
                     return -EINVAL;
@@ -885,7 +912,7 @@ int vfs_normalize_path(char *buf, const char *path, size_t buflen)
         npathcomp = 1;
     }
     buf[len] = '\0';
-    DEBUG("vfs_normalize_path: = %d, \"%s\"\n", npathcomp, buf);
+    debug("vfs_normalize_path: = %d, \"%s\"\n", npathcomp, buf);
     return npathcomp;
 }
 
@@ -948,7 +975,7 @@ bool vfs_iterate_mount_dirs(vfs_DIR *dir)
     atomic_fetch_sub(&next->open_files, 1);
 
     if (err != 0) {
-        DEBUG("vfs_iterate_mount opendir erred: vfs_opendir(\"%s\") = %d\n", next->mount_point, err);
+        debug("vfs_iterate_mount opendir erred: vfs_opendir(\"%s\") = %d\n", next->mount_point, err);
         return false;
     }
     return true;
@@ -975,7 +1002,7 @@ static inline int _allocate_fd(int fd)
                  * to bind to these specific file descriptor numbers. */
                 continue;
             }
-            if (_vfs_open_files[fd].pid == KERNEL_PID_UNDEF) {
+            if (_vfs_open_files[fd].task_id == (UBaseType_t)0U) {
                 break;
             }
         }
@@ -984,27 +1011,30 @@ static inline int _allocate_fd(int fd)
         /* The _vfs_open_files array is full */
         return -ENFILE;
     }
-    else if (_vfs_open_files[fd].pid != KERNEL_PID_UNDEF) {
+    else if (_vfs_open_files[fd].task_id != (UBaseType_t)0U) {
         /* The desired fd is already in use */
         return -EEXIST;
     }
-    kernel_pid_t pid = thread_getpid();
-    if (pid == KERNEL_PID_UNDEF) {
+
+    TaskHandle_t h_current_task = xTaskGetCurrentTaskHandle();
+    uint32_t task_id = uxTaskGetTaskNumber(h_current_task);
+
+    if (task_id == (UBaseType_t)0U) {
         /* This happens when calling vfs_bind during boot, before threads have
          * been started. */
-        pid = -1;
+        task_id = -1;
     }
-    _vfs_open_files[fd].pid = pid;
+    _vfs_open_files[fd].task_id = task_id;
     return fd;
 }
 
 static inline void _free_fd(int fd)
 {
-    DEBUG("_free_fd: %d, pid=%d\n", fd, _vfs_open_files[fd].pid);
+    debug("_free_fd: %d, task_id=%d\n", fd, _vfs_open_files[fd].task_id);
     if (_vfs_open_files[fd].mp != NULL) {
         atomic_fetch_sub(&_vfs_open_files[fd].mp->open_files, 1);
     }
-    _vfs_open_files[fd].pid = KERNEL_PID_UNDEF;
+    _vfs_open_files[fd].task_id = (UBaseType_t)0U;
 }
 
 static inline int _init_fd(int fd, const vfs_file_ops_t *f_op, vfs_mount_t *mountp, int flags, void *private_data)
@@ -1026,12 +1056,12 @@ static inline int _find_mount(vfs_mount_t **mountpp, const char *name, const cha
 {
     size_t longest_match = 0;
     size_t name_len = strlen(name);
-    mutex_lock(&_mount_mutex);
+    xSemaphoreTake(_mount_mutex, portMAX_DELAY);
 
     clist_node_t *node = _vfs_mounts_list.next;
     if (node == NULL) {
         /* list empty */
-        mutex_unlock(&_mount_mutex);
+        xSemaphoreGive(_mount_mutex);
         return -ENOENT;
     }
     vfs_mount_t *mountp = NULL;
@@ -1062,12 +1092,12 @@ static inline int _find_mount(vfs_mount_t **mountpp, const char *name, const cha
     } while (node != _vfs_mounts_list.next);
     if (mountp == NULL) {
         /* not found */
-        mutex_unlock(&_mount_mutex);
+        xSemaphoreGive(_mount_mutex);
         return -ENOENT;
     }
     /* Increment open files counter for this mount */
     atomic_fetch_add(&mountp->open_files, 1);
-    mutex_unlock(&_mount_mutex);
+    xSemaphoreGive(_mount_mutex);
     *mountpp = mountp;
 
     if (rel_path != NULL) {
@@ -1086,7 +1116,7 @@ static inline int _fd_is_valid(int fd)
         return -EBADF;
     }
     vfs_file_t *filp = &_vfs_open_files[fd];
-    if (filp->pid == KERNEL_PID_UNDEF) {
+    if (filp->task_id == (UBaseType_t)0U) {
         return -EBADF;
     }
     if (filp->f_op == NULL) {
@@ -1147,24 +1177,14 @@ int vfs_sysop_stat_from_fstat(vfs_mount_t *mountp, const char *restrict path, st
 static int _auto_mount(vfs_mount_t *mountp, unsigned i)
 {
     (void) i;
-    DEBUG("vfs%u: mounting as '%s'\n", i, mountp->mount_point);
+    debug("vfs%u: mounting as '%s'\n", i, mountp->mount_point);
     int res = vfs_mount(mountp);
     if (res == 0) {
         return 0;
     }
 
-    if (IS_ACTIVE(MODULE_VFS_AUTO_FORMAT)) {
-        DEBUG("vfs%u: formatting…\n", i);
-        res = vfs_format(mountp);
-        if (res) {
-            DEBUG("vfs%u: format: error %d\n", i, res);
-            return res;
-        }
-        res = vfs_mount(mountp);
-    }
-
     if (res) {
-        DEBUG("vfs%u mount: error %d\n", i, res);
+        debug("vfs%u mount: error %d\n", i, res);
     }
 
     return res;

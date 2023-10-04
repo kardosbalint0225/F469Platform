@@ -12,7 +12,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "uart_console.h"
+#include "stdio_base.h"
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -51,7 +51,7 @@ static void tests_runner_task(void * params)
 //            {
 //                char *pbuf = test_strings[i];
 //                int len = strlen(pbuf);
-//                __uart_console_write(pbuf, len);
+//                stdio_write(pbuf, len);
 //            }
 //            vTaskDelay(500);
 //        }
@@ -69,27 +69,27 @@ static void tests_runner_task(void * params)
         char *env = NULL;
         setenv("ENVVAR1", "1", 1);
         env = getenv("ENVVAR1");
-        __uart_console_write(env, strlen(env));
+        stdio_write(env, strlen(env));
 
         setenv("ENVVAR2", "2", 1);
         env = getenv("ENVVAR2");
-        __uart_console_write(env, strlen(env));
+        stdio_write(env, strlen(env));
 
         setenv("ENVVAR3", "3", 1);
         env = getenv("ENVVAR3");
-        __uart_console_write(env, strlen(env));
+        stdio_write(env, strlen(env));
 
         setenv("ENVVAR4", "4", 1);
         env = getenv("ENVVAR4");
-        __uart_console_write(env, strlen(env));
+        stdio_write(env, strlen(env));
 
         setenv("ENVVAR5", "5", 1);
         env = getenv("ENVVAR5");
-        __uart_console_write(env, strlen(env));
+        stdio_write(env, strlen(env));
 
         env = getenv("ENVVAR_NONEXISTING");
         if (NULL != env)
-            __uart_console_write(env, strlen(env));
+            stdio_write(env, strlen(env));
 
         vTaskDelay(10);
     }

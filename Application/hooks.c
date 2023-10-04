@@ -12,8 +12,9 @@
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
 #include "rtc.h"
-#include "uart_console.h"
+#include "stdio_base.h"
 #include "cli.h"
+#include "vfs.h"
 
 #if RUN_TESTS
     #include "tests.h"
@@ -39,7 +40,8 @@ void vApplicationDaemonTaskStartupHook(void)
 {
     GPIO_Init();
     rtc_init();
-    uart_console_init();
+    vfs_init();
+    stdio_init();
     cli_init();
 #if RUN_TESTS
     start_tests();

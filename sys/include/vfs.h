@@ -370,7 +370,7 @@ typedef struct {
     vfs_mount_t *mp;            /**< Pointer to mount table entry */
     int flags;                  /**< File flags */
     off_t pos;                  /**< Current position in the file */
-    uint32_t tid;               /**< ID of the task that opened the file */
+    uint32_t task_id;           /**< ID of the task that opened the file */
     union {
         void *ptr;              /**< pointer to private data */
         int value;              /**< alternatively, you can use private_data as an int */
@@ -711,6 +711,9 @@ struct vfs_file_system_ops {
      */
     int (*statvfs) (vfs_mount_t *mountp, const char *restrict path, struct statvfs *restrict buf);
 };
+
+void vfs_init(void);
+void vfs_deinit(void);
 
 /**
  * @brief   Allocate and bind file descriptors for  STDIN, STDERR, and STDOUT

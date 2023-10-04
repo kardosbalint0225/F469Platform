@@ -128,6 +128,7 @@ void rtc_deinit(void)
     assert_param(0UL == rtc_error);
 
     vSemaphoreDelete(h_rtc_mutex);
+    h_rtc_mutex = NULL;
 }
 
 /**
