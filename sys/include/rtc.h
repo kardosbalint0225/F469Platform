@@ -40,10 +40,44 @@ enum _RTC_ERROR
 };
 
 
-void     rtc_init(void);
-void     rtc_deinit(void);
-int      rtc_set_time(struct tm *time);
-int      rtc_get_time(struct tm *time);
+/**
+ * @brief Initialize RTC module
+ */
+void rtc_init(void);
+
+/**
+ * @brief De-initialize RTC module
+ */
+void rtc_deinit(void);
+
+/**
+ * @brief Set RTC to given time.
+ *
+ * @param[in] time          Pointer to the struct holding the time to set.
+ *
+ * @return  0 for success
+ * @return -1 an error occurred
+ */
+int rtc_set_time(struct tm *time);
+
+/**
+ * @brief Get current RTC time.
+ *
+ * @param[out] time         Pointer to the struct to write the time to.
+ *
+ * @return  0 for success
+ * @return -1 an error occurred
+ */
+int rtc_get_time(struct tm *time);
+
+/**
+ * @brief  Gets the current error state of the RTC
+ * @param  None
+ * @retval 0 if no error occured
+ *         positive value indicates error where each bit
+ *         corresponds to a specific error defined in _RTC_ERROR
+ * @note   -
+ */
 uint32_t rtc_get_error(void);
 
 #ifdef __cplusplus

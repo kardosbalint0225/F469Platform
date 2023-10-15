@@ -29,6 +29,11 @@
 #include "bitarithm.h"
 #include "mtd.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
 static bool out_of_bounds(mtd_dev_t *mtd, uint32_t page, uint32_t offset, uint32_t len)
 {
     const uint32_t page_shift = bitarithm_msb(mtd->page_size);
@@ -72,7 +77,7 @@ int mtd_init(mtd_dev_t *mtd)
 
 #ifdef MODULE_MTD_WRITE_PAGE
     if ((mtd->driver->flags & MTD_DRIVER_FLAG_DIRECT_WRITE) == 0) {
-        mtd->work_area = malloc(mtd->pages_per_sector * mtd->page_size);
+        mtd->work_area = pvPortMalloc(mtd->pages_per_sector * mtd->page_size);
         if (mtd->work_area == NULL) {
             res = -ENOMEM;
         }

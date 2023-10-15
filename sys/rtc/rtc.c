@@ -28,11 +28,6 @@ static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc);
 static void rtc_lock(void);
 static void rtc_unlock(void);
 
-/**
- * @brief  Initializes the RTC peripheral
- * @param  None
- * @retval None
- */
 void rtc_init(void)
 {
     RTC_TimeTypeDef sTime = {0};
@@ -106,11 +101,6 @@ static void rtc_msp_init(RTC_HandleTypeDef * hrtc)
     __HAL_RCC_RTC_ENABLE();
 }
 
-/**
- * @brief  Deinitializes the RTC peripheral
- * @param  None
- * @retval None
- */
 void rtc_deinit(void)
 {
     HAL_StatusTypeDef ret;
@@ -153,27 +143,11 @@ static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc)
     __HAL_RCC_RTC_DISABLE();
 }
 
-/**
- * @brief  Gets the current error state of the RTC
- * @param  None
- * @retval 0 if no error occured
- *         positive value indicates error where each bit
- *         corresponds to a specific error defined in _RTC_ERROR
- * @note   -
- */
 uint32_t rtc_get_error(void)
 {
     return rtc_error;
 }
 
-/**
- * @brief  Set RTC to given time.
- *
- * @param  time Pointer to the struct holding the time to set.
- *
- * @return  0 for success
- * @return -1 an error occurred
- */
 int rtc_set_time(struct tm *time)
 {
     rtc_tm_normalize(time);
@@ -213,14 +187,6 @@ int rtc_set_time(struct tm *time)
     return 0;
 }
 
-/**
- * @brief  Get current RTC time.
- *
- * @param  time Pointer to the struct to write the time to.
- *
- * @return  0 for success
- * @return -1 an error occurred
- */
 int rtc_get_time(struct tm *time)
 {
     RTC_TimeTypeDef stime = {0};

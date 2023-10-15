@@ -127,6 +127,14 @@ enum _STDIO_UART_ERROR
     STDIO_UART_ERROR_UINT_MAX                = 0xFFFFFFFFUL,
 };
 
+/**
+ * @brief  Gets the current error state of the UART Console
+ * @param  None
+ * @retval 0 if no error occured
+ *         positive value indicates error where each bit
+ *         corresponds to a specific error defined in _UART_CONSOLE_ERROR
+ * @note   -
+ */
 uint32_t stdio_uart_get_error(void);
 
 #ifdef __cplusplus

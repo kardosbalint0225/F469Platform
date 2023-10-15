@@ -337,14 +337,6 @@ static void uartx_msp_deinit(UART_HandleTypeDef *huart)
     HAL_NVIC_DisableIRQ(STDIO_UART_DMAx_STREAMx_IRQn);
 }
 
-/**
- * @brief  Gets the current error state of the UART Console
- * @param  None
- * @retval 0 if no error occured
- *         positive value indicates error where each bit
- *         corresponds to a specific error defined in _UART_CONSOLE_ERROR
- * @note   -
- */
 uint32_t stdio_uart_get_error(void)
 {
     return stdio_uart_error;

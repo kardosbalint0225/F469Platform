@@ -25,7 +25,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "assert.h"
+//#include "assert.h"
+#include "stm32f4xx_hal.h"
 #include "stdio_base.h"
 #include "vfs.h"
 
@@ -60,11 +61,11 @@ void vfs_bind_stdio(void)
     int fd;
     fd = vfs_bind(STDIN_FILENO, O_RDONLY, &_stdio_ops, (void *)STDIN_FILENO);
     /* Is there a better way to handle errors on init? */
-    assert(fd >= 0);
+    assert_param(fd >= 0);
     fd = vfs_bind(STDOUT_FILENO, O_WRONLY, &_stdio_ops, (void *)STDOUT_FILENO);
-    assert(fd >= 0);
+    assert_param(fd >= 0);
     fd = vfs_bind(STDERR_FILENO, O_WRONLY, &_stdio_ops, (void *)STDERR_FILENO);
-    assert(fd >= 0);
+    assert_param(fd >= 0);
     /* we are not interested in the return value in case assert is not
      * compiled in */
     (void)fd;

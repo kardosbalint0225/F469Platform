@@ -42,6 +42,7 @@ void vApplicationDaemonTaskStartupHook(void)
     rtc_init();
     vfs_init();
     stdio_init();
+    vfs_bind_stdio();
     cli_init();
 #if RUN_TESTS
     start_tests();

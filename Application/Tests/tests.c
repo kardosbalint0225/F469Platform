@@ -15,6 +15,7 @@
 #include "stdio_base.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 
 //static char *test_strings[6] = {
@@ -69,29 +70,35 @@ static void tests_runner_task(void * params)
         char *env = NULL;
         setenv("ENVVAR1", "1", 1);
         env = getenv("ENVVAR1");
-        stdio_write(env, strlen(env));
+//        stdio_write(env, strlen(env));
+        printf("ENVVAR1: %s\r\n", env);
 
         setenv("ENVVAR2", "2", 1);
         env = getenv("ENVVAR2");
-        stdio_write(env, strlen(env));
+//        stdio_write(env, strlen(env));
+        printf("ENVVAR2: %s\r\n", env);
 
         setenv("ENVVAR3", "3", 1);
         env = getenv("ENVVAR3");
-        stdio_write(env, strlen(env));
+//        stdio_write(env, strlen(env));
+        printf("ENVVAR3: %s\r\n", env);
 
         setenv("ENVVAR4", "4", 1);
         env = getenv("ENVVAR4");
-        stdio_write(env, strlen(env));
+//        stdio_write(env, strlen(env));
+        printf("ENVVAR4: %s\r\n", env);
 
         setenv("ENVVAR5", "5", 1);
         env = getenv("ENVVAR5");
-        stdio_write(env, strlen(env));
+//        stdio_write(env, strlen(env));
+        printf("ENVVAR5: %s\r\n", env);
 
         env = getenv("ENVVAR_NONEXISTING");
         if (NULL != env)
-            stdio_write(env, strlen(env));
+//            stdio_write(env, strlen(env));
+            printf("ENVVAR_NONEXISTING: %s\r\n", env);
 
-        vTaskDelay(10);
+        vTaskDelay(500);
     }
 }
 
