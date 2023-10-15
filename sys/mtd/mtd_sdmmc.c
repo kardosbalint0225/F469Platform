@@ -25,17 +25,15 @@
 #include <inttypes.h>
 #include <string.h>
 
-#define ENABLE_DEBUG 0
 #include "debug.h"
-#include "kernel_defines.h"
 #include "macros/utils.h"
 #include "mtd.h"
 #include "mtd_sdmmc.h"
-#include "sdmmc/sdmmc.h"
+#include "sdmmc.h"
 
 static int mtd_sdmmc_init(mtd_dev_t *dev)
 {
-    DEBUG("mtd_sdmmc_init\n");
+    debug("mtd_sdmmc_init\n");
     mtd_sdmmc_t *mtd_sd = (mtd_sdmmc_t*)dev;
 
     /* get the SDMMC device descriptor from SDMMC peripheral index */
@@ -63,7 +61,7 @@ static int mtd_sdmmc_read_page(mtd_dev_t *dev, void *buff, uint32_t page,
 {
     mtd_sdmmc_t *mtd_sd = (mtd_sdmmc_t*)dev;
 
-    DEBUG("mtd_sdmmc_read_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\n",
+    debug("mtd_sdmmc_read_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\n",
           page, offset, size);
 
     if (offset || size % SDMMC_SDHC_BLOCK_SIZE) {
