@@ -22,9 +22,8 @@
 
 #include "vfs.h"
 
-#if IS_USED(MODULE_FATFS_VFS)
 #include "fs/fatfs.h"
-#endif
+
 #if IS_USED(MODULE_LITTLEFS)
 #include "fs/littlefs_fs.h"
 #endif

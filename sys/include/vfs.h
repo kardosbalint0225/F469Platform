@@ -100,7 +100,6 @@ extern "C" {
  * @brief   VFS parameters for FAT
  * @{
  */
-#ifdef MODULE_FATFS_VFS
 #include "ffconf.h"
 
 #if FF_FS_TINY
@@ -131,10 +130,6 @@ extern "C" {
 
 #define FATFS_VFS_DIR_BUFFER_SIZE       (44 + _FATFS_DIR_LFN + _FATFS_DIR_EXFAT)
 #define FATFS_VFS_FILE_BUFFER_SIZE      (41 + VFS_NAME_MAX + _FATFS_FILE_CACHE + _FATFS_FILE_SEEK_PTR + _FATFS_FILE_EXFAT)
-#else
-#define FATFS_VFS_DIR_BUFFER_SIZE       (1)
-#define FATFS_VFS_FILE_BUFFER_SIZE      (1)
-#endif
 /** @} */
 
 /**
