@@ -15,6 +15,7 @@
 #include "stdio_base.h"
 #include "cli.h"
 #include "vfs.h"
+#include "sdmmc.h"
 
 #if RUN_TESTS
     #include "tests.h"
@@ -43,6 +44,7 @@ void vApplicationDaemonTaskStartupHook(void)
     vfs_init();
     stdio_init();
     vfs_bind_stdio();
+    sdmmc_init();
     cli_init();
 #if RUN_TESTS
     start_tests();
