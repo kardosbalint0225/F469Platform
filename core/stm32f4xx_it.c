@@ -14,7 +14,7 @@ extern UART_HandleTypeDef h_stdio_uart;
 extern DMA_HandleTypeDef h_stdio_uart_dma_tx;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim6;
-extern EXTI_HandleTypeDef hexti2;
+extern EXTI_HandleTypeDef hexti_linex;
 
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
@@ -131,6 +131,6 @@ void TIM6_DAC_IRQHandler(void)
  */
 void EXTI2_IRQHandler(void)
 {
-    HAL_EXTI_IRQHandler(&hexti2);
+    HAL_EXTI_IRQHandler(&hexti_linex);
 }
 

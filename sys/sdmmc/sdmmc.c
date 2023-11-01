@@ -16,11 +16,10 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-#include "timers.h"
 
-EXTI_HandleTypeDef hexti2;
+EXTI_HandleTypeDef hexti_linex;
 
-static StackType_t sdmmc_card_mount_task_stack[4*configMINIMAL_STACK_SIZE];
+static StackType_t sdmmc_card_mount_task_stack[SDMMC_CARD_MOUNT_TASK_STACKSIZE];
 static StaticTask_t sdmmc_card_mount_task_tcb;
 static TaskHandle_t h_sdmmc_card_mount_task = NULL;
 
@@ -36,12 +35,11 @@ enum _SDMMC_CARD_PRESENCE_STATE
 {
     SDMMC_CARD_PRESENCE_STATE_INSERTED = 0x00000001,
     SDMMC_CARD_PRESENCE_STATE_REMOVED  = 0x00000002,
+    SDMMC_CARD_PRESENCE_STATE_UNSTABLE = 0x00000003,
     SDMMC_CARD_PRESENCE_STATE_INT_MAX  = 0x7FFFFFFF,
 };
 
-static uint32_t sdmmc_card_detect_signal(void);
-
-static void exti2_callback(void)
+static void exti_linex_callback(void)
 {
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
     BaseType_t ret = xTaskNotifyFromISR(h_sdmmc_card_mount_task,
@@ -52,21 +50,48 @@ static void exti2_callback(void)
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-  ((byte) & 0x80 ? '1' : '0'), \
-  ((byte) & 0x40 ? '1' : '0'), \
-  ((byte) & 0x20 ? '1' : '0'), \
-  ((byte) & 0x10 ? '1' : '0'), \
-  ((byte) & 0x08 ? '1' : '0'), \
-  ((byte) & 0x04 ? '1' : '0'), \
-  ((byte) & 0x02 ? '1' : '0'), \
-  ((byte) & 0x01 ? '1' : '0')
+static void wait_for_stable_card_detect_pin_signal(const uint32_t timeout_ms, uint32_t *state)
+{
+    TimeOut_t timeout;
+    TickType_t ticks_to_wait = pdMS_TO_TICKS(timeout_ms);
+    vTaskSetTimeOutState(&timeout);
 
+    uint32_t signal = 0xAAAAAAAA;
+    bool is_stable = false;
+    BaseType_t timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
+
+    while ((false == is_stable) && (pdFALSE == timedout))
+    {
+        const GPIO_PinState cd_pin = HAL_GPIO_ReadPin(SDMMC_CARD_DETECT_GPIO_PORT, SDMMC_CARD_DETECT_GPIO_PIN);
+        signal <<= 1;
+        signal |= cd_pin == GPIO_PIN_RESET ? 0 : 1;
+        is_stable = (0 == signal) || (ULONG_MAX == signal) ? true : false;
+        timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+
+    if (pdTRUE == timedout)
+    {
+        *state = (uint32_t)SDMMC_CARD_PRESENCE_STATE_UNSTABLE;
+    }
+    else if (true == is_stable)
+    {
+        *state = 0 == signal ? (uint32_t)SDMMC_CARD_PRESENCE_STATE_INSERTED : (uint32_t)SDMMC_CARD_PRESENCE_STATE_REMOVED;
+    }
+}
 
 static void sdmmc_card_mount_task(void *params)
 {
     (void)params;
+
+    uint32_t sdmmc_card_presence_state;
+    wait_for_stable_card_detect_pin_signal(SDMMC_CARD_DETECT_DEBOUNCE_TIMEOUT_MS, &sdmmc_card_presence_state);
+    if ((uint32_t)SDMMC_CARD_PRESENCE_STATE_INSERTED == sdmmc_card_presence_state)
+    {
+        //TODO: vfs_mount
+        printf("sdmmc card is mounted\r\n");
+        is_mounted = true;
+    }
 
     BaseType_t ret;
 
@@ -79,44 +104,7 @@ static void sdmmc_card_mount_task(void *params)
 
         if ((uint32_t)SDMMC_CARD_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED == notification)
         {
-            vTaskDelay(pdMS_TO_TICKS(SDMMC_CARD_DETECT_DEBOUNCE_TIME_MS));
-
-            TimeOut_t timeout;
-            TickType_t ticks_to_wait = pdMS_TO_TICKS(SDMMC_CARD_DETECT_DEBOUNCE_TIMEOUT_MS);
-            vTaskSetTimeOutState(&timeout);
-
-            uint32_t card_detect_signal = 0x00010001;
-            bool stable_signal_is_detected = false;
-            int cnt = 0;
-            uint32_t sdmmc_card_presence_state;
-
-            while (pdTRUE != xTaskCheckForTimeOut(&timeout, &ticks_to_wait) && true != stable_signal_is_detected)
-            {
-                card_detect_signal <<= 1;
-                card_detect_signal |= sdmmc_card_detect_signal();
-                vTaskDelay(pdMS_TO_TICKS(30));
-                printf("%02d card_detect_signal:  "BYTE_TO_BINARY_PATTERN" "
-                                                 ""BYTE_TO_BINARY_PATTERN" "
-                                                 ""BYTE_TO_BINARY_PATTERN" "
-                                                 ""BYTE_TO_BINARY_PATTERN"\r\n",
-                                                 cnt++,
-                                                 BYTE_TO_BINARY(card_detect_signal >> 24),
-                                                 BYTE_TO_BINARY(card_detect_signal >> 16),
-                                                 BYTE_TO_BINARY(card_detect_signal >> 8),
-                                                 BYTE_TO_BINARY(card_detect_signal));
-                if (card_detect_signal == 0 || card_detect_signal == ULONG_MAX)
-                {
-                    stable_signal_is_detected = true;
-                    if (card_detect_signal == ULONG_MAX)
-                    {
-                        sdmmc_card_presence_state = (uint32_t)SDMMC_CARD_PRESENCE_STATE_INSERTED;
-                    }
-                    else
-                    {
-                        sdmmc_card_presence_state = (uint32_t)SDMMC_CARD_PRESENCE_STATE_REMOVED;
-                    }
-                }
-            }
+            wait_for_stable_card_detect_pin_signal(SDMMC_CARD_DETECT_DEBOUNCE_TIMEOUT_MS, &sdmmc_card_presence_state);
 
             switch(sdmmc_card_presence_state)
             {
@@ -130,7 +118,7 @@ static void sdmmc_card_mount_task(void *params)
                     }
                     else
                     {
-                        printf("inserted->mounted?\r\n");
+                        printf("The memory card is not inserted properly.\r\n");
                     }
                 }
                 break;
@@ -145,8 +133,14 @@ static void sdmmc_card_mount_task(void *params)
                     }
                     else
                     {
-                        printf("removeded->not mounted?\r\n");
+                        printf("The memory card is not inserted properly.\r\n");
                     }
+                }
+                break;
+
+                case (uint32_t)SDMMC_CARD_PRESENCE_STATE_UNSTABLE :
+                {
+                    printf("The memory card is not inserted properly.\r\n");
                 }
                 break;
 
@@ -156,58 +150,50 @@ static void sdmmc_card_mount_task(void *params)
                 }
                 break;
             }
-            xTaskNotifyWait(0, ULONG_MAX, &notification, 0);
         }
-        else
-        {
-            assert_param(0);
-        }
-    }
-}
 
-static uint32_t sdmmc_card_detect_signal(void)
-{
-    const GPIO_PinState cd_pin = HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_2);
-    return GPIO_PIN_RESET == cd_pin ? 1 : 0;
+        xTaskNotifyWait(0, ULONG_MAX, &notification, 0);
+    }
 }
 
 int sdmmc_init(void)
 {
     h_sdmmc_card_mount_task = xTaskCreateStatic(sdmmc_card_mount_task,
                                                 "SDMMC Mount",
-                                                4*configMINIMAL_STACK_SIZE,
+                                                SDMMC_CARD_MOUNT_TASK_STACKSIZE,
                                                 NULL,
-                                                3,
+                                                SDMMC_CARD_MOUNT_TASK_PRIORITY,
                                                 sdmmc_card_mount_task_stack,
                                                 &sdmmc_card_mount_task_tcb);
     assert_param(NULL != h_sdmmc_card_mount_task);
 
+    is_mounted = false;
 
-    __HAL_RCC_GPIOG_CLK_ENABLE();
+    SDMMC_CARD_DETECT_GPIO_CLK_ENABLE();
 
-    GPIO_InitTypeDef card_detect_gpio_config = {
-        .Pin = GPIO_PIN_2,
+    GPIO_InitTypeDef card_detect_pin_config = {
+        .Pin = SDMMC_CARD_DETECT_GPIO_PIN,
         .Mode = GPIO_MODE_IT_RISING_FALLING,
         .Pull = GPIO_PULLUP,
     };
-    HAL_GPIO_Init(GPIOG, &card_detect_gpio_config);
+    HAL_GPIO_Init(SDMMC_CARD_DETECT_GPIO_PORT, &card_detect_pin_config);
 
-    EXTI_ConfigTypeDef exti2_config = {
-        .Line = EXTI_LINE_2,
+    EXTI_ConfigTypeDef exti_config = {
+        .Line = SDMMC_CARD_DETECT_EXTI_LINE,
         .Mode = EXTI_MODE_INTERRUPT,
         .Trigger = EXTI_TRIGGER_RISING_FALLING,
-        .GPIOSel = EXTI_GPIOG
+        .GPIOSel = SDMMC_CARD_DETECT_EXTI_GPIO
     };
 
     HAL_StatusTypeDef ret;
-    ret = HAL_EXTI_SetConfigLine(&hexti2, &exti2_config);
+    ret = HAL_EXTI_SetConfigLine(&hexti_linex, &exti_config);
     assert_param(HAL_OK == ret);
 
-    ret = HAL_EXTI_RegisterCallback(&hexti2, HAL_EXTI_COMMON_CB_ID, exti2_callback);
+    ret = HAL_EXTI_RegisterCallback(&hexti_linex, HAL_EXTI_COMMON_CB_ID, exti_linex_callback);
     assert_param(HAL_OK == ret);
 
-    HAL_NVIC_SetPriority(EXTI2_IRQn, 10, 0U);
-    HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+    HAL_NVIC_SetPriority(SDMMC_CARD_DETECT_EXTIx_IRQn, SDMMC_CARD_DETECT_EXTIx_IRQ_PRIORITY, 0U);
+    HAL_NVIC_EnableIRQ(SDMMC_CARD_DETECT_EXTIx_IRQn);
 
     return 0;
 }
