@@ -127,10 +127,34 @@ void TIM6_DAC_IRQHandler(void)
 }
 
 /**
- * @brief This function handles EXTI line 2 interrupt
+ * @brief This function handles EXTI line 2 global interrupt
  */
 void EXTI2_IRQHandler(void)
 {
     HAL_EXTI_IRQHandler(&hexti_linex);
+}
+
+/**
+ * @brief This function handles DMA2 stream3 global interrupt.
+ */
+void DMA2_Stream3_IRQHandler(void)
+{
+
+}
+
+/**
+ * @brief This function handles DMA2 stream6 global interrupt.
+ */
+void DMA2_Stream6_IRQHandler(void)
+{
+
+}
+
+/**
+ * @brief This function handles SDIO global interrupt.
+ */
+void SDIO_IRQHandler(void)
+{
+
 }
 

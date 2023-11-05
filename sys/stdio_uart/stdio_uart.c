@@ -236,6 +236,8 @@ static void uartx_init(void)
     ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_RX_COMPLETE_CB_ID, uartx_rx_cplt_callback);
     stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_REGISTER_RX_CPLT_CB : 0UL;
     assert_param(0UL == stdio_uart_error);
+
+    //TODO: Error callback
 }
 
 /**
