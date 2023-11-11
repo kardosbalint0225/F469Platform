@@ -112,6 +112,7 @@ static void sdmmc_mount_task(void *params)
         sdio_init();
         printf("sdmmc card is mounted\r\n");
         is_mounted = true;
+        sdmmc_get_capacity();
     }
 
     BaseType_t ret;
@@ -461,9 +462,46 @@ int sdmmc_card_init(void)
     return 0;
 }
 
+int sdmmc_read_blocks(uint32_t block_addr,
+                      uint16_t block_size,
+                      uint16_t block_num,
+                      void *data,
+                      uint16_t *done)
+{
+return 0;
+}
+
+int sdmmc_write_blocks(uint32_t block_addr,
+                       uint16_t block_size,
+                       uint16_t block_num,
+                       const void *data,
+                       uint16_t *done)
+{
+return 0;
+}
+
+int sdmmc_erase_blocks(uint32_t block_addr, uint16_t block_num)
+{
+    (void)block_addr;
+    (void)block_num;
+
+    return 0;
+}
+
 uint64_t sdmmc_get_capacity(void)
 {
-
+    HAL_SD_CardInfoTypeDef ci = {0};
+    HAL_StatusTypeDef ret;
+    ret = HAL_SD_GetCardInfo(&h_sdio, &ci);
+    assert_param(HAL_OK == ret);
+    printf("CardType     : %lu\r\n", ci.CardType);
+    printf("CardVersion  : %lu\r\n", ci.CardVersion);
+    printf("Class        : %lu\r\n", ci.Class);
+    printf("RelCardAdd   : %lu\r\n", ci.RelCardAdd);
+    printf("BlockNbr     : %lu\r\n", ci.BlockNbr);
+    printf("BlockSize    : %lu\r\n", ci.BlockSize);
+    printf("LogBlockNbr  : %lu\r\n", ci.LogBlockNbr);
+    printf("LogBlockSize : %lu\r\n", ci.LogBlockSize);
     return 0;
 }
 
