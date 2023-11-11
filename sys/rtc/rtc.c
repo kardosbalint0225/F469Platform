@@ -20,8 +20,8 @@
 
 RTC_HandleTypeDef hrtc;
 static uint32_t rtc_error;
-static SemaphoreHandle_t h_rtc_mutex;
-static StaticSemaphore_t rtc_mutex_buffer;
+static SemaphoreHandle_t h_rtc_mutex = NULL;
+static StaticSemaphore_t rtc_mutex_storage;
 
 static void rtc_msp_init(RTC_HandleTypeDef * hrtc);
 static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc);
@@ -36,7 +36,7 @@ void rtc_init(void)
 
     rtc_error = 0UL;
 
-    h_rtc_mutex = xSemaphoreCreateMutexStatic(&rtc_mutex_buffer);
+    h_rtc_mutex = xSemaphoreCreateMutexStatic(&rtc_mutex_storage);
 
     hrtc.Instance = RTC;
     hrtc.Init.HourFormat = RTC_HOURFORMAT_24;

@@ -22,6 +22,11 @@ SD_HandleTypeDef h_sdio;
 DMA_HandleTypeDef h_sdio_dma_tx;
 DMA_HandleTypeDef h_sdio_dma_rx;
 
+static SemaphoreHandle_t h_sdio_tx_cplt_semphr = NULL;
+static StaticSemaphore_t sdio_tx_cplt_semphr_storage;
+static SemaphoreHandle_t h_sdio_rx_cplt_semphr = NULL;
+static StaticSemaphore_t sdio_rx_cplt_semphr_storage;
+
 static StackType_t sdmmc_mount_task_stack[SDMMC_MOUNT_TASK_STACKSIZE];
 static StaticTask_t sdmmc_mount_task_tcb;
 static TaskHandle_t h_sdmmc_mount_task = NULL;
@@ -104,6 +109,7 @@ static void sdmmc_mount_task(void *params)
     if ((uint32_t)SDMMC_CARD_PRESENCE_STATE_INSERTED == sdmmc_card_presence_state)
     {
         //TODO: vfs_mount
+        sdio_init();
         printf("sdmmc card is mounted\r\n");
         is_mounted = true;
     }
@@ -355,12 +361,16 @@ static void sdio_msp_deinit(SD_HandleTypeDef *h_sd)
 
 static void sdio_tx_cplt_callback(SD_HandleTypeDef *h_sd)
 {
-
+    BaseType_t higher_priority_task_woken = pdFALSE;
+    xSemaphoreGiveFromISR(h_sdio_tx_cplt_semphr, &higher_priority_task_woken);
+    portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
 static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd)
 {
-
+    BaseType_t higher_priority_task_woken = pdFALSE;
+    xSemaphoreGiveFromISR(h_sdio_rx_cplt_semphr, &higher_priority_task_woken);
+    portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
 static int sdio_cd_pin_init(void)
@@ -396,11 +406,25 @@ static int sdio_cd_pin_init(void)
 
 static int sdio_cd_pin_deinit(void)
 {
+    HAL_StatusTypeDef ret;
+
+    HAL_NVIC_DisableIRQ(SDMMC_CD_PIN_EXTIx_IRQn);
+
+    ret = HAL_EXTI_ClearConfigLine(&hexti_linex);
+    assert_param(HAL_OK == ret);
+
+    HAL_GPIO_DeInit(SDMMC_CD_PIN_GPIO_PORT, SDMMC_CD_PIN);
+
     return 0;
 }
 
 int sdmmc_init(void)
 {
+    h_sdio_tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&sdio_tx_cplt_semphr_storage);
+    assert_param(NULL != h_sdio_tx_cplt_semphr);
+    h_sdio_rx_cplt_semphr = xSemaphoreCreateBinaryStatic(&sdio_rx_cplt_semphr_storage);
+    assert_param(NULL != h_sdio_rx_cplt_semphr);
+
     h_sdmmc_mount_task = xTaskCreateStatic(sdmmc_mount_task,
                                            "SDMMC Mount",
                                            SDMMC_MOUNT_TASK_STACKSIZE,
@@ -419,6 +443,27 @@ int sdmmc_init(void)
 
 int sdmmc_deinit(void)
 {
+    vTaskDelete(h_sdmmc_mount_task);
+    vSemaphoreDelete(h_sdio_tx_cplt_semphr);
+    vSemaphoreDelete(h_sdio_rx_cplt_semphr);
+
+    h_sdmmc_mount_task = NULL;
+    h_sdio_tx_cplt_semphr = NULL;
+    h_sdio_rx_cplt_semphr = NULL;
+
+    sdio_cd_pin_deinit();
+
+    return 0;
+}
+
+int sdmmc_card_init(void)
+{
+    return 0;
+}
+
+uint64_t sdmmc_get_capacity(void)
+{
+
     return 0;
 }
 

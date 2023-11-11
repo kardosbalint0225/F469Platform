@@ -104,28 +104,28 @@ const mtd_desc_t mtd_sdmmc_driver = {
 };
 
 //#if IS_USED(MODULE_MTD_SDMMC_DEFAULT)
-#include "vfs_default.h"
-
-#ifndef CONFIG_SDMMC_GENERIC_MTD_OFFSET
-#define CONFIG_SDMMC_GENERIC_MTD_OFFSET 0
-#endif
-
-#define MTD_SDMMC_DEV(n, m)                 \
-    mtd_sdmmc_t mtd_sdmmc_dev ##n = {       \
-        .base = {                           \
-           .driver = &mtd_sdmmc_driver,     \
-        },                                  \
-    };                                      \
-                                            \
-    mtd_dev_t CONCAT(*mtd, m) = (mtd_dev_t *)&mtd_sdmmc_dev ##n
-
-
-/* we use /sd1 as default mount point for coexistence with mtd_sdcard */
-#define MTD_SDMMC_DEV_FS(n, m, filesystem) \
-    VFS_AUTO_MOUNT(filesystem, VFS_MTD(mtd_sdmmc_dev ##n), VFS_DEFAULT_SD(1), m)
-
-
-MTD_SDMMC_DEV(0, CONFIG_SDMMC_GENERIC_MTD_OFFSET);
-
-MTD_SDMMC_DEV_FS(0, CONFIG_SDMMC_GENERIC_MTD_OFFSET, fatfs);
+//#include "vfs_default.h"
+//
+//#ifndef CONFIG_SDMMC_GENERIC_MTD_OFFSET
+//#define CONFIG_SDMMC_GENERIC_MTD_OFFSET 0
+//#endif
+//
+//#define MTD_SDMMC_DEV(n, m)                 \
+//    mtd_sdmmc_t mtd_sdmmc_dev ##n = {       \
+//        .base = {                           \
+//           .driver = &mtd_sdmmc_driver,     \
+//        },                                  \
+//    };                                      \
+//                                            \
+//    mtd_dev_t CONCAT(*mtd, m) = (mtd_dev_t *)&mtd_sdmmc_dev ##n
+//
+//
+///* we use /sd1 as default mount point for coexistence with mtd_sdcard */
+//#define MTD_SDMMC_DEV_FS(n, m, filesystem) \
+//    VFS_AUTO_MOUNT(filesystem, VFS_MTD(mtd_sdmmc_dev ##n), VFS_DEFAULT_SD(1), m)
+//
+//
+//MTD_SDMMC_DEV(0, CONFIG_SDMMC_GENERIC_MTD_OFFSET);
+//
+//MTD_SDMMC_DEV_FS(0, CONFIG_SDMMC_GENERIC_MTD_OFFSET, fatfs);
 

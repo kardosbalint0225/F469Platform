@@ -15,6 +15,9 @@ extern DMA_HandleTypeDef h_stdio_uart_dma_tx;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim6;
 extern EXTI_HandleTypeDef hexti_linex;
+extern SD_HandleTypeDef h_sdio;
+extern DMA_HandleTypeDef h_sdio_dma_tx;
+extern DMA_HandleTypeDef h_sdio_dma_rx;
 
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
@@ -139,7 +142,7 @@ void EXTI2_IRQHandler(void)
  */
 void DMA2_Stream3_IRQHandler(void)
 {
-
+    HAL_DMA_IRQHandler(&h_sdio_dma_rx);
 }
 
 /**
@@ -147,7 +150,7 @@ void DMA2_Stream3_IRQHandler(void)
  */
 void DMA2_Stream6_IRQHandler(void)
 {
-
+    HAL_DMA_IRQHandler(&h_sdio_dma_tx);
 }
 
 /**
@@ -155,6 +158,6 @@ void DMA2_Stream6_IRQHandler(void)
  */
 void SDIO_IRQHandler(void)
 {
-
+    HAL_SD_IRQHandler(&h_sdio);
 }
 
