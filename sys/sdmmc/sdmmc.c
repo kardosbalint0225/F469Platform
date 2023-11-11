@@ -10,12 +10,16 @@
 
 #include <limits.h>
 #include <stdbool.h>
+#include <string.h>
 #include <stdio.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+
+static uint8_t aligned_read_buffer[512ul * 16] __attribute__((aligned(8)));
+static uint8_t unaligned_read_buffer[512ul * 16];
 
 EXTI_HandleTypeDef hexti_linex;
 SD_HandleTypeDef h_sdio;
@@ -58,6 +62,7 @@ static int sdio_cd_pin_deinit(void);
 static void exti_linex_callback(void);
 static void wait_for_stable_cd_pin_signal(const uint32_t timeout_ms, uint32_t *state);
 static void sdmmc_mount_task(void *params);
+static bool is_word_aligned(const void *pbuf);
 
 static void exti_linex_callback(void)
 {
@@ -113,6 +118,40 @@ static void sdmmc_mount_task(void *params)
         printf("sdmmc card is mounted\r\n");
         is_mounted = true;
         sdmmc_get_capacity();
+
+        uint32_t average = 0;
+        TickType_t tick_start, tick_end;
+
+        printf("aligned read:\r\n");
+        for (int i = 0; i < 1000; i++)
+        {
+            tick_start = xTaskGetTickCount();
+            sdmmc_read_blocks(0, 512ul, 15, aligned_read_buffer, NULL);
+            tick_end = xTaskGetTickCount();
+            //printf("tick_end - tick_start = %lu\r\n", tick_end - tick_start);
+            average += tick_end - tick_start;
+        }
+        printf("aligned read avg = %f\r\n", ((float)average) / 1000.0f);
+
+        average = 0;
+        printf("unaligned read:\r\n");
+        for (int i = 0; i < 1000; i++)
+        {
+            tick_start = xTaskGetTickCount();
+            sdmmc_read_blocks(0, 512ul, 15, &unaligned_read_buffer[1], NULL);
+            tick_end = xTaskGetTickCount();
+            //printf("tick_end - tick_start = %lu\r\n", tick_end - tick_start);
+            average += tick_end - tick_start;
+        }
+        printf("unaligned read avg = %f\r\n", ((float)average) / 1000.0f);
+
+        for (uint32_t i = 0; i < (15 * 512ul); i++)
+        {
+            if (aligned_read_buffer[i] != unaligned_read_buffer[1 + i])
+            {
+                printf("i = %lu item mismatch!\r\n", i);
+            }
+        }
     }
 
     BaseType_t ret;
@@ -462,13 +501,51 @@ int sdmmc_card_init(void)
     return 0;
 }
 
+static bool is_word_aligned(const void *pbuf)
+{
+    assert_param(NULL != pbuf);
+    return (0 == (((size_t)pbuf) & (sizeof(size_t) - 1))) ? true : false;
+}
+
 int sdmmc_read_blocks(uint32_t block_addr,
                       uint16_t block_size,
                       uint16_t block_num,
                       void *data,
                       uint16_t *done)
 {
-return 0;
+    assert_param(NULL != data);
+
+    if (true == is_word_aligned(data))
+    {
+        HAL_StatusTypeDef hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, block_num);
+        assert_param(HAL_OK == hal_status);
+
+        const TickType_t ticks_to_wait = portMAX_DELAY;
+        BaseType_t ret = xSemaphoreTake(h_sdio_rx_cplt_semphr, ticks_to_wait);
+        assert_param(pdPASS == ret);
+    }
+    else
+    {
+        uint8_t *work_area = pvPortMalloc(512ul);
+        assert_param(NULL != work_area);
+
+        for (uint32_t block = 0; block < (uint32_t)block_num; block++)
+        {
+            uint32_t address = block_addr + block;
+            HAL_StatusTypeDef hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, work_area, address, 1);
+            assert_param(HAL_OK == hal_status);
+
+            const TickType_t ticks_to_wait = portMAX_DELAY;
+            BaseType_t ret = xSemaphoreTake(h_sdio_rx_cplt_semphr, ticks_to_wait);
+            assert_param(pdPASS == ret);
+
+            memcpy(data + 512ul * block, work_area, 512ul);
+        }
+
+        vPortFree(work_area);
+    }
+
+    return 0;
 }
 
 int sdmmc_write_blocks(uint32_t block_addr,
