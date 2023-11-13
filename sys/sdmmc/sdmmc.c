@@ -33,8 +33,141 @@ static void sdio_msp_init(SD_HandleTypeDef *h_sd);
 static void sdio_msp_deinit(SD_HandleTypeDef *h_sd);
 static void sdio_tx_cplt_callback(SD_HandleTypeDef *h_sd);
 static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd);
-
 static bool is_word_aligned(const void *pbuf);
+
+int sdmmc_init(void)
+{
+    h_sdio_tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&sdio_tx_cplt_semphr_storage);
+    assert_param(NULL != h_sdio_tx_cplt_semphr);
+    h_sdio_rx_cplt_semphr = xSemaphoreCreateBinaryStatic(&sdio_rx_cplt_semphr_storage);
+    assert_param(NULL != h_sdio_rx_cplt_semphr);
+
+    sdio_init();
+
+    return 0;
+}
+
+int sdmmc_deinit(void)
+{
+    vSemaphoreDelete(h_sdio_tx_cplt_semphr);
+    vSemaphoreDelete(h_sdio_rx_cplt_semphr);
+
+    h_sdio_tx_cplt_semphr = NULL;
+    h_sdio_rx_cplt_semphr = NULL;
+
+    sdio_deinit();
+
+    return 0;
+}
+
+int sdmmc_read_blocks(uint32_t block_addr,
+                      uint16_t block_size,
+                      uint16_t block_num,
+                      void *data,
+                      uint16_t *done)
+{
+    assert_param(NULL != data);
+
+    if (true == is_word_aligned(data))
+    {
+        HAL_StatusTypeDef hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, block_num);
+        assert_param(HAL_OK == hal_status); //TODO: return value
+
+        const TickType_t ticks_to_wait = portMAX_DELAY;
+        BaseType_t ret = xSemaphoreTake(h_sdio_rx_cplt_semphr, ticks_to_wait);
+        assert_param(pdPASS == ret); //TODO: return value
+    }
+    else
+    {
+        uint8_t *work_area = pvPortMalloc(SDMMC_SDHC_BLOCK_SIZE);
+        assert_param(NULL != work_area); //TODO: return value
+
+        for (uint32_t block = 0; block < (uint32_t)block_num; block++)
+        {
+            uint32_t address = block_addr + block;
+            HAL_StatusTypeDef hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, work_area, address, 1);
+            assert_param(HAL_OK == hal_status); //TODO: return value
+
+            const TickType_t ticks_to_wait = portMAX_DELAY;
+            BaseType_t ret = xSemaphoreTake(h_sdio_rx_cplt_semphr, ticks_to_wait);
+            assert_param(pdPASS == ret); //TODO: return value
+
+            memcpy(data + SDMMC_SDHC_BLOCK_SIZE * block, work_area, SDMMC_SDHC_BLOCK_SIZE);
+        }
+
+        vPortFree(work_area);
+    }
+
+    return 0;
+}
+
+int sdmmc_write_blocks(uint32_t block_addr,
+                       uint16_t block_size,
+                       uint16_t block_num,
+                       const void *data,
+                       uint16_t *done)
+{
+    assert_param(NULL != data);
+
+    if (true == is_word_aligned(data))
+    {
+        HAL_StatusTypeDef hal_status = HAL_SD_WriteBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, block_num);
+        assert_param(HAL_OK == hal_status); //TODO: return value
+
+        const TickType_t ticks_to_wait = portMAX_DELAY;
+        BaseType_t ret = xSemaphoreTake(h_sdio_tx_cplt_semphr, ticks_to_wait);
+        assert_param(pdPASS == ret); //TODO: return value
+    }
+    else
+    {
+        uint8_t *work_area = pvPortMalloc(SDMMC_SDHC_BLOCK_SIZE);
+        assert_param(NULL != work_area); //TODO: return value
+
+        for (uint32_t block = 0; block < (uint32_t)block_num; block++)
+        {
+            memcpy(work_area, data + SDMMC_SDHC_BLOCK_SIZE * block, SDMMC_SDHC_BLOCK_SIZE);
+            uint32_t address = block_addr + block;
+            HAL_StatusTypeDef hal_status = HAL_SD_WriteBlocks_DMA(&h_sdio, work_area, address, 1);
+            assert_param(HAL_OK == hal_status); //TODO: return value
+
+            const TickType_t ticks_to_wait = portMAX_DELAY;
+            BaseType_t ret = xSemaphoreTake(h_sdio_tx_cplt_semphr, ticks_to_wait);
+            assert_param(pdPASS == ret); //TODO: return value
+        }
+
+        vPortFree(work_area);
+    }
+
+    return 0;
+}
+
+int sdmmc_erase_blocks(uint32_t block_addr, uint16_t block_num)
+{
+    uint8_t *work_area = pvPortMalloc(SDMMC_SDHC_BLOCK_SIZE);
+
+    memset(work_area, 0, SDMMC_SDHC_BLOCK_SIZE);
+    sdmmc_write_blocks(block_addr, SDMMC_SDHC_BLOCK_SIZE, block_num, work_area, NULL); //TODO: return value
+
+    vPortFree(work_area);
+
+    return 0;
+}
+
+uint64_t sdmmc_get_capacity(void)
+{
+    HAL_SD_CardInfoTypeDef ci = {0};
+    HAL_StatusTypeDef ret = HAL_SD_GetCardInfo(&h_sdio, &ci);
+    assert_param(HAL_OK == ret);
+
+    uint64_t capacity = ((uint64_t)ci.BlockNbr) * ((uint64_t)ci.BlockSize);
+    return capacity;
+}
+
+static bool is_word_aligned(const void *pbuf)
+{
+    assert_param(NULL != pbuf);
+    return (0 == (((size_t)pbuf) & (sizeof(size_t) - 1))) ? true : false;
+}
 
 static int sdio_init(void)
 {
@@ -230,114 +363,7 @@ static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd)
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
-int sdmmc_init(void)
-{
-    h_sdio_tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&sdio_tx_cplt_semphr_storage);
-    assert_param(NULL != h_sdio_tx_cplt_semphr);
-    h_sdio_rx_cplt_semphr = xSemaphoreCreateBinaryStatic(&sdio_rx_cplt_semphr_storage);
-    assert_param(NULL != h_sdio_rx_cplt_semphr);
 
-    sdio_init();
 
-    return 0;
-}
 
-int sdmmc_deinit(void)
-{
-    vSemaphoreDelete(h_sdio_tx_cplt_semphr);
-    vSemaphoreDelete(h_sdio_rx_cplt_semphr);
-
-    h_sdio_tx_cplt_semphr = NULL;
-    h_sdio_rx_cplt_semphr = NULL;
-
-    sdio_deinit();
-
-    return 0;
-}
-
-int sdmmc_card_init(void)
-{
-    return 0;
-}
-
-static bool is_word_aligned(const void *pbuf)
-{
-    assert_param(NULL != pbuf);
-    return (0 == (((size_t)pbuf) & (sizeof(size_t) - 1))) ? true : false;
-}
-
-int sdmmc_read_blocks(uint32_t block_addr,
-                      uint16_t block_size,
-                      uint16_t block_num,
-                      void *data,
-                      uint16_t *done)
-{
-    assert_param(NULL != data);
-
-    if (true == is_word_aligned(data))
-    {
-        HAL_StatusTypeDef hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, block_num);
-        assert_param(HAL_OK == hal_status);
-
-        const TickType_t ticks_to_wait = portMAX_DELAY;
-        BaseType_t ret = xSemaphoreTake(h_sdio_rx_cplt_semphr, ticks_to_wait);
-        assert_param(pdPASS == ret);
-    }
-    else
-    {
-        uint8_t *work_area = pvPortMalloc(512ul);
-        assert_param(NULL != work_area);
-
-        for (uint32_t block = 0; block < (uint32_t)block_num; block++)
-        {
-            uint32_t address = block_addr + block;
-            HAL_StatusTypeDef hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, work_area, address, 1);
-            assert_param(HAL_OK == hal_status);
-
-            const TickType_t ticks_to_wait = portMAX_DELAY;
-            BaseType_t ret = xSemaphoreTake(h_sdio_rx_cplt_semphr, ticks_to_wait);
-            assert_param(pdPASS == ret);
-
-            memcpy(data + 512ul * block, work_area, 512ul);
-        }
-
-        vPortFree(work_area);
-    }
-
-    return 0;
-}
-
-int sdmmc_write_blocks(uint32_t block_addr,
-                       uint16_t block_size,
-                       uint16_t block_num,
-                       const void *data,
-                       uint16_t *done)
-{
-    return 0;
-}
-
-int sdmmc_erase_blocks(uint32_t block_addr, uint16_t block_num)
-{
-    (void)block_addr;
-    (void)block_num;
-
-    return 0;
-}
-
-uint64_t sdmmc_get_capacity(void)
-{
-    HAL_SD_CardInfoTypeDef ci = {0};
-    HAL_StatusTypeDef ret;
-    ret = HAL_SD_GetCardInfo(&h_sdio, &ci);
-    assert_param(HAL_OK == ret);
-    printf("CardType     : %lu\r\n", ci.CardType);
-    printf("CardVersion  : %lu\r\n", ci.CardVersion);
-    printf("Class        : %lu\r\n", ci.Class);
-    printf("RelCardAdd   : %lu\r\n", ci.RelCardAdd);
-    printf("BlockNbr     : %lu\r\n", ci.BlockNbr);
-    printf("BlockSize    : %lu\r\n", ci.BlockSize);
-    printf("LogBlockNbr  : %lu\r\n", ci.LogBlockNbr);
-    printf("LogBlockSize : %lu\r\n", ci.LogBlockSize);
-    return 0;
-}
 

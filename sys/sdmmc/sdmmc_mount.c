@@ -28,9 +28,6 @@ static TaskHandle_t h_sdmmc_mount_task = NULL;
 
 static bool is_mounted = false;
 
-static uint8_t aligned_read_buffer[512ul * 16] __attribute__((aligned(8)));
-static uint8_t unaligned_read_buffer[512ul * 16];
-
 enum _SDMMC_MOUNT_TASK_NOTIFICATION
 {
     SDMMC_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED = 0x00000001,
@@ -92,42 +89,6 @@ static void sdmmc_mount_task(void *params)
         printf("sdmmc card is mounted\r\n");
         is_mounted = true;
         sdmmc_get_capacity();
-
-        uint32_t average = 0;
-        TickType_t tick_start, tick_end;
-
-        printf("aligned read:\r\n");
-        for (int i = 0; i < 1000; i++)
-        {
-            tick_start = xTaskGetTickCount();
-            sdmmc_read_blocks(0, 512ul, 15, aligned_read_buffer, NULL);
-            tick_end = xTaskGetTickCount();
-            //printf("tick_end - tick_start = %lu\r\n", tick_end - tick_start);
-            average += tick_end - tick_start;
-        }
-        printf("aligned read avg = %f\r\n", ((float)average) / 1000.0f);
-
-        average = 0;
-        printf("unaligned read:\r\n");
-        for (int i = 0; i < 1000; i++)
-        {
-            tick_start = xTaskGetTickCount();
-            sdmmc_read_blocks(0, 512ul, 15, &unaligned_read_buffer[1], NULL);
-            tick_end = xTaskGetTickCount();
-            //printf("tick_end - tick_start = %lu\r\n", tick_end - tick_start);
-            average += tick_end - tick_start;
-        }
-        printf("unaligned read avg = %f\r\n", ((float)average) / 1000.0f);
-
-        for (uint32_t i = 0; i < (15 * 512ul); i++)
-        {
-            if (aligned_read_buffer[i] != unaligned_read_buffer[1 + i])
-            {
-                printf("i = %lu item mismatch!\r\n", i);
-            }
-        }
-
-        printf("Tests finished running.\r\n");
     }
 
     BaseType_t ret;

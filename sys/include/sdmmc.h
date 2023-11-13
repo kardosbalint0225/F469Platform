@@ -10,11 +10,11 @@
 
 #include <stdint.h>
 
-#define SDMMC_SDHC_BLOCK_SIZE   (512)
+#define SDMMC_SDHC_BLOCK_SIZE   (512ul)
 
 int sdmmc_init(void);
 int sdmmc_deinit(void);
-int sdmmc_card_init(void);
+
 uint64_t sdmmc_get_capacity(void);
 
 /**
