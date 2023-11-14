@@ -76,7 +76,7 @@ DSTATUS disk_initialize(BYTE pdrv)
     uint32_t sector_size = fatfs_mtd_devs[pdrv]->page_size
                          * fatfs_mtd_devs[pdrv]->pages_per_sector;
     if (sector_size > FF_MAX_SS) {
-        assert(0);
+        assert_param(0);
         return STA_NOINIT;
     }
 

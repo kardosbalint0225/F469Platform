@@ -18,7 +18,44 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "sdcard.h"
+#include "fs/fatfs.h"
+#include "vfs.h"
+
+#include "mtd.h"
+#include "mtd_sdcard.h"
+
+#define MNT_PATH  "/test"
+
+static fatfs_desc_t fatfs;
+static vfs_mount_t _test_vfs_mount = {
+    .mount_point = MNT_PATH,
+    .fs = &fatfs_file_system,
+    .private_data = (void *)&fatfs,
+};
+
+mtd_sdcard_t mtd_sdcard_devs[1];
+/* always default to first sdcard*/
+static mtd_dev_t *mtd_sdcard = (mtd_dev_t*)&mtd_sdcard_devs[0];
+
+TCHAR current_directory[512] = {'\0'};
+
+typedef union {
+    struct {
+        uint16_t sec  : 5;
+        uint16_t min  : 6;
+        uint16_t hour : 5;
+    };
+    uint16_t w;
+} fattime_t;
+
+typedef union {
+    struct {
+        uint16_t day  : 5;
+        uint16_t month: 4;
+        uint16_t year : 7;
+    };
+    uint16_t w;
+} fatdate_t;
 
 EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 
@@ -80,15 +117,62 @@ static void sdcard_mount_task(void *params)
 {
     (void)params;
 
+    vTaskDelay(1000);
+
     uint32_t card_presence_state;
     wait_for_stable_cd_pin_signal(SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS, &card_presence_state);
     if ((uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED == card_presence_state)
     {
         //TODO: vfs_mount
-        sdcard_init();
-        printf("sdcard is mounted\r\n");
+        int err;
+
+        mtd_sdcard_devs[0].base.driver = &mtd_sdcard_driver;
+        err = mtd_init(&mtd_sdcard_devs[0].base);
+        printf("mtd_init : %d\r\n", err);
+
+        fatfs.dev = mtd_sdcard;
+
+        err = vfs_mount(&_test_vfs_mount);
+        printf("vfs_mount : %d\r\n", err);
+
+        DIR dir;
+        FILINFO fno;
+
+        if (FR_OK == f_getcwd(current_directory, sizeof(current_directory)))
+        {
+            if (FR_OK == f_opendir(&dir, current_directory))
+            {
+                f_readdir(&dir, &fno);
+
+                for (uint32_t i = 0; (i < 255) && (0 != fno.fname[0]); i++)
+                {
+                    fattime_t fattime = {
+                        .w = fno.ftime,
+                    };
+
+                    fatdate_t fatdate = {
+                        .w = fno.fdate,
+                    };
+
+//                    printf("%04d.%02d.%02d  %02d:%02d  %s  %16llu  %s\r\n",
+//                           (fatdate.year+1980),
+//                           fatdate.month,
+//                           fatdate.day,
+//                           fattime.hour,
+//                           fattime.min,
+//                           (fno.fattrib & AM_DIR) ? ("<DIR>") : ("     "),
+//                           fno.fsize,
+//                           fno.fname);
+                    printf("%s\r\n", fno.fname);
+
+                    f_readdir(&dir, &fno);
+                }
+            }
+
+            f_closedir(&dir);
+        }
+
         is_mounted = true;
-        sdcard_get_capacity();
     }
 
     BaseType_t ret;
@@ -111,7 +195,6 @@ static void sdcard_mount_task(void *params)
                     if (false == is_mounted)
                     {
                         //TODO: vfs_mount
-                        sdcard_init();
                         printf("sdcard card is mounted\r\n");
                         is_mounted = true;
                     }
@@ -127,7 +210,6 @@ static void sdcard_mount_task(void *params)
                     if (true == is_mounted)
                     {
                         //TODO: vfs_unmount
-                        sdcard_deinit();
                         printf("sdcard card is unmounted\r\n");
                         is_mounted = false;
                     }
