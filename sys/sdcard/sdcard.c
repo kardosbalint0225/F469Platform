@@ -60,11 +60,7 @@ int sdcard_deinit(void)
     return 0;
 }
 
-int sdcard_read_blocks(uint32_t block_addr,
-                      uint16_t block_size,
-                      uint16_t block_num,
-                      void *data,
-                      uint16_t *done)
+int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
 {
     assert_param(NULL != data);
 
@@ -101,11 +97,7 @@ int sdcard_read_blocks(uint32_t block_addr,
     return 0;
 }
 
-int sdcard_write_blocks(uint32_t block_addr,
-                       uint16_t block_size,
-                       uint16_t block_num,
-                       const void *data,
-                       uint16_t *done)
+int sdcard_write_blocks(uint32_t block_addr, uint16_t block_num, const void *data)
 {
     assert_param(NULL != data);
 
@@ -146,7 +138,7 @@ int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num)
     uint8_t *work_area = pvPortMalloc(SDCARD_SDHC_BLOCK_SIZE);
 
     memset(work_area, 0, SDCARD_SDHC_BLOCK_SIZE);
-    sdcard_write_blocks(block_addr, SDCARD_SDHC_BLOCK_SIZE, block_num, work_area, NULL); //TODO: return value
+    sdcard_write_blocks(block_addr, block_num, work_area); //TODO: return value
 
     vPortFree(work_area);
 

@@ -14,16 +14,10 @@
 
 int sdcard_init(void);
 int sdcard_deinit(void);
-
-uint64_t sdcard_get_capacity(void);
-
-int sdcard_read_blocks(uint32_t block_addr, uint16_t block_size,
-                      uint16_t block_num, void *data, uint16_t *done);
-
-int sdcard_write_blocks(uint32_t block_addr, uint16_t block_size,
-                       uint16_t block_num, const void *data, uint16_t *done);
-
+int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data);
+int sdcard_write_blocks(uint32_t block_addr, uint16_t block_num, const void *data);
 int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num);
+uint64_t sdcard_get_capacity(void);
 
 #endif /* _SDCARD_H_ */
 
