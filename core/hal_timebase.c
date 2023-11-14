@@ -12,7 +12,7 @@
 
 #include "hal_timebase.h"
 
-TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef h_tim6;
 static uint32_t hal_timebase_error;
 void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
@@ -59,7 +59,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     uwPrescalerValue = (uint32_t)((uwTimclock / 1000000U) - 1U);
 
     /* Initialize TIM6 */
-    htim6.Instance = TIM6;
+    h_tim6.Instance = TIM6;
 
     /* Initialize TIMx peripheral as follow:
      + Period = [(TIM6CLK/1000) - 1]. to have a (1/1000) s time base.
@@ -67,22 +67,22 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
      + ClockDivision = 0
      + Counter direction = Up
      */
-    htim6.Init.Period = (1000000U / 1000U) - 1U;
-    htim6.Init.Prescaler = uwPrescalerValue;
-    htim6.Init.ClockDivision = 0;
-    htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    h_tim6.Init.Period = (1000000U / 1000U) - 1U;
+    h_tim6.Init.Prescaler = uwPrescalerValue;
+    h_tim6.Init.ClockDivision = 0;
+    h_tim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+    h_tim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
-    ret = HAL_TIM_Base_Init(&htim6);
+    ret = HAL_TIM_Base_Init(&h_tim6);
     hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_TIM_BASE_INIT : 0UL;
     assert_param(0UL == hal_timebase_error);
 
-    ret = HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM6_PeriodElapsedCallback);
+    ret = HAL_TIM_RegisterCallback(&h_tim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM6_PeriodElapsedCallback);
     hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_REGISTER_PERIOD_ELAPSED_CB : 0UL;
     assert_param(0UL == hal_timebase_error);
 
     /* Start the TIM time Base generation in interrupt mode */
-    ret = HAL_TIM_Base_Start_IT(&htim6);
+    ret = HAL_TIM_Base_Start_IT(&h_tim6);
     hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_TIM_BASE_START_IT : 0UL;
     assert_param(0UL == hal_timebase_error);
 
@@ -108,7 +108,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 void HAL_SuspendTick(void)
 {
     /* Disable TIM6 update Interrupt */
-    __HAL_TIM_DISABLE_IT(&htim6, TIM_IT_UPDATE);
+    __HAL_TIM_DISABLE_IT(&h_tim6, TIM_IT_UPDATE);
 }
 
 /**
@@ -120,7 +120,7 @@ void HAL_SuspendTick(void)
 void HAL_ResumeTick(void)
 {
     /* Enable TIM6 Update interrupt */
-    __HAL_TIM_ENABLE_IT(&htim6, TIM_IT_UPDATE);
+    __HAL_TIM_ENABLE_IT(&h_tim6, TIM_IT_UPDATE);
 }
 
 /**

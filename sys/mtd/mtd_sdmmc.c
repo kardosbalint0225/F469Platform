@@ -31,7 +31,7 @@
 #include "macros/utils.h"
 #include "mtd.h"
 #include "mtd_sdmmc.h"
-#include "sdmmc.h"
+#include "sdcard.h"
 
 static int mtd_sdmmc_init(mtd_dev_t *dev)
 {
@@ -68,8 +68,8 @@ static int mtd_sdmmc_power(mtd_dev_t *dev, enum mtd_power_state power)
 static int mtd_sdmmc_read(mtd_dev_t *dev, void *buff, uint32_t addr,
                            uint32_t size)
 {
-    int res = mtd_sdmmc_read_page(dev, buff, addr / SDMMC_SDHC_BLOCK_SIZE,
-                                   addr % SDMMC_SDHC_BLOCK_SIZE, size);
+    int res = mtd_sdmmc_read_page(dev, buff, addr / SDCARD_SDHC_BLOCK_SIZE,
+                                   addr % SDCARD_SDHC_BLOCK_SIZE, size);
     if (res < 0) {
         return res;
     }
@@ -82,8 +82,8 @@ static int mtd_sdmmc_read(mtd_dev_t *dev, void *buff, uint32_t addr,
 static int mtd_sdmmc_write(mtd_dev_t *dev, const void *buff, uint32_t addr,
                             uint32_t size)
 {
-    int res =  mtd_sdmmc_write_page(dev, buff, addr / SDMMC_SDHC_BLOCK_SIZE,
-                                     addr % SDMMC_SDHC_BLOCK_SIZE, size);
+    int res =  mtd_sdmmc_write_page(dev, buff, addr / SDCARD_SDHC_BLOCK_SIZE,
+                                     addr % SDCARD_SDHC_BLOCK_SIZE, size);
     if (res < 0) {
         return res;
     }

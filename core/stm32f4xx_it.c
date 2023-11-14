@@ -12,9 +12,9 @@
 
 extern UART_HandleTypeDef h_stdio_uart;
 extern DMA_HandleTypeDef h_stdio_uart_dma_tx;
-extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim6;
-extern EXTI_HandleTypeDef hexti_linex;
+extern TIM_HandleTypeDef h_tim2;
+extern TIM_HandleTypeDef h_tim6;
+extern EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 extern SD_HandleTypeDef h_sdio;
 extern DMA_HandleTypeDef h_sdio_dma_tx;
 extern DMA_HandleTypeDef h_sdio_dma_rx;
@@ -118,7 +118,7 @@ void USART3_IRQHandler(void)
  */
 void TIM2_IRQHandler(void)
 {
-    HAL_TIM_IRQHandler(&htim2);
+    HAL_TIM_IRQHandler(&h_tim2);
 }
 
 /**
@@ -126,7 +126,7 @@ void TIM2_IRQHandler(void)
  */
 void TIM6_DAC_IRQHandler(void)
 {
-    HAL_TIM_IRQHandler(&htim6);
+    HAL_TIM_IRQHandler(&h_tim6);
 }
 
 /**
@@ -134,7 +134,7 @@ void TIM6_DAC_IRQHandler(void)
  */
 void EXTI2_IRQHandler(void)
 {
-    HAL_EXTI_IRQHandler(&hexti_linex);
+    HAL_EXTI_IRQHandler(&h_exti_sdcard_cd_pin);
 }
 
 /**

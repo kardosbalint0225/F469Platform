@@ -7,7 +7,7 @@
 #include "runtime_stats_timer.h"
 #include "stm32f4xx_hal.h"
 
-TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef h_tim2;
 static uint32_t runtime_stats_timer_error;
 static volatile uint32_t runtime_stats_timer;
 
@@ -104,7 +104,7 @@ static void tim2_init(void)
     uwPrescalerValue = (uint32_t)((uwTimclock / 1000000U) - 1U);
 
     /* Initialize TIM2 */
-    htim2.Instance = TIM2;
+    h_tim2.Instance = TIM2;
 
     /* Initialize TIMx peripheral as follow:
      *
@@ -114,22 +114,22 @@ static void tim2_init(void)
      + ClockDivision = 0
      + Counter direction = Up
      */
-    htim2.Init.Period = (1000000U / 10000U) - 1U;
-    htim2.Init.Prescaler = uwPrescalerValue;
-    htim2.Init.ClockDivision = 0;
-    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    h_tim2.Init.Period = (1000000U / 10000U) - 1U;
+    h_tim2.Init.Prescaler = uwPrescalerValue;
+    h_tim2.Init.ClockDivision = 0;
+    h_tim2.Init.CounterMode = TIM_COUNTERMODE_UP;
 
     HAL_StatusTypeDef ret;
-    ret = HAL_TIM_Base_Init(&htim2);
+    ret = HAL_TIM_Base_Init(&h_tim2);
     runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_INIT : 0UL;
     assert_param(0UL == runtime_stats_timer_error);
 
-    ret = HAL_TIM_RegisterCallback(&htim2, HAL_TIM_PERIOD_ELAPSED_CB_ID, tim2_period_elapsed_callback);
+    ret = HAL_TIM_RegisterCallback(&h_tim2, HAL_TIM_PERIOD_ELAPSED_CB_ID, tim2_period_elapsed_callback);
     runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_REGISTER_PERIOD_ELAPSED_CB : 0UL;
     assert_param(0UL == runtime_stats_timer_error);
 
     /* Start the TIM time Base generation in interrupt mode */
-    ret = HAL_TIM_Base_Start_IT(&htim2);
+    ret = HAL_TIM_Base_Start_IT(&h_tim2);
     runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_START_IT : 0UL;
     assert_param(0UL == runtime_stats_timer_error);
 }
@@ -145,18 +145,18 @@ static void tim2_deinit(void)
     HAL_StatusTypeDef ret;
 
     /* Stop the TIM time Base generation in interrupt mode */
-    ret = HAL_TIM_Base_Stop_IT(&htim2);
+    ret = HAL_TIM_Base_Stop_IT(&h_tim2);
     runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_STOP_IT : 0UL;
     assert_param(0UL == runtime_stats_timer_error);
 
     /* Disable the TIM2 global Interrupt */
     HAL_NVIC_DisableIRQ(TIM2_IRQn);
 
-    ret = HAL_TIM_UnRegisterCallback(&htim2, HAL_TIM_PERIOD_ELAPSED_CB_ID);
+    ret = HAL_TIM_UnRegisterCallback(&h_tim2, HAL_TIM_PERIOD_ELAPSED_CB_ID);
     runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_UNREGISTER_PERIOD_ELAPSED_CB : 0UL;
     assert_param(0UL == runtime_stats_timer_error);
 
-    ret = HAL_TIM_Base_DeInit(&htim2);
+    ret = HAL_TIM_Base_DeInit(&h_tim2);
     runtime_stats_timer_error |= (HAL_OK != ret) ? RUNTIME_STATS_TIMER_ERROR_TIM_BASE_DEINIT : 0UL;
     assert_param(0UL == runtime_stats_timer_error);
 
