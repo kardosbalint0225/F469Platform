@@ -89,7 +89,8 @@ extern uint32_t SystemCoreClock;
 #define xPortSysTickHandler                           SysTick_Handler
 
 /* Define to trap errors during development. */
-#define configASSERT( x )                             assert_param( ( x ) )
+#include <assert.h>
+#define configASSERT( x )                             assert( ( x ) )
 
 /* Optional functions - most linkers will remove unused functions anyway. */
 #define INCLUDE_vTaskPrioritySet                      ( 1 )

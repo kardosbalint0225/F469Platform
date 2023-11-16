@@ -348,7 +348,7 @@ ssize_t vfs_read(int fd, void *dest, size_t count)
 
 ssize_t vfs_write(int fd, const void *src, size_t count)
 {
-    debug("vfs_write: %d, %p, %lu\n", fd, src, (unsigned long)count);
+//    debug("vfs_write: %d, %p, %lu\n", fd, src, (unsigned long)count);
     if (src == NULL) {
         return -EFAULT;
     }

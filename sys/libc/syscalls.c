@@ -206,9 +206,12 @@ void _exit(int status)
 {
     (void)status;
 
+    __disable_irq();
+
     while (1)
     {
-
+        HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);  //TODO: Move to GPIO layer
+        for (volatile int i = 0; i < 1000000ul; i++);
     }
 }
 

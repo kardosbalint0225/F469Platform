@@ -146,13 +146,13 @@ static void sdcard_mount_task(void *params)
 
                 for (uint32_t i = 0; (i < 255) && (0 != fno.fname[0]); i++)
                 {
-                    fattime_t fattime = {
-                        .w = fno.ftime,
-                    };
-
-                    fatdate_t fatdate = {
-                        .w = fno.fdate,
-                    };
+//                    fattime_t fattime = {
+//                        .w = fno.ftime,
+//                    };
+//
+//                    fatdate_t fatdate = {
+//                        .w = fno.fdate,
+//                    };
 
 //                    printf("%04d.%02d.%02d  %02d:%02d  %s  %16llu  %s\r\n",
 //                           (fatdate.year+1980),
