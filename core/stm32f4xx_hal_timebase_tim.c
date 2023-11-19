@@ -10,7 +10,7 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_tim.h"
 
-#include "hal_timebase.h"
+#include "stm32f4xx_hal_timebase_tim.h"
 
 TIM_HandleTypeDef h_tim6;
 static uint32_t hal_timebase_error;

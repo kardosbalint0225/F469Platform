@@ -35,8 +35,6 @@ static int mtd_sdcard_init(mtd_dev_t *dev)
 {
     debug("mtd_sdcard_init\r\n");
 
-    //TODO: dev->work_area = pvPortMalloc(SDCARD_SDHC_BLOCK_SIZE); ?
-
     if (0 == sdcard_init())
     {
         /* erasing whole sectors is handled internally by the card so you can
