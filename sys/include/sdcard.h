@@ -5,7 +5,7 @@
  *      Author: Balint
  */
 
-#ifndef _SDMMC_H_
+#ifndef _SDCARD_H_
 #define _SDCARD_H_
 
 #include <stdint.h>

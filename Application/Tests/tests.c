@@ -19,9 +19,7 @@
 #include <time.h>
 #include <assert.h>
 
-#ifdef DEBUG
-    #error "DEBUG symbol is defined"
-#endif
+extern uint32_t uxTaskGetStackSize( TaskHandle_t xTask );
 
 static void tests_runner_task(void * params);
 
@@ -39,11 +37,14 @@ void start_tests(void)
 
 static void tests_runner_task(void * params)
 {
-    assert(0);
+    TaskHandle_t current = xTaskGetCurrentTaskHandle();
+    uint32_t stack_size = uxTaskGetStackSize(current);
+
+    printf("Stack size: %lu\n", stack_size);
 
     for ( ;; )
     {
-
+        vTaskDelay(10);
     }
 }
 

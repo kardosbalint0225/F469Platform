@@ -18,7 +18,7 @@
  *
  * @}
  */
-//#define ENABLE_DEBUG 0
+#define ENABLE_DEBUG 0
 #include "debug.h"
 //#include "kernel_defines.h"
 #include "macros/utils.h"
@@ -33,7 +33,7 @@
 
 static int mtd_sdcard_init(mtd_dev_t *dev)
 {
-    debug("mtd_sdcard_init\r\n");
+    DEBUG("mtd_sdcard_init\r\n");
 
     if (0 == sdcard_init())
     {
@@ -54,13 +54,13 @@ static int mtd_sdcard_read_page(mtd_dev_t *dev, void *buff, uint32_t page, uint3
 {
     int err;
 
-    debug("mtd_sdcard_read_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\r\n", page, offset, size);
+    DEBUG("mtd_sdcard_read_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\r\n", page, offset, size);
 
     if (offset || size % SDCARD_SDHC_BLOCK_SIZE)
     {
         if (NULL == dev->work_area)
         {
-            debug("mtd_sdcard_read_page: no work area\r\n");
+            DEBUG("mtd_sdcard_read_page: no work area\r\n");
             return -ENOTSUP;
         }
 
@@ -71,7 +71,7 @@ static int mtd_sdcard_read_page(mtd_dev_t *dev, void *buff, uint32_t page, uint3
         }
 
         size = MIN(size, SDCARD_SDHC_BLOCK_SIZE - offset);
-        debug("mtd_sdcard_read_page: read %" PRIu32 " bytes at offset %" PRIu32 "\r\n", size, offset);
+        DEBUG("mtd_sdcard_read_page: read %" PRIu32 " bytes at offset %" PRIu32 "\r\n", size, offset);
         memcpy(buff, (uint8_t *)dev->work_area + offset, size);
         return size;
     }
@@ -89,13 +89,13 @@ static int mtd_sdcard_write_page(mtd_dev_t *dev, const void *buff, uint32_t page
 {
     int err;
 
-    debug("mtd_sdcard_write_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\r\n", page, offset, size);
+    DEBUG("mtd_sdcard_write_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\r\n", page, offset, size);
 
     if (offset || size % SDCARD_SDHC_BLOCK_SIZE)
     {
         if (NULL == dev->work_area)
         {
-            debug("mtd_sdcard_write_page: no work area\r\n");
+            DEBUG("mtd_sdcard_write_page: no work area\r\n");
             return -ENOTSUP;
         }
 
@@ -106,7 +106,7 @@ static int mtd_sdcard_write_page(mtd_dev_t *dev, const void *buff, uint32_t page
         }
 
         size = MIN(size, SDCARD_SDHC_BLOCK_SIZE - offset);
-        debug("mtd_sdcard_write_page: write %" PRIu32 " bytes at offset %" PRIu32 "\r\n", size, offset);
+        DEBUG("mtd_sdcard_write_page: write %" PRIu32 " bytes at offset %" PRIu32 "\r\n", size, offset);
         memcpy((uint8_t *)dev->work_area + offset, buff, size);
         err = sdcard_write_blocks(page, 1, dev->work_area);
     }
@@ -117,7 +117,7 @@ static int mtd_sdcard_write_page(mtd_dev_t *dev, const void *buff, uint32_t page
 
     if (0 != err)
     {
-        debug("mtd_sdcard_write_page: error %d\r\n", err);
+        DEBUG("mtd_sdcard_write_page: error %d\r\n", err);
         return -EIO;
     }
     return size;
@@ -125,11 +125,11 @@ static int mtd_sdcard_write_page(mtd_dev_t *dev, const void *buff, uint32_t page
 
 static int mtd_sdcard_erase_sector(mtd_dev_t *dev, uint32_t sector, uint32_t count)
 {
-    debug("mtd_sdcard_erase_sector: sector: %" PRIu32 " count: %" PRIu32 "\r\n", sector, count);
+    DEBUG("mtd_sdcard_erase_sector: sector: %" PRIu32 " count: %" PRIu32 "\r\n", sector, count);
 
     if (NULL == dev->work_area)
     {
-        debug("mtd_sdcard_erase_sector: no work area\r\n");
+        DEBUG("mtd_sdcard_erase_sector: no work area\r\n");
         return -ENOTSUP;
     }
 
@@ -141,7 +141,7 @@ static int mtd_sdcard_erase_sector(mtd_dev_t *dev, uint32_t sector, uint32_t cou
         err = sdcard_write_blocks(sector, 1, dev->work_area);
         if (0 != err)
         {
-            debug("mtd_sdcard_erase_sector: error %d\r\n", err);
+            DEBUG("mtd_sdcard_erase_sector: error %d\r\n", err);
             return -EIO;
         }
         --count;

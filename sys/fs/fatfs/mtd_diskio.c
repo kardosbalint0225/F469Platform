@@ -22,10 +22,10 @@
 #include "fatfs_diskio_mtd.h"
 #include "ffconf.h"
 #include "mtd.h"
-#include "rtc.h"
-
+#define ENABLE_DEBUG 0
 #include "debug.h"
 
+#include "rtc.h"
 
 /* mtd devices for use by FatFs should be provided by the application */
 extern mtd_dev_t *fatfs_mtd_devs[FF_VOLUMES];
@@ -41,7 +41,7 @@ extern mtd_dev_t *fatfs_mtd_devs[FF_VOLUMES];
  */
 DSTATUS disk_status(BYTE pdrv)
 {
-    debug("disk_status %d\n", pdrv);
+    DEBUG("disk_status %d\n", pdrv);
     if (pdrv >= FF_VOLUMES) {
         return STA_NODISK;
     } else if (fatfs_mtd_devs[pdrv]->driver == NULL){
@@ -62,7 +62,7 @@ DSTATUS disk_status(BYTE pdrv)
  */
 DSTATUS disk_initialize(BYTE pdrv)
 {
-    debug("disk_initialize %d\n", pdrv);
+    DEBUG("disk_initialize %d\n", pdrv);
     if (pdrv >= FF_VOLUMES) {
         return STA_NODISK;
     } else if (fatfs_mtd_devs[pdrv]->driver == NULL){
@@ -76,7 +76,7 @@ DSTATUS disk_initialize(BYTE pdrv)
     uint32_t sector_size = fatfs_mtd_devs[pdrv]->page_size
                          * fatfs_mtd_devs[pdrv]->pages_per_sector;
     if (sector_size > FF_MAX_SS) {
-        assert_param(0);
+        assert(0);
         return STA_NOINIT;
     }
 
@@ -97,7 +97,7 @@ DSTATUS disk_initialize(BYTE pdrv)
  */
 DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
 {
-    debug("disk_read: %d, %lu, %d\n", pdrv, (long unsigned)sector, count);
+    DEBUG("disk_read: %d, %lu, %d\n", pdrv, (long unsigned)sector, count);
     if ((pdrv >= FF_VOLUMES) || (fatfs_mtd_devs[pdrv]->driver == NULL)) {
         return RES_PARERR;
     }
@@ -128,7 +128,7 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
  */
 DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
 {
-    debug("disk_write: %d, %lu, %d\n", pdrv, (long unsigned)sector, count);
+    DEBUG("disk_write: %d, %lu, %d\n", pdrv, (long unsigned)sector, count);
     if ((pdrv >= FF_VOLUMES) || (fatfs_mtd_devs[pdrv]->driver == NULL)) {
         return RES_PARERR;
     }

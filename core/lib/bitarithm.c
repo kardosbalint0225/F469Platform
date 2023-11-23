@@ -18,6 +18,9 @@
  *
  * @}
  */
+
+#include <stdio.h>
+
 #include "bitarithm.h"
 
 unsigned bitarith_msb_32bit_no_native_clz(unsigned v)

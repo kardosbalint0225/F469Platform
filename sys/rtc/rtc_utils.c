@@ -24,7 +24,7 @@
 #include "rtc.h"
 
 #ifndef RTC_NORMALIZE_COMPAT
-#define RTC_NORMALIZE_COMPAT (1)
+#define RTC_NORMALIZE_COMPAT (0)
 #endif
 
 #define MINUTE  (60U)

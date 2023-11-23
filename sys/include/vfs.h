@@ -100,6 +100,7 @@ extern "C" {
  * @brief   VFS parameters for FAT
  * @{
  */
+#ifdef MODULE_FATFS_VFS
 #include "ffconf.h"
 
 #if FF_FS_TINY
@@ -130,6 +131,10 @@ extern "C" {
 
 #define FATFS_VFS_DIR_BUFFER_SIZE       (44 + _FATFS_DIR_LFN + _FATFS_DIR_EXFAT)
 #define FATFS_VFS_FILE_BUFFER_SIZE      (41 + VFS_NAME_MAX + _FATFS_FILE_CACHE + _FATFS_FILE_SEEK_PTR + _FATFS_FILE_EXFAT)
+#else
+#define FATFS_VFS_DIR_BUFFER_SIZE       (1)
+#define FATFS_VFS_FILE_BUFFER_SIZE      (1)
+#endif
 /** @} */
 
 /**
@@ -707,7 +712,19 @@ struct vfs_file_system_ops {
     int (*statvfs) (vfs_mount_t *mountp, const char *restrict path, struct statvfs *restrict buf);
 };
 
+/**
+ * @brief   Initializes the Virtual File System
+ *
+ * This function is meant to be called once during system initialization time.
+ * This function creates the _open and _mount mutexes
+ */
 void vfs_init(void);
+
+/**
+ * @brief   De-initializes the Virtual File System
+ *
+ * This function frees the _open and _mount mutex related resources
+ */
 void vfs_deinit(void);
 
 /**

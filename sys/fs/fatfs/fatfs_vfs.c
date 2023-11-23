@@ -25,12 +25,13 @@
 #include <sys/stat.h> /* for struct stat */
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <stdio.h>
 
 #include "fs/fatfs.h"
+
+#include <time.h>
 #include "container.h"
 
+#define ENABLE_DEBUG 0
 #include "debug.h"
 
 #define TEST_FATFS_MAX_VOL_STR_LEN 14 /* "-2147483648:/\0" */
@@ -70,6 +71,7 @@ static int _init(vfs_mount_t *mountp)
     return -1;
 }
 
+#ifdef MODULE_FATFS_VFS_FORMAT
 static int _format(vfs_mount_t *mountp)
 {
     fatfs_desc_t *fs_desc = mountp->private_data;
@@ -97,6 +99,7 @@ static int _format(vfs_mount_t *mountp)
 
     return fatfs_err_to_errno(res);
 }
+#endif
 
 static int _mount(vfs_mount_t *mountp)
 {
@@ -110,7 +113,7 @@ static int _mount(vfs_mount_t *mountp)
     fatfs_desc_t *fs_desc = (fatfs_desc_t *)mountp->private_data;
 
     if (_init(mountp)) {
-        debug("can't find free slot in fatfs_mtd_devs\n");
+        DEBUG("can't find free slot in fatfs_mtd_devs\n");
         return -ENOMEM;
     }
 
@@ -118,14 +121,14 @@ static int _mount(vfs_mount_t *mountp)
 
     memset(&fs_desc->fat_fs, 0, sizeof(fs_desc->fat_fs));
 
-    debug("mounting file system of volume '%s'\n", fs_desc->abs_path_str_buff);
+    DEBUG("mounting file system of volume '%s'\n", fs_desc->abs_path_str_buff);
     FRESULT res = f_mount(&fs_desc->fat_fs, fs_desc->abs_path_str_buff, 1);
 
     if (res == FR_OK) {
-        debug("[OK]");
+        DEBUG("[OK]");
     }
     else {
-        debug("[ERROR]");
+        DEBUG("[ERROR]");
     }
 
     return fatfs_err_to_errno(res);
@@ -135,19 +138,19 @@ static int _umount(vfs_mount_t *mountp)
 {
     fatfs_desc_t *fs_desc = mountp->private_data;
 
-    debug("fatfs_vfs.c: _umount: private_data = %p\n", mountp->private_data);
+    DEBUG("fatfs_vfs.c: _umount: private_data = %p\n", mountp->private_data);
 
     _build_abs_path(fs_desc, "");
 
-    debug("unmounting file system of volume '%s'\n", fs_desc->abs_path_str_buff);
+    DEBUG("unmounting file system of volume '%s'\n", fs_desc->abs_path_str_buff);
     FRESULT res = f_unmount(fs_desc->abs_path_str_buff);
 
     if (res == FR_OK) {
-        debug("[OK]");
+        DEBUG("[OK]");
         memset(&fs_desc->fat_fs, 0, sizeof(fs_desc->fat_fs));
     }
     else {
-        debug("[ERROR]");
+        DEBUG("[ERROR]");
     }
 
     return fatfs_err_to_errno(res);
@@ -216,7 +219,7 @@ static int _open(vfs_file_t *filp, const char *name, int flags, mode_t mode)
     _build_abs_path(fs_desc, name);
 
     (void) mode; /* fatfs can't use mode param with f_open*/
-    debug("fatfs_vfs.c: _open: private_data = %p, name = %s; flags = 0x%x\n",
+    DEBUG("fatfs_vfs.c: _open: private_data = %p, name = %s; flags = 0x%x\n",
           filp->mp->private_data, name, flags);
 
     strncpy(fd->fname, fs_desc->abs_path_str_buff, VFS_NAME_MAX);
@@ -254,13 +257,13 @@ static int _open(vfs_file_t *filp, const char *name, int flags, mode_t mode)
                                fatfs_flags);
 
     if (open_resu == FR_OK) {
-        debug("[OK]");
+        DEBUG("[OK]");
     }
     else {
-        debug("[ERROR]");
+        DEBUG("[ERROR]");
     }
 
-    debug("fatfs_vfs.c _open: returning fatfserr=%d; errno=%d\n", open_resu,
+    DEBUG("fatfs_vfs.c _open: returning fatfserr=%d; errno=%d\n", open_resu,
           fatfs_err_to_errno(open_resu));
 
     return fatfs_err_to_errno(open_resu);
@@ -270,15 +273,15 @@ static int _close(vfs_file_t *filp)
 {
     fatfs_file_desc_t *fd = _get_fatfs_file_desc(filp);
 
-    debug("fatfs_vfs.c: _close: private_data = %p\n", filp->mp->private_data);
+    DEBUG("fatfs_vfs.c: _close: private_data = %p\n", filp->mp->private_data);
 
     FRESULT res = f_close(&fd->file);
 
     if (res == FR_OK) {
-        debug("[OK]");
+        DEBUG("[OK]");
     }
     else {
-        debug("[FAILED] (f_close error %d)\n", res);
+        DEBUG("[FAILED] (f_close error %d)\n", res);
     }
 
     return fatfs_err_to_errno(res);
@@ -543,7 +546,9 @@ static int fatfs_err_to_errno(int32_t err)
 }
 
 static const vfs_file_system_ops_t fatfs_fs_ops = {
+#ifdef MODULE_FATFS_VFS_FORMAT
     .format = _format,
+#endif
     .mount = _mount,
     .umount = _umount,
     .rename = _rename,

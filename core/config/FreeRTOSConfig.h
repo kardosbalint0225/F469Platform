@@ -42,6 +42,8 @@ extern uint32_t SystemCoreClock;
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS       ( 5 )
 #define configSTACK_DEPTH_TYPE                        uint16_t
 #define configMESSAGE_BUFFER_LENGTH_TYPE              size_t
+#define configRECORD_STACK_HIGH_ADDRESS               ( 1 )
+#define configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H     ( 1 )
 
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION               ( 1 )
@@ -112,7 +114,6 @@ extern uint32_t SystemCoreClock;
 #define INCLUDE_xQueueGetMutexHolder                  ( 1 )
 
 #define configCOMMAND_INT_MAX_OUTPUT_SIZE             ( 512 )
-
 
 #endif /* FREERTOS_CONFIG_H */
 
