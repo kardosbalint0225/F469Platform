@@ -15,28 +15,35 @@
 #include "semphr.h"
 #include "task.h"
 
+#include "hal_errno.h"
+#include <errno.h>
+
 /* struct tm counts years since 1900 but RTC has only two-digit year, hence the offset */
 #define YEAR_OFFSET    (_EPOCH_YEAR - 1900)
 
 RTC_HandleTypeDef hrtc;
-static uint32_t rtc_error;
-static SemaphoreHandle_t h_rtc_mutex = NULL;
-static StaticSemaphore_t rtc_mutex_storage;
+static SemaphoreHandle_t _rtc_mutex = NULL;
+static StaticSemaphore_t _rtc_mutex_storage;
+static HAL_StatusTypeDef _error = HAL_OK; /**< for msp init/deinit error handling */
 
-static void rtc_msp_init(RTC_HandleTypeDef * hrtc);
-static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc);
+static void rtc_msp_init(RTC_HandleTypeDef *hrtc);
+static void rtc_msp_deinit(RTC_HandleTypeDef *hrtc);
 static void rtc_lock(void);
 static void rtc_unlock(void);
 
-void rtc_init(void)
+
+int rtc_init(void)
 {
     RTC_TimeTypeDef sTime = {0};
     RTC_DateTypeDef sDate = {0};
     HAL_StatusTypeDef ret;
 
-    rtc_error = 0UL;
-
-    h_rtc_mutex = xSemaphoreCreateMutexStatic(&rtc_mutex_storage);
+    _error = HAL_OK;
+    _rtc_mutex = xSemaphoreCreateMutexStatic(&_rtc_mutex_storage);
+    if (NULL == _rtc_mutex)
+    {
+        return -ENOMEM;
+    }
 
     hrtc.Instance = RTC;
     hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
@@ -47,16 +54,27 @@ void rtc_init(void)
     hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
 
     ret = HAL_RTC_RegisterCallback(&hrtc, HAL_RTC_MSPINIT_CB_ID, rtc_msp_init);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_REGISTER_MSPINIT_CB : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_RTC_RegisterCallback(&hrtc, HAL_RTC_MSPDEINIT_CB_ID, rtc_msp_deinit);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_REGISTER_MSPDEINIT_CB : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_RTC_Init(&hrtc);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_INIT : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    if (HAL_OK != _error)
+    {
+        return hal_statustypedef_to_errno(_error);
+    }
 
     sTime.Hours = 12;
     sTime.Minutes = 0;
@@ -65,8 +83,10 @@ void rtc_init(void)
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
 
     ret = HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     sDate.WeekDay = RTC_WEEKDAY_SATURDAY;
     sDate.Month = RTC_MONTH_JANUARY;
@@ -74,8 +94,12 @@ void rtc_init(void)
     sDate.Year = 22;
 
     ret = HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_DATE : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    return 0;
 }
 
 /**
@@ -88,37 +112,46 @@ void rtc_init(void)
  */
 static void rtc_msp_init(RTC_HandleTypeDef * hrtc)
 {
-    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-    HAL_StatusTypeDef ret;
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {
+        .PeriphClockSelection = RCC_PERIPHCLK_RTC,
+        .RTCClockSelection = RCC_RTCCLKSOURCE_LSE,
+    };
 
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
-    PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-
-    ret = HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RCC_PERIPHCLKCONFIG_LSE : 0UL;
-    assert_param(0UL == rtc_error);
-
+    _error = HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
     __HAL_RCC_RTC_ENABLE();
 }
 
-void rtc_deinit(void)
+int rtc_deinit(void)
 {
     HAL_StatusTypeDef ret;
 
     ret = HAL_RTC_DeInit(&hrtc);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_DEINIT : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    if (HAL_OK != _error)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_RTC_UnRegisterCallback(&hrtc, HAL_RTC_MSPINIT_CB_ID);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_UNREGISTER_MSPINIT_CB : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_RTC_UnRegisterCallback(&hrtc, HAL_RTC_MSPDEINIT_CB_ID);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_UNREGISTER_MSPDEINIT_CB : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
-    vSemaphoreDelete(h_rtc_mutex);
-    h_rtc_mutex = NULL;
+    vSemaphoreDelete(_rtc_mutex);
+    _rtc_mutex = NULL;
+
+    return 0;
 }
 
 /**
@@ -128,25 +161,17 @@ void rtc_deinit(void)
  * @note   This function is called by the HAL library when
  *         rtc_deinit functions is called
  */
-static void rtc_msp_deinit(RTC_HandleTypeDef * hrtc)
+static void rtc_msp_deinit(RTC_HandleTypeDef *hrtc)
 {
-    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-    HAL_StatusTypeDef ret;
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {
+        .PeriphClockSelection = RCC_PERIPHCLK_RTC,
+        .RTCClockSelection = RCC_RTCCLKSOURCE_NO_CLK,
+    };
 
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
-    PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_NO_CLK;
-
-    ret = HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RCC_PERIPHCLKCONFIG_NO_CLK : 0UL;
-    assert_param(0UL == rtc_error);
-
+    _error = HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
     __HAL_RCC_RTC_DISABLE();
 }
 
-uint32_t rtc_get_error(void)
-{
-    return rtc_error;
-}
 
 int rtc_set_time(struct tm *time)
 {
@@ -159,28 +184,40 @@ int rtc_set_time(struct tm *time)
     rtc_lock();
 
     ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        rtc_unlock();
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        rtc_unlock();
+        return hal_statustypedef_to_errno(ret);
+    }
 
     sdate.Year = time->tm_year - YEAR_OFFSET;
     sdate.Month = time->tm_mon + 1;
     sdate.Date = time->tm_mday;
 
     ret = HAL_RTC_SetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_DATE : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        rtc_unlock();
+        return hal_statustypedef_to_errno(ret);
+    }
 
     stime.Hours = time->tm_hour;
     stime.Minutes = time->tm_min;
     stime.Seconds = time->tm_sec;
 
     ret = HAL_RTC_SetTime(&hrtc, &stime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_SET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        rtc_unlock();
+        return hal_statustypedef_to_errno(ret);
+    }
 
     rtc_unlock();
 
@@ -196,12 +233,18 @@ int rtc_get_time(struct tm *time)
     rtc_lock();
 
     ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_TIME : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        rtc_unlock();
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
-    rtc_error |= (HAL_OK != ret) ? RTC_ERROR_RTC_GET_DATE : 0UL;
-    assert_param(0UL == rtc_error);
+    if (HAL_OK != ret)
+    {
+        rtc_unlock();
+        return hal_statustypedef_to_errno(ret);
+    }
 
     rtc_unlock();
 
@@ -220,8 +263,7 @@ int rtc_get_time(struct tm *time)
  */
 static void rtc_lock(void)
 {
-    BaseType_t ret = xSemaphoreTake(h_rtc_mutex, portMAX_DELAY);
-    assert_param(pdPASS == ret);
+    xSemaphoreTake(_rtc_mutex, portMAX_DELAY);
 }
 
 /**
@@ -229,8 +271,7 @@ static void rtc_lock(void)
  */
 static void rtc_unlock(void)
 {
-    BaseType_t ret = xSemaphoreGive(h_rtc_mutex);
-    assert_param(pdPASS == ret);
+    xSemaphoreGive(_rtc_mutex);
 }
 
 

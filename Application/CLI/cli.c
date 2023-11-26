@@ -19,7 +19,7 @@
 #include "stdio_base.h"
 #include "stm32f4xx_hal.h"
 
-extern QueueHandle_t h_uart_rx_queue;
+extern QueueHandle_t _rx_queue;
 
 static EmbeddedCli *cli;
 static CLI_UINT cli_buffer[BYTES_TO_CLI_UINTS(CLI_BUFFER_SIZE)];
@@ -115,7 +115,7 @@ static void cli_io_read_task(void *params)
     for ( ;; )
     {
         char c;
-        BaseType_t ret = xQueueReceive(h_uart_rx_queue, &c, portMAX_DELAY);
+        BaseType_t ret = xQueueReceive(_rx_queue, &c, portMAX_DELAY);
         cli_error |= (pdTRUE != ret) ? CLI_ERROR_RX_QUEUE_RECEIVE : 0UL;
         assert_param(0UL == cli_error);
 

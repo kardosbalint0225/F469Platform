@@ -20,7 +20,7 @@
  */
 #define ENABLE_DEBUG 0
 #include "debug.h"
-//#include "kernel_defines.h"
+#include "modules.h"
 #include "macros/utils.h"
 #include "mtd.h"
 #include "mtd_sdcard.h"
@@ -33,10 +33,10 @@
 
 static int mtd_sdcard_init(mtd_dev_t *dev)
 {
-    DEBUG("mtd_sdcard_init\r\n");
+    DEBUG("mtd_sdcard_init\n");
 
-    if (0 == sdcard_init())
-    {
+    if (sdcard_init() == 0) {
+    	
         /* erasing whole sectors is handled internally by the card so you can
            delete single blocks (i.e. pages) */
         dev->pages_per_sector = 1;
@@ -50,74 +50,89 @@ static int mtd_sdcard_init(mtd_dev_t *dev)
     return -EIO;
 }
 
-static int mtd_sdcard_read_page(mtd_dev_t *dev, void *buff, uint32_t page, uint32_t offset, uint32_t size)
+static int mtd_sdcard_read_page(mtd_dev_t *dev, void *buff, uint32_t page,
+                                uint32_t offset, uint32_t size)
 {
     int err;
 
-    DEBUG("mtd_sdcard_read_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\r\n", page, offset, size);
 
-    if (offset || size % SDCARD_SDHC_BLOCK_SIZE)
-    {
-        if (NULL == dev->work_area)
-        {
-            DEBUG("mtd_sdcard_read_page: no work area\r\n");
+    DEBUG("mtd_sdcard_read_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\n",
+          page, offset, size);
+
+    if (offset || size % SDCARD_SDHC_BLOCK_SIZE) {
+#if IS_USED(MODULE_MTD_WRITE_PAGE)
+        if (dev->work_area == NULL) {
+            DEBUG("mtd_sdcard_read_page: no work area\n");
             return -ENOTSUP;
         }
 
-        err = sdcard_read_blocks(page, 1, dev->work_area);
-        if (0 != err)
-        {
+        err = sdcard_read_blocks(page, 
+                                 1, 
+                                 dev->work_area);
+        if (err != 0) {
             return -EIO;
         }
 
         size = MIN(size, SDCARD_SDHC_BLOCK_SIZE - offset);
-        DEBUG("mtd_sdcard_read_page: read %" PRIu32 " bytes at offset %" PRIu32 "\r\n", size, offset);
+        DEBUG("mtd_sdcard_read_page: read %" PRIu32 " bytes at offset %" PRIu32 "\n",
+              size, offset);
         memcpy(buff, (uint8_t *)dev->work_area + offset, size);
         return size;
+#else
+        return -ENOTSUP;
+#endif
     }
 
-    err = sdcard_read_blocks(page, size / SDCARD_SDHC_BLOCK_SIZE, buff);
-    if (0 != err)
-    {
+    err = sdcard_read_blocks(page, 
+                             size / SDCARD_SDHC_BLOCK_SIZE, 
+                             buff);
+    if (err != 0) {
         return -EIO;
     }
-
     return size;
 }
 
-static int mtd_sdcard_write_page(mtd_dev_t *dev, const void *buff, uint32_t page, uint32_t offset, uint32_t size)
+static int mtd_sdcard_write_page(mtd_dev_t *dev, const void *buff, uint32_t page,
+                                 uint32_t offset, uint32_t size)
 {
     int err;
 
-    DEBUG("mtd_sdcard_write_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\r\n", page, offset, size);
 
-    if (offset || size % SDCARD_SDHC_BLOCK_SIZE)
-    {
-        if (NULL == dev->work_area)
-        {
-            DEBUG("mtd_sdcard_write_page: no work area\r\n");
+    DEBUG("mtd_sdcard_write_page: page:%" PRIu32 " offset:%" PRIu32 " size:%" PRIu32 "\n",
+          page, offset, size);
+
+    if (offset || size % SDCARD_SDHC_BLOCK_SIZE) {
+#if IS_USED(MODULE_MTD_WRITE_PAGE)
+        if (dev->work_area == NULL) {
+            DEBUG("mtd_sdcard_write_page: no work area\n");
             return -ENOTSUP;
         }
 
-        err = sdcard_read_blocks(page, 1, dev->work_area);
-        if (0 != err)
-        {
+        err = sdcard_read_blocks(page, 
+                                 1, 
+                                 dev->work_area);
+        if (err != 0) {
             return -EIO;
         }
 
         size = MIN(size, SDCARD_SDHC_BLOCK_SIZE - offset);
-        DEBUG("mtd_sdcard_write_page: write %" PRIu32 " bytes at offset %" PRIu32 "\r\n", size, offset);
+        DEBUG("mtd_sdcard_write_page: write %" PRIu32 " bytes at offset %" PRIu32 "\n",
+              size, offset);
         memcpy((uint8_t *)dev->work_area + offset, buff, size);
-        err = sdcard_write_blocks(page, 1, dev->work_area);
-    }
-    else
-    {
-        err = sdcard_write_blocks(page, size / SDCARD_SDHC_BLOCK_SIZE, buff);
+        err = sdcard_write_blocks(page, 
+                                  1, 
+                                  dev->work_area);
+#else
+        return -ENOTSUP;
+#endif
+    } else {
+        err = sdcard_write_blocks(page, 
+                                  size / SDCARD_SDHC_BLOCK_SIZE, 
+                                  buff);
     }
 
-    if (0 != err)
-    {
-        DEBUG("mtd_sdcard_write_page: error %d\r\n", err);
+    if (err != 0) {
+        DEBUG("mtd_sdcard_write_page: error %d\n", err);
         return -EIO;
     }
     return size;
@@ -125,29 +140,37 @@ static int mtd_sdcard_write_page(mtd_dev_t *dev, const void *buff, uint32_t page
 
 static int mtd_sdcard_erase_sector(mtd_dev_t *dev, uint32_t sector, uint32_t count)
 {
-    DEBUG("mtd_sdcard_erase_sector: sector: %" PRIu32 " count: %" PRIu32 "\r\n", sector, count);
+#if IS_ACTIVE(CONFIG_MTD_SDCARD_ERASE) && IS_USED(MODULE_MTD_WRITE_PAGE)
 
-    if (NULL == dev->work_area)
-    {
-        DEBUG("mtd_sdcard_erase_sector: no work area\r\n");
+
+    DEBUG("mtd_sdcard_erase_sector: sector: %" PRIu32 " count: %" PRIu32 "\n",
+          sector, count);
+
+    if (dev->work_area == NULL) {
+        DEBUG("mtd_sdcard_erase_sector: no work area\n");
         return -ENOTSUP;
     }
-
     memset(dev->work_area, 0, SDCARD_SDHC_BLOCK_SIZE);
-
-    while (count)
-    {
+    while (count) {
         int err;
-        err = sdcard_write_blocks(sector, 1, dev->work_area);
-        if (0 != err)
-        {
-            DEBUG("mtd_sdcard_erase_sector: error %d\r\n", err);
+        err = sdcard_write_blocks(sector, 
+                                  1, 
+                                  dev->work_area);
+        if (err != 0) {
+            DEBUG("mtd_sdcard_erase_sector: error %d\n", err);
             return -EIO;
         }
         --count;
         ++sector;
     }
-
+#else
+    (void)dev;
+    (void)sector;
+    (void)count;
+    if (IS_ACTIVE(CONFIG_MTD_SDCARD_ERASE)) {
+        return -ENOTSUP;
+    }
+#endif
     return 0;
 }
 
@@ -199,3 +222,36 @@ const mtd_desc_t mtd_sdcard_driver = {
     .power = mtd_sdcard_power,
 };
 
+#if IS_USED(MODULE_MTD_SDCARD_DEFAULT)
+#include "sdcard_config.h"
+#include "vfs_default.h"
+
+
+
+#ifndef CONFIG_SDCARD_GENERIC_MTD_OFFSET
+#define CONFIG_SDCARD_GENERIC_MTD_OFFSET 0
+#endif
+
+#define MTD_SDCARD_DEV(n, m)                \
+    mtd_sdcard_t mtd_sdcard_dev ## n = {    \
+        .base = {                           \
+           .driver = &mtd_sdcard_driver,    \
+        },                                  \
+                                            \
+                                            \
+    };                                      \
+                                            \
+    mtd_dev_t CONCAT(*mtd, m) = (mtd_dev_t *)&mtd_sdcard_dev ## n
+
+#define MTD_SDCARD_DEV_FS(n, m, filesystem) \
+    VFS_AUTO_MOUNT(filesystem, VFS_MTD(mtd_sdcard_dev ## n), VFS_DEFAULT_SD(n), m)
+
+
+
+
+MTD_SDCARD_DEV(0, CONFIG_SDCARD_GENERIC_MTD_OFFSET);
+#ifdef MODULE_FATFS_VFS
+MTD_SDCARD_DEV_FS(0, CONFIG_SDCARD_GENERIC_MTD_OFFSET, fatfs);
+#endif
+
+#endif

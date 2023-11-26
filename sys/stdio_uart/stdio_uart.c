@@ -30,9 +30,13 @@
 #include <errno.h>
 #include <string.h>
 
-#include "stdio_uart.h"
+#include "stdio_base.h"
 #include "stdio_uart_config.h"
 #include "stm32f4xx_hal.h"
+#include "hal_errno.h"
+
+#include "dma.h"
+#include "gpio.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -45,43 +49,43 @@ typedef struct
     uint16_t size;
 } uart_tx_data_t;
 
-static SemaphoreHandle_t h_uart_tx_cplt_semphr = NULL;
-static StaticSemaphore_t uart_tx_cplt_semphr_storage;
+static SemaphoreHandle_t _tx_cplt_semphr = NULL;
+static StaticSemaphore_t _tx_cplt_semphr_storage;
 
-static StaticQueue_t uart_rx_queue_struct;
-static uint8_t uart_rx_queue_storage[STDIO_UART_RX_QUEUE_LENGTH * sizeof(uint8_t)];
-QueueHandle_t h_uart_rx_queue = NULL;
+static StaticQueue_t _rx_queue_struct;
+static uint8_t _rx_queue_storage[STDIO_UART_RX_QUEUE_LENGTH * sizeof(uint8_t)];
+QueueHandle_t _rx_queue = NULL;
 
-static StaticQueue_t uart_tx_avail_struct;
-static uint8_t uart_tx_avail_queue_storage[STDIO_UART_TX_AVAIL_QUEUE_LENGTH * sizeof(uint8_t *)];
-static QueueHandle_t h_uart_tx_avail_queue = NULL;
+static StaticQueue_t _tx_avail_queue_struct;
+static uint8_t _tx_avail_queue_storage[STDIO_UART_TX_AVAIL_QUEUE_LENGTH * sizeof(uint8_t *)];
+static QueueHandle_t _tx_avail_queue = NULL;
 
-static StaticQueue_t uart_tx_ready_struct;
-static uint8_t uart_tx_ready_queue_storage[STDIO_UART_TX_READY_QUEUE_LENGTH * sizeof(uart_tx_data_t)];
-static QueueHandle_t h_uart_tx_ready_queue = NULL;
+static StaticQueue_t _tx_ready_queue_struct;
+static uint8_t _tx_ready_queue_storage[STDIO_UART_TX_READY_QUEUE_LENGTH * sizeof(uart_tx_data_t)];
+static QueueHandle_t _tx_ready_queue = NULL;
 
-static StackType_t stdio_uart_write_task_stack[STDIO_UART_WRITE_TASK_STACKSIZE];
-static StaticTask_t stdio_uart_write_task_tcb;
+static StackType_t _stdio_uart_write_task_stack[STDIO_UART_WRITE_TASK_STACKSIZE];
+static StaticTask_t _stdio_uart_write_task_tcb;
 static TaskHandle_t h_stdio_uart_write_task = NULL;
 
 UART_HandleTypeDef h_stdio_uart;
-DMA_HandleTypeDef h_stdio_uart_dma_tx;
 
-static uint8_t uart_tx_buffer[STDIO_UART_TX_BUFFER_DEPTH * STDIO_UART_TX_AVAIL_QUEUE_LENGTH];
-static uint8_t uart_rx_buffer;
+static uint8_t _tx_buffer[STDIO_UART_TX_BUFFER_DEPTH * STDIO_UART_TX_AVAIL_QUEUE_LENGTH];
+static uint8_t _rx_buffer;
 
 static const TickType_t dma_tx_max_time_ms = (TickType_t)((1000.0f * (((float)(10 * STDIO_UART_TX_BUFFER_DEPTH)) / 115200.0f)) + 0.5f);
 
-static uint32_t stdio_uart_error;
+static HAL_StatusTypeDef _error = HAL_OK;
 
-static void uartx_init(void);
-static void uartx_deinit(void);
-static void uartx_msp_init(UART_HandleTypeDef *huart);
-static void uartx_msp_deinit(UART_HandleTypeDef *huart);
-static void uartx_tx_cplt_callback(UART_HandleTypeDef *huart);
-static void uartx_rx_cplt_callback(UART_HandleTypeDef *huart);
+static int stdio_uart_init(void);
+static int stdio_uart_deinit(void);
+static void stdio_uart_msp_init(UART_HandleTypeDef *huart);
+static void stdio_uart_msp_deinit(UART_HandleTypeDef *huart);
+static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart);
+static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart);
 
 static void stdio_uart_write_task(void *params);
+static void uart_write(const uint8_t *data, size_t len);
 
 /**
  * @brief  UART writer gatekeeper task
@@ -95,74 +99,64 @@ static void stdio_uart_write_task(void *params)
 
     BaseType_t ret;
     HAL_StatusTypeDef hal_status;
-    uint8_t *uart_tx_pending = NULL;
+    uint8_t *_tx_pending = NULL;
 
     uart_tx_data_t uart_tx_data = {
         .pbuf = NULL,
         .size = 0,
     };
 
-    const TickType_t ticks_to_wait = pdMS_TO_TICKS(2UL * dma_tx_max_time_ms);
+    const TickType_t ticks_to_wait = pdMS_TO_TICKS(2ul * dma_tx_max_time_ms);
 
     for ( ;; )
     {
-        ret = xQueueReceive(h_uart_tx_ready_queue, &uart_tx_data, portMAX_DELAY);
-        stdio_uart_error |= (pdPASS != ret) ? STDIO_UART_ERROR_TX_READY_QUEUE_RECEIVE : 0UL;
-        assert_param(0UL == stdio_uart_error);
+        ret = xQueueReceive(_tx_ready_queue, &uart_tx_data, portMAX_DELAY);
+        assert(ret);
 
         hal_status = HAL_UART_Transmit_DMA(&h_stdio_uart, uart_tx_data.pbuf, uart_tx_data.size);
-        stdio_uart_error |= (HAL_OK != hal_status) ? STDIO_UART_ERROR_UART_TRANSMIT_DMA : 0UL;
-        assert_param(0UL == stdio_uart_error);
-        uart_tx_pending = uart_tx_data.pbuf;
+        assert(HAL_OK == hal_status);
 
-        ret = xSemaphoreTake(h_uart_tx_cplt_semphr, ticks_to_wait);
-        stdio_uart_error |= (pdPASS != ret) ? STDIO_UART_ERROR_TX_CPLT_SEMPHR_TAKE : 0UL;
-        assert_param(0UL == stdio_uart_error);
+        _tx_pending = uart_tx_data.pbuf;
 
-        ret = xQueueSend(h_uart_tx_avail_queue, &uart_tx_pending, 0);
-        stdio_uart_error |= (pdPASS != ret) ? STDIO_UART_ERROR_TX_AVAIL_QUEUE_SEND : 0UL;
-        assert_param(0UL == stdio_uart_error);
+        ret = xSemaphoreTake(_tx_cplt_semphr, ticks_to_wait);
+        assert(ret);
+        ret = xQueueSend(_tx_avail_queue, &_tx_pending, 0);
+        assert(ret);
     }
 }
 
 void stdio_init(void)
 {
-    BaseType_t ret;
-    stdio_uart_error = 0UL;
+    int ret;
+    ret = stdio_uart_init();
+    assert(0 == ret);
 
-    uartx_init();
+    _tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&_tx_cplt_semphr_storage);
+    assert(_tx_cplt_semphr);
 
-    h_uart_tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&uart_tx_cplt_semphr_storage);
-    stdio_uart_error |= (NULL == h_uart_tx_cplt_semphr) ? STDIO_UART_ERROR_TX_CPLT_SEMPHR_CREATE : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    _tx_avail_queue = xQueueCreateStatic(STDIO_UART_TX_AVAIL_QUEUE_LENGTH,
+                                         sizeof(uint8_t *),
+                                         _tx_avail_queue_storage,
+                                         &_tx_avail_queue_struct);
+    assert(_tx_avail_queue);
 
-    h_uart_tx_avail_queue = xQueueCreateStatic(STDIO_UART_TX_AVAIL_QUEUE_LENGTH,
-                                               sizeof(uint8_t *),
-                                               uart_tx_avail_queue_storage,
-                                               &uart_tx_avail_struct);
-    stdio_uart_error |= (NULL == h_uart_tx_avail_queue) ? STDIO_UART_ERROR_TX_AVAIL_QUEUE_CREATE : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    _tx_ready_queue = xQueueCreateStatic(STDIO_UART_TX_READY_QUEUE_LENGTH,
+                                         sizeof(uart_tx_data_t),
+                                         _tx_ready_queue_storage,
+                                         &_tx_ready_queue_struct);
+    assert(_tx_ready_queue);
 
-    h_uart_tx_ready_queue = xQueueCreateStatic(STDIO_UART_TX_READY_QUEUE_LENGTH,
-                                               sizeof(uart_tx_data_t),
-                                               uart_tx_ready_queue_storage,
-                                               &uart_tx_ready_struct);
-    stdio_uart_error |= (NULL == h_uart_tx_ready_queue) ? STDIO_UART_ERROR_TX_READY_QUEUE_CREATE : 0UL;
-    assert_param(0UL == stdio_uart_error);
-
-    h_uart_rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
-                                         sizeof(uint8_t),
-                                         uart_rx_queue_storage,
-                                         &uart_rx_queue_struct);
-    stdio_uart_error |= (NULL == h_uart_rx_queue) ? STDIO_UART_ERROR_RX_QUEUE_CREATE : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    _rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
+                                   sizeof(uint8_t),
+                                   _rx_queue_storage,
+                                   &_rx_queue_struct);
+    assert(_rx_queue);
 
     for (uint8_t i = 0; i < STDIO_UART_TX_AVAIL_QUEUE_LENGTH; i++)
     {
-        uint8_t *buffer_address = &uart_tx_buffer[i * STDIO_UART_TX_BUFFER_DEPTH];
-        ret = xQueueSend(h_uart_tx_avail_queue, &buffer_address, 0);
-        stdio_uart_error |= (pdPASS != ret) ? STDIO_UART_ERROR_TX_AVAIL_QUEUE_INIT : 0UL;
-        assert_param(0UL == stdio_uart_error);
+        uint8_t *buffer_address = &_tx_buffer[i * STDIO_UART_TX_BUFFER_DEPTH];
+        BaseType_t retv = xQueueSend(_tx_avail_queue, &buffer_address, 0);
+        assert(retv);
     }
 
     h_stdio_uart_write_task = xTaskCreateStatic(stdio_uart_write_task,
@@ -170,44 +164,51 @@ void stdio_init(void)
                                                 STDIO_UART_WRITE_TASK_STACKSIZE,
                                                 NULL,
                                                 STDIO_UART_WRITE_TASK_PRIORITY,
-                                                stdio_uart_write_task_stack,
-                                                &stdio_uart_write_task_tcb);
-    stdio_uart_error |= (NULL == h_stdio_uart_write_task) ? STDIO_UART_ERROR_WRITE_TASK_CREATE : 0UL;
-    assert_param(0UL == stdio_uart_error);
+                                                _stdio_uart_write_task_stack,
+                                                &_stdio_uart_write_task_tcb);
+    assert(h_stdio_uart_write_task);
 
-    HAL_StatusTypeDef hal_status = HAL_UART_Receive_IT(&h_stdio_uart, &uart_rx_buffer, 1);
-    stdio_uart_error |= (HAL_OK != hal_status) ? STDIO_UART_ERROR_UART_RECEIVE_IT : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    HAL_StatusTypeDef hal_status = HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
+    assert(HAL_OK == hal_status);
 }
 
 void stdio_deinit(void)
 {
-    uartx_deinit();
+    int ret;
+
+    ret = stdio_uart_deinit();
+    assert(0 == ret);
 
     vTaskDelete(h_stdio_uart_write_task);
-    vQueueDelete(h_uart_tx_avail_queue);
-    vQueueDelete(h_uart_tx_ready_queue);
-    vQueueDelete(h_uart_rx_queue);
-    vSemaphoreDelete(h_uart_tx_cplt_semphr);
+    vQueueDelete(_tx_avail_queue);
+    vQueueDelete(_tx_ready_queue);
+    vQueueDelete(_rx_queue);
+    vSemaphoreDelete(_tx_cplt_semphr);
 
     h_stdio_uart_write_task = NULL;
-    h_uart_tx_avail_queue = NULL;
-    h_uart_tx_ready_queue = NULL;
-    h_uart_rx_queue = NULL;
-    h_uart_tx_cplt_semphr = NULL;
+    _tx_avail_queue = NULL;
+    _tx_ready_queue = NULL;
+    _rx_queue = NULL;
+    _tx_cplt_semphr = NULL;
 }
 
 /**
- * @brief  Initializes the UART peripheral
+ * @brief  Initializes the STDIO_UART peripheral
+ *
  * @param  None
- * @retval None
+ *
+ * @return  0 for success
+ * @return < 0 an error occurred
+ *
  * @note   The communication is configured 115200 Baudrate 8N1 with no
  *         flowcontrol.
  */
-static void uartx_init(void)
+static int stdio_uart_init(void)
 {
+    _error = HAL_OK;
+
     h_stdio_uart.Instance = STDIO_UART_USARTx;
-    h_stdio_uart.Init.BaudRate = 115200;
+    h_stdio_uart.Init.BaudRate = 115200ul;
     h_stdio_uart.Init.WordLength = UART_WORDLENGTH_8B;
     h_stdio_uart.Init.StopBits = UART_STOPBITS_1;
     h_stdio_uart.Init.Parity = UART_PARITY_NONE;
@@ -217,131 +218,134 @@ static void uartx_init(void)
 
     HAL_StatusTypeDef ret;
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPINIT_CB_ID, uartx_msp_init);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_REGISTER_MSPINIT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPINIT_CB_ID, stdio_uart_msp_init);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPDEINIT_CB_ID, uartx_msp_deinit);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_REGISTER_MSPDEINIT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPDEINIT_CB_ID, stdio_uart_msp_deinit);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_UART_Init(&h_stdio_uart);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_UART_INIT : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_TX_COMPLETE_CB_ID, uartx_tx_cplt_callback);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_REGISTER_TX_CPLT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    if (HAL_OK != _error)
+    {
+        return hal_statustypedef_to_errno(_error);
+    }
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_RX_COMPLETE_CB_ID, uartx_rx_cplt_callback);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_REGISTER_RX_CPLT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_TX_COMPLETE_CB_ID, stdio_uart_tx_cplt_callback);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_RX_COMPLETE_CB_ID, stdio_uart_rx_cplt_callback);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     //TODO: Error callback
+
+    return 0;
 }
 
 /**
- * @brief  Initializes the UARTx MSP
+ * @brief  Initializes the STDIO_UART MSP (low-level)
  * @param  huart pointer to the UART_HandleTypeDef structure
  * @retval None
  * @note   This function initializes the GPIOs corresponding the UART peripheral,
  *         the DMA stream and enables the DMA and UART interrupts
  */
-static void uartx_msp_init(UART_HandleTypeDef *huart)
+static void stdio_uart_msp_init(UART_HandleTypeDef *huart)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
     STDIO_UART_USARTx_CLK_ENABLE();
-    STDIO_UART_DMAx_CLK_ENABLE();
-    STDIO_UART_GPIOx_CLK_ENABLE();
 
-    GPIO_InitStruct.Pin = STDIO_UART_UARTx_TX_PIN | STDIO_UART_UARTx_RX_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = STDIO_UART_GPIO_AFx_USARTx;
-    HAL_GPIO_Init(STDIO_UART_GPIOx_PORT, &GPIO_InitStruct);
+    stdio_uart_tx_pin_init();
+    stdio_uart_rx_pin_init();
 
-    h_stdio_uart_dma_tx.Instance = STDIO_UART_DMAx_STREAMx;
-    h_stdio_uart_dma_tx.Init.Channel = STDIO_UART_DMA_CHANNELx;
-    h_stdio_uart_dma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
-    h_stdio_uart_dma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-    h_stdio_uart_dma_tx.Init.MemInc = DMA_MINC_ENABLE;
-    h_stdio_uart_dma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    h_stdio_uart_dma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-    h_stdio_uart_dma_tx.Init.Mode = DMA_NORMAL;
-    h_stdio_uart_dma_tx.Init.Priority = DMA_PRIORITY_LOW;
-    h_stdio_uart_dma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-
-    HAL_StatusTypeDef ret = HAL_DMA_Init(&h_stdio_uart_dma_tx);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_DMA_INIT : 0UL;
-    assert_param(0UL == stdio_uart_error);
-
-    __HAL_LINKDMA(huart, hdmatx, h_stdio_uart_dma_tx);
+    _error = stdio_uart_dma_init(huart);
 
     HAL_NVIC_SetPriority(STDIO_UART_USARTx_IRQn, STDIO_UART_USARTx_IRQ_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(STDIO_UART_USARTx_IRQn);
-
-    HAL_NVIC_SetPriority(STDIO_UART_DMAx_STREAMx_IRQn, STDIO_UART_DMAx_STREAMx_IRQ_PRIORITY, 0);
-    HAL_NVIC_EnableIRQ(STDIO_UART_DMAx_STREAMx_IRQn);
 }
 
 /**
- * @brief  Deinitializes the UART peripheral
+ * @brief  De-initializes the STDIO_UART peripheral
+ *
  * @param  None
- * @retval None
+ *
+ * @return  0 for success
+ * @return < 0 an error occurred
  * @note   -
  */
-static void uartx_deinit(void)
+static int stdio_uart_deinit(void)
 {
     HAL_StatusTypeDef ret;
 
     ret = HAL_UART_UnRegisterCallback(&h_stdio_uart, HAL_UART_TX_COMPLETE_CB_ID);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_UNREGISTER_TX_CPLT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_UART_UnRegisterCallback(&h_stdio_uart, HAL_UART_RX_COMPLETE_CB_ID);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_UNREGISTER_RX_CPLT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_UART_DeInit(&h_stdio_uart);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_UART_DEINIT : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    if (HAL_OK != _error)
+    {
+        return hal_statustypedef_to_errno(_error);
+    }
 
     ret = HAL_UART_UnRegisterCallback(&h_stdio_uart, HAL_UART_MSPINIT_CB_ID);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_UNREGISTER_MSPINIT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_UART_UnRegisterCallback(&h_stdio_uart, HAL_UART_MSPDEINIT_CB_ID);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_UNREGISTER_MSPDEINIT_CB : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    return 0;
 }
 
 /**
- * @brief  Deinitializes the UARTx MSP
+ * @brief  De-initializes the STDIO_UART MSP (low-level)
  * @param  huart pointer to the UART_HandleTypeDef structure
  * @retval None
- * @note   This function deinitializes the GPIOs corresponding the UART peripheral,
+ * @note   This function de-initializes the GPIOs corresponding the UART peripheral,
  *         the DMA stream and disables the DMA and UART interrupts
  */
-static void uartx_msp_deinit(UART_HandleTypeDef *huart)
+static void stdio_uart_msp_deinit(UART_HandleTypeDef *huart)
 {
     STDIO_UART_USARTx_CLK_DISABLE();
 
-    HAL_GPIO_DeInit(STDIO_UART_GPIOx_PORT, STDIO_UART_UARTx_TX_PIN | STDIO_UART_UARTx_RX_PIN);
+    stdio_uart_tx_pin_deinit();
+    stdio_uart_rx_pin_deinit();
 
-    HAL_StatusTypeDef ret;
-    ret = HAL_DMA_DeInit(huart->hdmatx);
-    stdio_uart_error |= (HAL_OK != ret) ? STDIO_UART_ERROR_DMA_DEINIT : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    _error = stdio_uart_dma_deinit(huart);
 
     HAL_NVIC_DisableIRQ(STDIO_UART_USARTx_IRQn);
-    HAL_NVIC_DisableIRQ(STDIO_UART_DMAx_STREAMx_IRQn);
-}
-
-uint32_t stdio_uart_get_error(void)
-{
-    return stdio_uart_error;
 }
 
 /**
@@ -351,10 +355,10 @@ uint32_t stdio_uart_get_error(void)
  * @note   This function is called by the HAL library
  *         when the DMA is finished transferring data
  */
-static void uartx_tx_cplt_callback(UART_HandleTypeDef *huart)
+static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart)
 {
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
-    xSemaphoreGiveFromISR(h_uart_tx_cplt_semphr, &higher_priority_task_woken);
+    xSemaphoreGiveFromISR(_tx_cplt_semphr, &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
@@ -365,11 +369,11 @@ static void uartx_tx_cplt_callback(UART_HandleTypeDef *huart)
  * @note   This function is called by the HAL library
  *         when a character is arrived.
  */
-static void uartx_rx_cplt_callback(UART_HandleTypeDef *huart)
+static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart)
 {
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
-    xQueueSendFromISR(h_uart_rx_queue, &uart_rx_buffer, &higher_priority_task_woken);
-    HAL_UART_Receive_IT(&h_stdio_uart, &uart_rx_buffer, 1);
+    xQueueSendFromISR(_rx_queue, &_rx_buffer, &higher_priority_task_woken);
+    HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
@@ -386,24 +390,46 @@ ssize_t stdio_read(void* buffer, size_t count)
 ssize_t stdio_write(const void *buffer, size_t len)
 {
     ssize_t result = len;
-    uart_tx_data_t data = {
+    if (IS_USED(MODULE_STDIO_UART_ONLCR)) {
+        static const uint8_t crlf[2] = { (uint8_t)'\r', (uint8_t)'\n' };
+        const uint8_t *buf = buffer;
+        while (len) {
+            const uint8_t *pos = memchr(buf, '\n', len);
+            size_t chunk_len = (pos != NULL)
+                             ? (uintptr_t)pos - (uintptr_t)buf
+                             : len;
+            uart_write(buf, chunk_len);
+            buf += chunk_len;
+            len -= chunk_len;
+            if (len) {
+                uart_write(crlf, sizeof(crlf));
+                buf++;
+                len--;
+            }
+        }
+    }
+    else {
+        uart_write((const uint8_t *)buffer, len);
+    }
+    return result;
+}
+
+static void uart_write(const uint8_t *data, size_t len)
+{
+    const TickType_t ticks_to_wait = pdMS_TO_TICKS(2ul * dma_tx_max_time_ms);
+    BaseType_t ret;
+    uart_tx_data_t tx_data = {
         .pbuf = NULL,
         .size = 0,
     };
 
-    BaseType_t ret;
-    const TickType_t ticks_to_wait = pdMS_TO_TICKS(2UL * dma_tx_max_time_ms);
+    ret = xQueueReceive(_tx_avail_queue, &tx_data.pbuf, ticks_to_wait);
+    assert(ret);
 
-    ret = xQueueReceive(h_uart_tx_avail_queue, &data.pbuf, ticks_to_wait);
-    stdio_uart_error |= (pdPASS != ret) ? STDIO_UART_ERROR_TX_AVAIL_QUEUE_RECEIVE : 0UL;
-    assert_param(0UL == stdio_uart_error);
+    memcpy(tx_data.pbuf, (uint8_t *)data, len);
+    tx_data.size = len;
 
-    memcpy(data.pbuf, (uint8_t *)buffer, len);
-    data.size = len;
-
-    ret = xQueueSend(h_uart_tx_ready_queue, &data, ticks_to_wait);
-    stdio_uart_error |= (pdPASS != ret) ? STDIO_UART_ERROR_TX_READY_QUEUE_SEND : 0UL;
-    assert_param(0UL == stdio_uart_error);
-    return result;
+    ret = xQueueSend(_tx_ready_queue, &data, ticks_to_wait);
+    assert(ret);
 }
 

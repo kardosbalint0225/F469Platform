@@ -151,9 +151,9 @@ static StaticSemaphore_t _open_mutex_storage;
 void vfs_init(void)
 {
     _mount_mutex = xSemaphoreCreateMutexStatic(&_mount_mutex_storage);
-    assert_param(NULL != _mount_mutex);
+    assert(_mount_mutex);
     _open_mutex = xSemaphoreCreateMutexStatic(&_open_mutex_storage);
-    assert_param(NULL != _open_mutex);
+    assert(_open_mutex);
 }
 
 void vfs_deinit(void)

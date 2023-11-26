@@ -39,8 +39,6 @@ extern "C"
  */
 typedef struct {
     mtd_dev_t base;                    /**< inherit from mtd_dev_t object */
-//    sdcard_spi_t *sd_card;             /**< sdcard_spi dev descriptor */
-//    const sdcard_spi_params_t *params; /**< params for sdcard_spi init */
 } mtd_sdcard_t;
 
 /**

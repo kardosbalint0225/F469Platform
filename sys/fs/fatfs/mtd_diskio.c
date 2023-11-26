@@ -25,7 +25,9 @@
 #define ENABLE_DEBUG 0
 #include "debug.h"
 
+#if FF_FS_NORTC == 0
 #include "rtc.h"
+#endif
 
 /* mtd devices for use by FatFs should be provided by the application */
 extern mtd_dev_t *fatfs_mtd_devs[FF_VOLUMES];
