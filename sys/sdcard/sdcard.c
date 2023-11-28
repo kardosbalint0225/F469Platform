@@ -259,7 +259,7 @@ static int sdio_init(void)
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_RX_CPLT_CB_ID, sdio_error_callback);
+    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_ERROR_CB_ID, sdio_error_callback);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -391,10 +391,7 @@ static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd)
 
 static void sdio_error_callback(SD_HandleTypeDef *h_sd)
 {
-    if (h_sd->ErrorCode != HAL_SD_ERROR_NONE)
-    {
-        error_handler();
-    }
+    error_handler();
 }
 
 static void error_handler(void)
