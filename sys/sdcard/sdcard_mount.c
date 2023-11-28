@@ -127,18 +127,16 @@ static void sdcard_mount_task(void *params)
         int err;
 
         mtd_sdcard_devs[0].base.driver = &mtd_sdcard_driver;
-        err = mtd_init(&mtd_sdcard_devs[0].base);
-        printf("mtd_init : %d\r\n", err);
-
         fatfs.dev = mtd_sdcard;
 
         err = vfs_mount(&_test_vfs_mount);
-        printf("vfs_mount : %d\r\n", err);
+        const char *s = strerror((-1)*err);
+        printf("vfs_mount : %s\r\n", s);
 
         DIR dir;
         FILINFO fno;
 
-        if (FR_OK == f_getcwd(current_directory, sizeof(current_directory)))
+        if (0 == err && FR_OK == f_getcwd(current_directory, sizeof(current_directory)))
         {
             if (FR_OK == f_opendir(&dir, current_directory))
             {

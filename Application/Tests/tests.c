@@ -12,14 +12,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "stdio_base.h"
 #include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <assert.h>
-
-extern uint32_t uxTaskGetStackSize( TaskHandle_t xTask );
+#include <stdio_base.h>
 
 static void tests_runner_task(void * params);
 
@@ -37,14 +31,12 @@ void start_tests(void)
 
 static void tests_runner_task(void * params)
 {
-    TaskHandle_t current = xTaskGetCurrentTaskHandle();
-    uint32_t stack_size = uxTaskGetStackSize(current);
-
-    printf("Stack size: %lu\n", stack_size);
-
+    const char *imalive = "Im alive!\r\n";
+    const size_t len = strnlen(imalive, 128);
     for ( ;; )
     {
-        vTaskDelay(10);
+        stdio_write((const void *)imalive, (size_t)len);
+        vTaskDelay(500);
     }
 }
 

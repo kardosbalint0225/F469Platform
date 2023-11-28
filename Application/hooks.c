@@ -44,7 +44,7 @@ void vApplicationDaemonTaskStartupHook(void)
     stdio_init();
     vfs_bind_stdio();
     sdcard_mount_init();
-    cli_init();
+//    cli_init();
 #if RUN_TESTS
     start_tests();
 #endif
@@ -57,7 +57,7 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
     /* Run time stack overflow checking is performed if
        configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
        called if a stack overflow is detected. */
-    assert_param(0);
+    assert(0);
 }
 
 void vApplicationMallocFailedHook(void)
@@ -72,7 +72,7 @@ void vApplicationMallocFailedHook(void)
        FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
        to query the size of free heap space that remains (although it does not
        provide information on how the remaining heap might be fragmented). */
-    assert_param(0);
+    assert(0);
 }
 
 /* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an

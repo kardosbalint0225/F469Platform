@@ -455,7 +455,7 @@ static void uart_write(const uint8_t *data, size_t len)
     memcpy(tx_data.pbuf, (uint8_t *)data, len);
     tx_data.size = len;
 
-    ret = xQueueSend(_tx_ready_queue, &data, ticks_to_wait);
+    ret = xQueueSend(_tx_ready_queue, &tx_data, ticks_to_wait);
     assert(ret);
 }
 

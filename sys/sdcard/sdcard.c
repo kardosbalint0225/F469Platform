@@ -391,14 +391,17 @@ static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd)
 
 static void sdio_error_callback(SD_HandleTypeDef *h_sd)
 {
-    error_handler();
+    if (h_sd->ErrorCode != HAL_SD_ERROR_NONE)
+    {
+        error_handler();
+    }
 }
 
 static void error_handler(void)
 {
     //TODO: proper error handling
-    sdio_deinit();
-    sdio_init();
+//    sdio_deinit();
+//    sdio_init();
 }
 
 static int sd_error_to_errno(const uint32_t error)
