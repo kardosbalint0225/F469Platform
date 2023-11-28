@@ -38,6 +38,8 @@ static void sdio_msp_init(SD_HandleTypeDef *h_sd);
 static void sdio_msp_deinit(SD_HandleTypeDef *h_sd);
 static void sdio_tx_cplt_callback(SD_HandleTypeDef *h_sd);
 static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd);
+static void sdio_error_callback(SD_HandleTypeDef *h_sd);
+static void error_handler(void);
 static bool is_word_aligned(const void *pbuf);
 static int sd_error_to_errno(const uint32_t error);
 
@@ -257,13 +259,17 @@ static int sdio_init(void)
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_SD_ConfigWideBusOperation(&h_sdio, SDIO_BUS_WIDE_4B);
+    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_RX_CPLT_CB_ID, sdio_error_callback);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    //TODO: Error callback
+    ret = HAL_SD_ConfigWideBusOperation(&h_sdio, SDIO_BUS_WIDE_4B);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     return 0;
 }
@@ -306,6 +312,12 @@ static int sdio_deinit(void)
     }
 
     ret = HAL_SD_UnRegisterCallback(&h_sdio, HAL_SD_RX_CPLT_CB_ID);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_SD_UnRegisterCallback(&h_sdio, HAL_SD_ERROR_CB_ID);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -375,6 +387,18 @@ static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd)
     BaseType_t higher_priority_task_woken = pdFALSE;
     xSemaphoreGiveFromISR(_rx_cplt_semphr, &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);
+}
+
+static void sdio_error_callback(SD_HandleTypeDef *h_sd)
+{
+    error_handler();
+}
+
+static void error_handler(void)
+{
+    //TODO: proper error handling
+    sdio_deinit();
+    sdio_init();
 }
 
 static int sd_error_to_errno(const uint32_t error)

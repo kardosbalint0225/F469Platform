@@ -83,9 +83,11 @@ static void stdio_uart_msp_init(UART_HandleTypeDef *huart);
 static void stdio_uart_msp_deinit(UART_HandleTypeDef *huart);
 static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart);
 static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart);
+static void stdio_uart_error_callback(UART_HandleTypeDef *huart);
 
 static void stdio_uart_write_task(void *params);
 static void uart_write(const uint8_t *data, size_t len);
+static void error_handler(void);
 
 /**
  * @brief  UART writer gatekeeper task
@@ -253,7 +255,11 @@ static int stdio_uart_init(void)
         return hal_statustypedef_to_errno(ret);
     }
 
-    //TODO: Error callback
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_ERROR_CB_ID, stdio_uart_error_callback);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     return 0;
 }
@@ -268,6 +274,8 @@ static int stdio_uart_init(void)
 static void stdio_uart_msp_init(UART_HandleTypeDef *huart)
 {
     STDIO_UART_USARTx_CLK_ENABLE();
+    STDIO_UART_USARTx_FORCE_RESET();
+    STDIO_UART_USARTx_RELEASE_RESET();
 
     stdio_uart_tx_pin_init();
     stdio_uart_rx_pin_init();
@@ -298,6 +306,12 @@ static int stdio_uart_deinit(void)
     }
 
     ret = HAL_UART_UnRegisterCallback(&h_stdio_uart, HAL_UART_RX_COMPLETE_CB_ID);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_UART_UnRegisterCallback(&h_stdio_uart, HAL_UART_ERROR_CB_ID);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -375,6 +389,18 @@ static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart)
     xQueueSendFromISR(_rx_queue, &_rx_buffer, &higher_priority_task_woken);
     HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
     portYIELD_FROM_ISR(higher_priority_task_woken);
+}
+
+static void stdio_uart_error_callback(UART_HandleTypeDef *huart)
+{
+    error_handler();
+}
+
+static void error_handler(void)
+{
+    //TODO: proper error handling
+    stdio_uart_deinit();
+    stdio_uart_init();
 }
 
 int stdio_available(void)
