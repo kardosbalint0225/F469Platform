@@ -107,11 +107,14 @@ int rtc_init(void)
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTCEx_SetWakeUpTimer(&hrtc, 0x7FF, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+    ret = HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0x7FF, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
+
+    HAL_NVIC_SetPriority(RTC_WKUP_IRQn, 15, 0);
+    HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
 
     return 0;
 }

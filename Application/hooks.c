@@ -44,7 +44,7 @@ void vApplicationDaemonTaskStartupHook(void)
     stdio_init();
     vfs_bind_stdio();
     sdcard_mount_init();
-//    cli_init();
+    cli_init();
 #if RUN_TESTS
     start_tests();
 #endif

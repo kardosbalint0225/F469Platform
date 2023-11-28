@@ -116,6 +116,10 @@ static void stdio_uart_write_task(void *params)
         assert(ret);
 
         hal_status = HAL_UART_Transmit_DMA(&h_stdio_uart, uart_tx_data.pbuf, uart_tx_data.size);
+        if (HAL_OK != hal_status)
+        {
+            error_handler();
+        }
         assert(HAL_OK == hal_status);
 
         _tx_pending = uart_tx_data.pbuf;
@@ -421,7 +425,7 @@ ssize_t stdio_write(const void *buffer, size_t len)
         const uint8_t *buf = buffer;
         while (len) {
             const uint8_t *pos = memchr(buf, '\n', len);
-            size_t chunk_len = (pos != NULL)
+            size_t chunk_len = (pos != NULL && len != 1)
                              ? (uintptr_t)pos - (uintptr_t)buf
                              : len;
             uart_write(buf, chunk_len);

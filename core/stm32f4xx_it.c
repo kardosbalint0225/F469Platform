@@ -18,6 +18,7 @@ extern EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 extern SD_HandleTypeDef h_sdio;
 extern DMA_HandleTypeDef h_sdio_dma_tx;
 extern DMA_HandleTypeDef h_sdio_dma_rx;
+extern RTC_HandleTypeDef hrtc;
 
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
@@ -159,5 +160,13 @@ void DMA2_Stream6_IRQHandler(void)
 void SDIO_IRQHandler(void)
 {
     HAL_SD_IRQHandler(&h_sdio);
+}
+
+/**
+ * @brief This function handles RTC WakeUp global interrupt.
+ */
+void RTC_WKUP_IRQHandler(void)
+{
+    HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
 }
 
