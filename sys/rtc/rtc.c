@@ -25,9 +25,11 @@ RTC_HandleTypeDef hrtc;
 static SemaphoreHandle_t _rtc_mutex = NULL;
 static StaticSemaphore_t _rtc_mutex_storage;
 static HAL_StatusTypeDef _error = HAL_OK; /**< for msp init/deinit error handling */
+static volatile uint32_t _tick_count_previous = 0ul;
 
 static void rtc_msp_init(RTC_HandleTypeDef *hrtc);
 static void rtc_msp_deinit(RTC_HandleTypeDef *hrtc);
+static void rtc_wakeuptimer_event_callback(RTC_HandleTypeDef *hrtc);
 static void rtc_lock(void);
 static void rtc_unlock(void);
 
@@ -76,6 +78,12 @@ int rtc_init(void)
         return hal_statustypedef_to_errno(_error);
     }
 
+    ret = HAL_RTC_RegisterCallback(&hrtc, HAL_RTC_WAKEUPTIMER_EVENT_CB_ID, rtc_wakeuptimer_event_callback);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
     sTime.Hours = 12;
     sTime.Minutes = 0;
     sTime.Seconds = 0;
@@ -94,6 +102,12 @@ int rtc_init(void)
     sDate.Year = 22;
 
     ret = HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_RTCEx_SetWakeUpTimer(&hrtc, 0x7FF, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -124,6 +138,18 @@ static void rtc_msp_init(RTC_HandleTypeDef * hrtc)
 int rtc_deinit(void)
 {
     HAL_StatusTypeDef ret;
+
+    ret = HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_RTC_UnRegisterCallback(&hrtc, HAL_RTC_WAKEUPTIMER_EVENT_CB_ID);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_RTC_DeInit(&hrtc);
     if (HAL_OK != ret)
@@ -226,6 +252,16 @@ int rtc_set_time(struct tm *time)
 
 int rtc_get_time(struct tm *time)
 {
+    return rtc_get_time_ms(time, NULL);
+}
+
+int rtc_get_time_ms(struct tm *time, uint16_t *ms)
+{
+    if (NULL == time)
+    {
+        return -1;
+    }
+
     RTC_TimeTypeDef stime = {0};
     RTC_DateTypeDef sdate = {0};
     HAL_StatusTypeDef ret;
@@ -255,7 +291,27 @@ int rtc_get_time(struct tm *time)
     time->tm_min = stime.Minutes;
     time->tm_sec = stime.Seconds;
 
+    const uint32_t resolution_ms = (uint32_t)(1000ul / (uint32_t)configTICK_RATE_HZ);
+    uint32_t tick_count_current = (uint32_t)xTaskGetTickCount();
+
+    if (ms != NULL)
+    {
+        if (tick_count_current > _tick_count_previous)
+        {
+            *ms = (uint16_t)((tick_count_current - _tick_count_previous) * resolution_ms);
+        }
+        else
+        {
+            *ms = (uint16_t)((_tick_count_previous - tick_count_current) * resolution_ms);
+        }
+    }
+
     return 0;
+}
+
+static void rtc_wakeuptimer_event_callback(RTC_HandleTypeDef *hrtc)
+{
+    _tick_count_previous = (uint32_t)xTaskGetTickCountFromISR();
 }
 
 /**

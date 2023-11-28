@@ -206,8 +206,6 @@ void _exit(int status)
 {
     (void)status;
 
-    __disable_irq();
-
     while (1)
     {
         HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);  //TODO: Move to GPIO layer
@@ -509,7 +507,8 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *ptimeval, void *ptimezon
     (void)ptimezone;
 
     struct tm t;
-    int res = rtc_get_time(&t);
+    uint16_t ms;
+    int res = rtc_get_time_ms(&t, &ms);
     if (res < 0)
     {
         ptr->_errno = EIO;
@@ -518,8 +517,9 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *ptimeval, void *ptimezon
 
     if (NULL != ptimeval)
     {
-        ptimeval->tv_sec = mktime(&t);
-        ptimeval->tv_usec = 0;
+        uint64_t sec = mktime(&t);
+        ptimeval->tv_sec = sec - (time_t)(ms / 1000);
+        ptimeval->tv_usec = (suseconds_t)(ms * 1000);
     }
 
     return 0;
