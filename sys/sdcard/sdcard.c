@@ -277,6 +277,8 @@ static int sdio_init(void)
 static void sdio_msp_init(SD_HandleTypeDef *h_sd)
 {
     __HAL_RCC_SDIO_CLK_ENABLE();
+    __HAL_RCC_SDIO_FORCE_RESET();
+    __HAL_RCC_SDIO_RELEASE_RESET();
 
     sdcard_cmd_pin_init();
     sdcard_clk_pin_init();

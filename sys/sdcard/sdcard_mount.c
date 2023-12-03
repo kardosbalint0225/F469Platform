@@ -7,6 +7,7 @@
 #include "sdcard_mount.h"
 #include "sdcard_config.h"
 #include "stm32f4xx_hal.h"
+#include "gpio.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -24,18 +25,19 @@
 #include "mtd.h"
 #include "mtd_sdcard.h"
 
-#define MNT_PATH  "/test"
+#define SDCARD_MOUNT_PATH  "/sd"
 
-static fatfs_desc_t fatfs;
-static vfs_mount_t _test_vfs_mount = {
-    .mount_point = MNT_PATH,
+static fatfs_desc_t _fatfs_sdcard_desc;
+static vfs_mount_t _fatfs_sdcard_vfs_mount = {
+    .mount_point = SDCARD_MOUNT_PATH,
     .fs = &fatfs_file_system,
-    .private_data = (void *)&fatfs,
+    .private_data = (void *)&_fatfs_sdcard_desc,
 };
 
-mtd_sdcard_t mtd_sdcard_devs[1];
-/* always default to first sdcard*/
-static mtd_dev_t *mtd_sdcard = (mtd_dev_t*)&mtd_sdcard_devs[0];
+//mtd_sdcard_t mtd_sdcard_devs[1];
+///* always default to first sdcard*/
+//static mtd_dev_t *mtd_sdcard = (mtd_dev_t *)&mtd_sdcard_devs[0];
+static mtd_sdcard_t mtd_sdcard;
 
 TCHAR current_directory[512] = {'\0'};
 
@@ -57,13 +59,9 @@ typedef union {
     uint16_t w;
 } fatdate_t;
 
-EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
-
-static StackType_t sdcard_mount_task_stack[SDCARD_MOUNT_TASK_STACKSIZE];
-static StaticTask_t sdcard_mount_task_tcb;
+static StackType_t _sdcard_mount_task_stack[SDCARD_MOUNT_TASK_STACKSIZE];
+static StaticTask_t _sdcard_mount_task_tcb;
 static TaskHandle_t h_sdcard_mount_task = NULL;
-
-static bool is_mounted = false;
 
 enum _SDCARD_MOUNT_TASK_NOTIFICATION
 {
@@ -79,11 +77,12 @@ enum _SDCARD_CARD_PRESENCE_STATE
     SDCARD_CARD_PRESENCE_STATE_INT_MAX  = 0x7FFFFFFFul,
 };
 
-int sdcard_cd_pin_init(void);
-int sdcard_cd_pin_deinit(void);
+
 static void exti_sdcard_cd_pin_callback(void);
 static void wait_for_stable_cd_pin_signal(const uint32_t timeout_ms, uint32_t *state);
 static void sdcard_mount_task(void *params);
+static int sdcard_mount(void);
+static int sdcard_unmount(void);
 
 int sdcard_mount_init(void)
 {
@@ -92,15 +91,11 @@ int sdcard_mount_init(void)
                                             SDCARD_MOUNT_TASK_STACKSIZE,
                                             NULL,
                                             SDCARD_MOUNT_TASK_PRIORITY,
-                                            sdcard_mount_task_stack,
-                                            &sdcard_mount_task_tcb);
-    assert_param(NULL != h_sdcard_mount_task);
+                                            _sdcard_mount_task_stack,
+                                            &_sdcard_mount_task_tcb);
+    assert(h_sdcard_mount_task);
 
-    is_mounted = false;
-
-    sdcard_cd_pin_init();
-
-    return 0;
+    return sdcard_cd_pin_init(exti_sdcard_cd_pin_callback);
 }
 
 int sdcard_mount_deinit(void)
@@ -108,35 +103,30 @@ int sdcard_mount_deinit(void)
     vTaskDelete(h_sdcard_mount_task);
     h_sdcard_mount_task = NULL;
 
-    sdcard_cd_pin_deinit();
-
-    return 0;
+    return sdcard_cd_pin_deinit();
 }
 
 static void sdcard_mount_task(void *params)
 {
     (void)params;
 
-    vTaskDelay(1000);
-
+    bool is_mounted = false;
     uint32_t card_presence_state;
+
     wait_for_stable_cd_pin_signal(SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS, &card_presence_state);
+
     if ((uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED == card_presence_state)
     {
         //TODO: vfs_mount
-        int err;
-
-        mtd_sdcard_devs[0].base.driver = &mtd_sdcard_driver;
-        fatfs.dev = mtd_sdcard;
-
-        err = vfs_mount(&_test_vfs_mount);
-        const char *s = strerror((-1)*err);
-        printf("vfs_mount : %s\r\n", s);
+        if (0 == sdcard_mount())
+        {
+            is_mounted = true;
+        }
 
         DIR dir;
         FILINFO fno;
 
-        if (0 == err && FR_OK == f_getcwd(current_directory, sizeof(current_directory)))
+        if (is_mounted && FR_OK == f_getcwd(current_directory, sizeof(current_directory)))
         {
             if (FR_OK == f_opendir(&dir, current_directory))
             {
@@ -151,7 +141,7 @@ static void sdcard_mount_task(void *params)
 //                    fatdate_t fatdate = {
 //                        .w = fno.fdate,
 //                    };
-
+//
 //                    printf("%04d.%02d.%02d  %02d:%02d  %s  %16llu  %s\r\n",
 //                           (fatdate.year+1980),
 //                           fatdate.month,
@@ -169,8 +159,6 @@ static void sdcard_mount_task(void *params)
 
             f_closedir(&dir);
         }
-
-        is_mounted = true;
     }
 
     BaseType_t ret;
@@ -180,7 +168,7 @@ static void sdcard_mount_task(void *params)
         uint32_t notification;
 
         ret = xTaskNotifyWait(0, 0, &notification, portMAX_DELAY);
-        assert_param(pdPASS == ret);
+        assert(ret);
 
         if ((uint32_t)SDCARD_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED == notification)
         {
@@ -193,8 +181,11 @@ static void sdcard_mount_task(void *params)
                     if (false == is_mounted)
                     {
                         //TODO: vfs_mount
-                        printf("sdcard card is mounted\r\n");
-                        is_mounted = true;
+                        if (0 == sdcard_mount())
+                        {
+                            is_mounted = true;
+                            printf("sdcard card is mounted\r\n");
+                        }
                     }
                     else
                     {
@@ -207,9 +198,12 @@ static void sdcard_mount_task(void *params)
                 {
                     if (true == is_mounted)
                     {
-                        //TODO: vfs_unmount
-                        printf("sdcard card is unmounted\r\n");
-                        is_mounted = false;
+                        //TODO: vfs_umount
+                        if (0 == sdcard_unmount())
+                        {
+                            is_mounted = false;
+                            printf("sdcard card is unmounted\r\n");
+                        }
                     }
                     else
                     {
@@ -226,7 +220,7 @@ static void sdcard_mount_task(void *params)
 
                 default:
                 {
-                    assert_param(0);
+                    assert(0);
                 }
                 break;
             }
@@ -236,47 +230,40 @@ static void sdcard_mount_task(void *params)
     }
 }
 
-int sdcard_cd_pin_init(void)
+static int sdcard_mount(void)
 {
-    SDCARD_CD_PIN_GPIO_CLK_ENABLE();
+    int err;
 
-    GPIO_InitTypeDef card_detect_pin_config = {
-        .Pin = SDCARD_CD_PIN,
-        .Mode = GPIO_MODE_IT_RISING_FALLING,
-        .Pull = GPIO_PULLUP,
-    };
-    HAL_GPIO_Init(SDCARD_CD_PIN_GPIO_PORT, &card_detect_pin_config);
+    mtd_sdcard.base.driver = &mtd_sdcard_driver;
+    _fatfs_sdcard_desc.dev = (mtd_dev_t *)&mtd_sdcard;
 
-    EXTI_ConfigTypeDef exti_config = {
-        .Line = SDCARD_CD_PIN_EXTI_LINE,
-        .Mode = EXTI_MODE_INTERRUPT,
-        .Trigger = EXTI_TRIGGER_RISING_FALLING,
-        .GPIOSel = SDCARD_CD_PIN_EXTI_GPIO
-    };
+    err = vfs_mount(&_fatfs_sdcard_vfs_mount);
+    printf("sdcard_mount : %s\r\n", strerror(-err));
 
-    HAL_StatusTypeDef ret;
-    ret = HAL_EXTI_SetConfigLine(&h_exti_sdcard_cd_pin, &exti_config);
-    assert_param(HAL_OK == ret);
-
-    ret = HAL_EXTI_RegisterCallback(&h_exti_sdcard_cd_pin, HAL_EXTI_COMMON_CB_ID, exti_sdcard_cd_pin_callback);
-    assert_param(HAL_OK == ret);
-
-    HAL_NVIC_SetPriority(SDCARD_CD_PIN_EXTIx_IRQn, SDCARD_CD_PIN_EXTIx_IRQ_PRIORITY, 0U);
-    HAL_NVIC_EnableIRQ(SDCARD_CD_PIN_EXTIx_IRQn);
-
-    return 0;
+    return err;
 }
 
-int sdcard_cd_pin_deinit(void)
+static int sdcard_unmount(void)
 {
-    HAL_StatusTypeDef ret;
+    int err;
 
-    HAL_NVIC_DisableIRQ(SDCARD_CD_PIN_EXTIx_IRQn);
+    err = vfs_umount(&_fatfs_sdcard_vfs_mount, true);
+    printf("sdcard_unmount : %s\r\n", strerror(-err));
+    if (err < 0)
+    {
+        return err;
+    }
 
-    ret = HAL_EXTI_ClearConfigLine(&h_exti_sdcard_cd_pin);
-    assert_param(HAL_OK == ret);
+    err = sdcard_deinit();
+    if (err < 0)
+    {
+        return err;
+    }
 
-    HAL_GPIO_DeInit(SDCARD_CD_PIN_GPIO_PORT, SDCARD_CD_PIN);
+    vPortFree(mtd_sdcard.base.work_area);
+
+    mtd_sdcard.base.driver = NULL;
+    _fatfs_sdcard_desc.dev = NULL;
 
     return 0;
 }
@@ -284,11 +271,10 @@ int sdcard_cd_pin_deinit(void)
 static void exti_sdcard_cd_pin_callback(void)
 {
     BaseType_t higher_priority_task_woken = pdFALSE;
-    BaseType_t ret = xTaskNotifyFromISR(h_sdcard_mount_task,
-                                        (uint32_t)SDCARD_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED,
-                                        eSetBits,
-                                        &higher_priority_task_woken);
-    assert_param(pdPASS == ret);
+    xTaskNotifyFromISR(h_sdcard_mount_task,
+                       (uint32_t)SDCARD_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED,
+                       eSetBits,
+                       &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 

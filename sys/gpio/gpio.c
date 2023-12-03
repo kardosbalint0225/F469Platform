@@ -10,9 +10,12 @@
  */
 #include "gpio.h"
 #include "stm32f4xx_hal.h"
+#include "hal_errno.h"
 
 #include "stdio_uart_config.h"
 #include "sdcard_config.h"
+
+EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 
 void stdio_uart_tx_pin_init(void)
 {
@@ -166,7 +169,59 @@ void sdcard_d0_pin_deinit(void)
     HAL_GPIO_DeInit(SDCARD_D0_PIN_GPIO_PORT, SDCARD_D0_PIN);
 }
 
+int sdcard_cd_pin_init(void (*exti_callback_fn)(void))
+{
+    SDCARD_CD_PIN_GPIO_CLK_ENABLE();
 
+    GPIO_InitTypeDef card_detect_pin_config = {
+        .Pin = SDCARD_CD_PIN,
+        .Mode = GPIO_MODE_IT_RISING_FALLING,
+        .Pull = GPIO_PULLUP,
+    };
+    HAL_GPIO_Init(SDCARD_CD_PIN_GPIO_PORT, &card_detect_pin_config);
+
+    EXTI_ConfigTypeDef exti_config = {
+        .Line = SDCARD_CD_PIN_EXTI_LINE,
+        .Mode = EXTI_MODE_INTERRUPT,
+        .Trigger = EXTI_TRIGGER_RISING_FALLING,
+        .GPIOSel = SDCARD_CD_PIN_EXTI_GPIO
+    };
+
+    HAL_StatusTypeDef ret;
+    ret = HAL_EXTI_SetConfigLine(&h_exti_sdcard_cd_pin, &exti_config);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_EXTI_RegisterCallback(&h_exti_sdcard_cd_pin, HAL_EXTI_COMMON_CB_ID, exti_callback_fn);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    HAL_NVIC_SetPriority(SDCARD_CD_PIN_EXTIx_IRQn, SDCARD_CD_PIN_EXTIx_IRQ_PRIORITY, 0U);
+    HAL_NVIC_EnableIRQ(SDCARD_CD_PIN_EXTIx_IRQn);
+
+    return 0;
+}
+
+int sdcard_cd_pin_deinit(void)
+{
+    HAL_StatusTypeDef ret;
+
+    HAL_NVIC_DisableIRQ(SDCARD_CD_PIN_EXTIx_IRQn);
+
+    ret = HAL_EXTI_ClearConfigLine(&h_exti_sdcard_cd_pin);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    HAL_GPIO_DeInit(SDCARD_CD_PIN_GPIO_PORT, SDCARD_CD_PIN);
+
+    return 0;
+}
 
 
 

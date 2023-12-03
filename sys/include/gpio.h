@@ -33,6 +33,9 @@ void sdcard_d2_pin_deinit(void);
 void sdcard_d1_pin_deinit(void);
 void sdcard_d0_pin_deinit(void);
 
+int sdcard_cd_pin_init(void (*exti_callback_fn)(void));
+int sdcard_cd_pin_deinit(void);
+
 #ifdef __cplusplus
 }
 #endif
