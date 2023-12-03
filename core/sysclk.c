@@ -4,21 +4,20 @@
  *  Created on: 2023. jul. 6.
  *      Author: Balint
  */
-#include "stm32f4xx_hal.h"
 #include "sysclk.h"
-
-static uint32_t sysclk_error;
+#include "stm32f4xx_hal.h"
+#include "hal_errno.h"
 
 /**
  * @brief  System Clock Configuration
- * @retval None
+ *
+ * @return 0 on success
+ * @return < 0 on error
  */
-void sysclk_init(void)
+int sysclk_init(void)
 {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-
-    sysclk_error = 0UL;
 
     /** Configure the main internal regulator output voltage
      */
@@ -41,14 +40,18 @@ void sysclk_init(void)
 
     HAL_StatusTypeDef ret;
     ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
-    sysclk_error |= (HAL_OK != ret) ? SYSCLK_ERROR_RCC_OSC_CONFIG : 0UL;
-    assert_param(0UL == sysclk_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     /** Activate the Over-Drive mode
      */
     ret = HAL_PWREx_EnableOverDrive();
-    sysclk_error |= (HAL_OK != ret) ? SYSCLK_ERROR_PWR_ENABLE_OVERDRIVE : 0UL;
-    assert_param(0UL == sysclk_error);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
@@ -60,20 +63,11 @@ void sysclk_init(void)
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
     ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5);
-    sysclk_error |= (HAL_OK != ret) ? SYSCLK_ERROR_RCC_CLOCK_CONFIG : 0UL;
-    assert_param(0UL == sysclk_error);
-}
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
-/**
- * @brief  Gets the current error state of the Sysclk
- * @param  None
- * @retval 0 if no error occured
- *         positive value indicates error where each bit
- *         corresponds to a specific error defined in _SYSCLK_ERROR
- * @note   -
- */
-uint32_t sysclk_get_error(void)
-{
-    return sysclk_error;
+    return 0;
 }
 
