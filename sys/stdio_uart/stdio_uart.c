@@ -54,7 +54,7 @@ static StaticSemaphore_t _tx_cplt_semphr_storage;
 
 static StaticQueue_t _rx_queue_struct;
 static uint8_t _rx_queue_storage[STDIO_UART_RX_QUEUE_LENGTH * sizeof(uint8_t)];
-QueueHandle_t _rx_queue = NULL;
+QueueHandle_t stdio_uart_rx_queue = NULL;
 
 static StaticQueue_t _tx_avail_queue_struct;
 static uint8_t _tx_avail_queue_storage[STDIO_UART_TX_AVAIL_QUEUE_LENGTH * sizeof(uint8_t *)];
@@ -152,11 +152,11 @@ void stdio_init(void)
                                          &_tx_ready_queue_struct);
     assert(_tx_ready_queue);
 
-    _rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
+    stdio_uart_rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
                                    sizeof(uint8_t),
                                    _rx_queue_storage,
                                    &_rx_queue_struct);
-    assert(_rx_queue);
+    assert(stdio_uart_rx_queue);
 
     for (uint8_t i = 0; i < STDIO_UART_TX_AVAIL_QUEUE_LENGTH; i++)
     {
@@ -188,13 +188,13 @@ void stdio_deinit(void)
     vTaskDelete(h_stdio_uart_write_task);
     vQueueDelete(_tx_avail_queue);
     vQueueDelete(_tx_ready_queue);
-    vQueueDelete(_rx_queue);
+    vQueueDelete(stdio_uart_rx_queue);
     vSemaphoreDelete(_tx_cplt_semphr);
 
     h_stdio_uart_write_task = NULL;
     _tx_avail_queue = NULL;
     _tx_ready_queue = NULL;
-    _rx_queue = NULL;
+    stdio_uart_rx_queue = NULL;
     _tx_cplt_semphr = NULL;
 }
 
@@ -390,7 +390,7 @@ static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart)
 static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart)
 {
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
-    xQueueSendFromISR(_rx_queue, &_rx_buffer, &higher_priority_task_woken);
+    xQueueSendFromISR(stdio_uart_rx_queue, &_rx_buffer, &higher_priority_task_woken);
     HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }

@@ -9,9 +9,7 @@
 #include "cli.h"
 
 #include "stm32f4xx_hal.h"
-
 #include "rtc.h"
-#include "stdio_base.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -19,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "library_versions.h"
 
@@ -94,8 +93,8 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context);
 static bool is_number(const char s);
 static bool is_time_command_string_valid(const char *time_string, const uint32_t len);
 static bool is_date_command_string_valid(const char *date_string, const uint32_t len);
-static void convert_string_to_time(uint8_t *hour, uint8_t *min, uint8_t *sec, const char *time_string);
-static void convert_string_to_date(uint8_t *day, uint8_t *month, uint32_t *year, const char *date_string);
+static void convert_string_to_time(int *hour, int *min, int *sec, const char *time_string);
+static void convert_string_to_date(int *day, int *month, int *year, const char *date_string);
 static uint32_t find(const uint32_t *array, const uint32_t size, const uint32_t value);
 
 static CliCommandBinding clear_binding = {
@@ -196,7 +195,7 @@ void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
     (void)context;
 
     const char * const clear_string = "\33[2J";
-    stdio_write((char *)clear_string, sizeof(clear_string));
+    printf("%s", clear_string);
 }
 
 /**
@@ -214,14 +213,12 @@ static void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *contex
     (void)args;
     (void)context;
 
-    const char * const header = "Task            Abs Time        %% Time"
-                                "\r\n****************************************\r\n";
-    int len = snprintf(cli_output_buffer, sizeof(cli_output_buffer), header);
-    assert_param(len > 0);
-    vTaskGetRunTimeStats(cli_output_buffer + len);
+    printf("Task            Abs Time        %% Time\r\n");
+    printf("****************************************\r\n");
 
-    len = strnlen(cli_output_buffer, sizeof(cli_output_buffer));
-    stdio_write(cli_output_buffer, len);
+    vTaskGetRunTimeStats(cli_output_buffer);
+
+    printf("%s\r\n", cli_output_buffer);
 }
 
 /**
@@ -239,14 +236,12 @@ static void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context)
     (void)args;
     (void)context;
 
-    const char * const header = "Task          State  Priority   Stack   #"
-                                "\r\n************************************************\r\n";
-    int len = snprintf(cli_output_buffer, sizeof(cli_output_buffer), header);
-    assert_param(len > 0);
-    vTaskList(cli_output_buffer + len);
+    printf("Task          State  Priority   Stack   #\r\n");
+    printf("************************************************\r\n");
 
-    len = strnlen(cli_output_buffer, sizeof(cli_output_buffer));
-    stdio_write(cli_output_buffer, len);
+    vTaskList(cli_output_buffer);
+
+    printf("%s\r\n", cli_output_buffer);
 }
 
 /**
@@ -264,20 +259,14 @@ static void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
     (void)args;
     (void)context;
 
-    uint8_t day = 0;
-    uint8_t month = 0;
-    uint32_t year = 0;
-//    uint8_t weekday;
-    //rtc_get_date(&day, &month, &year, &weekday);
-    assert_param(0);
-    int len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    %04lu.%02d.%02d.\r\n",
-                       year,
-                       month,
-                       day);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
+    time_t rawtime;
+    struct tm *timeinfo;
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(cli_output_buffer, sizeof(cli_output_buffer), "%F", timeinfo);
+    printf("    %s\r\n", cli_output_buffer);
 }
 
 /**
@@ -295,21 +284,14 @@ static void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
     (void)args;
     (void)context;
 
-    uint8_t hours = 0;
-    uint8_t minutes = 0;
-    uint8_t seconds = 0;
-    //uint32_t subseconds;
-    //rtc_get_time(&hours, &minutes, &seconds, &subseconds);
-    assert_param(0);
+    time_t rawtime;
+    struct tm *timeinfo;
 
-    int len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    %02d:%02d:%02d\r\n",
-                       hours,
-                       minutes,
-                       seconds);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(cli_output_buffer, sizeof(cli_output_buffer), "%T", timeinfo);
+    printf("    %s\r\n", cli_output_buffer);
 }
 
 /**
@@ -326,52 +308,44 @@ static void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
     (void)cli;
     (void)context;
 
-    int len;
-
     if (NULL == args)
     {
-        len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    Invalid command argument\r\n");
-        assert_param(len > 0);
-        stdio_write(cli_output_buffer, len);
+        printf("\r\n    Invalid command argument\r\n");
         return;
     }
 
     embeddedCliTokenizeArgs(args);
 
     const char *date_to_set = embeddedCliGetToken(args, 1);
-    assert_param(date_to_set);
+    assert(date_to_set);
 
     const uint32_t param_len = strnlen(date_to_set, CLI_CMD_BUFFER_SIZE);
 
-    if (true == is_date_command_string_valid(date_to_set, param_len))
+    if (true != is_date_command_string_valid(date_to_set, param_len))
     {
-        uint8_t day;
-        uint8_t month;
-        uint32_t year;
-//        uint8_t weekday;
-
-        convert_string_to_date(&day, &month, &year, date_to_set);
-
-//        rtc_set_date(day, month, year);
-//        rtc_get_date(&day, &month, &year, &weekday);
-        assert_param(0);
-
-        len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    Date set to: %04lu.%02d.%02d.\r\n",
-                       year, month, day);
-    }
-    else
-    {
-        len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    Invalid parameter\r\n");
+        printf("\r\n    Invalid parameter\r\n");
+        return;
     }
 
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
+    struct tm t;
+    int ret;
+    ret = rtc_get_time(&t);
+    if (0 != ret)
+    {
+        printf("\r\n    An error occurred while trying to access the RTC module. Error : %d\r\n", ret);
+        return;
+    }
+
+    convert_string_to_date(&t.tm_mday, &t.tm_mon, &t.tm_year, date_to_set);
+
+    ret = rtc_set_time(&t);
+    if (0 != ret)
+    {
+        printf("\r\n    An error occurred while trying to access the RTC module. Error : %d\r\n", ret);
+        return;
+    }
+
+    printf("\r\n    Date set to: %04d.%02d.%02d.\r\n", t.tm_year, t.tm_mon, t.tm_mday);
 }
 
 /**
@@ -388,52 +362,45 @@ static void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
     (void)cli;
     (void)context;
 
-    int len;
-
     if (NULL == args)
     {
-        len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    Invalid command argument\r\n");
-        assert_param(len > 0);
-        stdio_write(cli_output_buffer, len);
+        printf("\r\n    Invalid command argument\r\n");
         return;
     }
 
     embeddedCliTokenizeArgs(args);
 
     const char *time_to_set = embeddedCliGetToken(args, 1);
-    assert_param(time_to_set);
+    assert(time_to_set);
 
     const uint32_t param_len = strnlen(time_to_set, CLI_CMD_BUFFER_SIZE);
 
-    if (true == is_time_command_string_valid(time_to_set, param_len))
+    if (true != is_time_command_string_valid(time_to_set, param_len))
     {
-        uint8_t hours;
-        uint8_t minutes;
-        uint8_t seconds;
-//        uint32_t subseconds;
-
-        convert_string_to_time(&hours, &minutes, &seconds, time_to_set);
-
-//        rtc_set_time(hours, minutes, seconds);
-//        rtc_get_time(&hours, &minutes, &seconds, &subseconds);
-        assert_param(0);
-
-        len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    Time set to: %02d:%02d:%02d\r\n",
-                       hours, minutes, seconds);
-    }
-    else
-    {
-        len = snprintf(cli_output_buffer,
-                       sizeof(cli_output_buffer),
-                       "\r\n    Invalid parameter\r\n");
+        printf("\r\n    Invalid parameter\r\n");
+        return;
     }
 
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
+    struct tm t;
+    int ret;
+
+    ret = rtc_get_time(&t);
+    if (0 != ret)
+    {
+        printf("\r\n    An error occurred while trying to access the RTC module. Error : %d\r\n", ret);
+        return;
+    }
+
+    convert_string_to_time(&t.tm_hour, &t.tm_min, &t.tm_sec, time_to_set);
+
+    ret = rtc_set_time(&t);
+    if (0 != ret)
+    {
+        printf("\r\n    An error occurred while trying to access the RTC module. Error : %d\r\n", ret);
+        return;
+    }
+
+    printf("\r\n    Time set to: %02d:%02d:%02d\r\n", t.tm_hour, t.tm_min, t.tm_sec);
 }
 
 /**
@@ -459,10 +426,10 @@ static bool is_number(const char s)
  */
 static bool is_time_command_string_valid(const char *time_string, const uint32_t len)
 {
-    assert_param(time_string);
+    assert(time_string);
 
     bool retv = true;
-    if (len < 8UL)
+    if (len < 8)
     {
         retv = false;
     }
@@ -472,7 +439,7 @@ static bool is_time_command_string_valid(const char *time_string, const uint32_t
         retv = false;
     }
 
-    uint32_t non_number_chars = 0UL;
+    uint32_t non_number_chars = 0;
     for (uint32_t i = 0; i < len; i++)
     {
         if (true != is_number(time_string[i]))
@@ -481,7 +448,7 @@ static bool is_time_command_string_valid(const char *time_string, const uint32_t
         }
     }
 
-    if (2UL != non_number_chars)
+    if (2 != non_number_chars)
     {
         retv = false;
     }
@@ -499,10 +466,10 @@ static bool is_time_command_string_valid(const char *time_string, const uint32_t
  */
 static bool is_date_command_string_valid(const char *date_string, const uint32_t len)
 {
-    assert_param(date_string);
+    assert(date_string);
 
     bool retv = true;
-    if (len < 8UL)
+    if (len < 8)
     {
         retv = false;
     }
@@ -512,7 +479,7 @@ static bool is_date_command_string_valid(const char *date_string, const uint32_t
         retv = false;
     }
 
-    uint32_t non_number_chars = 0UL;
+    uint32_t non_number_chars = 0;
     for (uint32_t i = 0; i < len; i++)
     {
         if (true != is_number(date_string[i]))
@@ -521,7 +488,7 @@ static bool is_date_command_string_valid(const char *date_string, const uint32_t
         }
     }
 
-    if (3UL != non_number_chars)
+    if (3 != non_number_chars)
     {
         retv = false;
     }
@@ -539,16 +506,16 @@ static bool is_date_command_string_valid(const char *date_string, const uint32_t
  * @retval None
  * @note   -
  */
-static void convert_string_to_time(uint8_t *hour, uint8_t *min, uint8_t *sec, const char *time_string)
+static void convert_string_to_time(int *hour, int *min, int *sec, const char *time_string)
 {
-    assert_param(hour);
-    assert_param(min);
-    assert_param(sec);
-    assert_param(time_string);
+    assert(hour);
+    assert(min);
+    assert(sec);
+    assert(time_string);
 
-    *hour = (uint8_t)((time_string[0] - '0') * 10) + (uint8_t)(time_string[1] - '0');
-    *min = (uint8_t)((time_string[3] - '0') * 10) + (uint8_t)(time_string[4] - '0');
-    *sec = (uint8_t)((time_string[6] - '0') * 10) + (uint8_t)(time_string[7] - '0');
+    *hour = (int)((time_string[0] - '0') * 10) + (int)(time_string[1] - '0');
+    *min = (int)((time_string[3] - '0') * 10) + (int)(time_string[4] - '0');
+    *sec = (int)((time_string[6] - '0') * 10) + (int)(time_string[7] - '0');
 }
 
 /**
@@ -561,19 +528,19 @@ static void convert_string_to_time(uint8_t *hour, uint8_t *min, uint8_t *sec, co
  * @retval None
  * @note   -
  */
-static void convert_string_to_date(uint8_t *day, uint8_t *month, uint32_t *year, const char *date_string)
+static void convert_string_to_date(int *day, int *month, int *year, const char *date_string)
 {
-    assert_param(day);
-    assert_param(month);
-    assert_param(year);
-    assert_param(date_string);
+    assert(day);
+    assert(month);
+    assert(year);
+    assert(date_string);
 
-    *year = (uint32_t)((date_string[0] - '0') * 1000) +
-            (uint32_t)((date_string[1] - '0') * 100) +
-            (uint32_t)((date_string[2] - '0') * 10) +
-            (uint32_t)((date_string[3] - '0') * 1);
-    *month = (uint8_t)((date_string[5] - '0') * 10) + (uint8_t)(date_string[6] - '0');
-    *day = (uint8_t)((date_string[8] - '0') * 10) + (uint8_t)(date_string[9] - '0');
+    *year = (int)((date_string[0] - '0') * 1000) +
+            (int)((date_string[1] - '0') * 100) +
+            (int)((date_string[2] - '0') * 10) +
+            (int)((date_string[3] - '0') * 1);
+    *month = (int)((date_string[5] - '0') * 10) + (int)(date_string[6] - '0');
+    *day = (int)((date_string[8] - '0') * 10) + (int)(date_string[9] - '0');
 }
 
 /**
@@ -591,35 +558,10 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
     (void)args;
     (void)context;
 
-    int len;
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    FreeRTOS Kernel Version : %s\r\n",
-                   FREERTOS_KERNEL_VERSION);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    HAL Driver Version      : %s\r\n",
-                   STM32F4XX_HAL_DRIVER_VERSION);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    Embedded CLI Version    : %s\r\n",
-                   EMBEDDED_CLI_VERSION);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    CMSIS GCC Version       : %s\r\n",
-                   CMSIS_GCC_VERSION);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
+    printf("    FreeRTOS Kernel Version : %s\r\n", FREERTOS_KERNEL_VERSION);
+    printf("    HAL Driver Version      : %s\r\n", STM32F4XX_HAL_DRIVER_VERSION);
+    printf("    Embedded CLI Version    : %s\r\n", EMBEDDED_CLI_VERSION);
+    printf("    CMSIS GCC Version       : %s\r\n", CMSIS_GCC_VERSION);
 
     uint32_t revid = HAL_GetREVID();
     uint32_t devid = HAL_GetDEVID();
@@ -648,178 +590,56 @@ static void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
     HAL_RCC_GetClockConfig(&RCC_ClkInitStruct, &pFLatency);
 
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    MCU Revision ID         : 0x%04lx\r\n",
-                   revid);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    MCU Device ID           : 0x%3lx\r\n",
-                   devid);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    MCU UID                 : %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\r\n",
-                   uidw2.b3, uidw2.b2, uidw2.b1, uidw2.b0,
-                   uidw1.b3, uidw1.b2, uidw1.b1, uidw1.b0,
-                   uidw0.b3, uidw0.b2, uidw0.b1, uidw0.b0);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    HSE State               : %s\r\n",
-                   (RCC_HSE_ON == RCC_OscInitStruct.HSEState) ? ("On") : ((RCC_HSE_OFF == RCC_OscInitStruct.HSEState) ? ("Off") : ("Bypass")));
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    LSE State               : %s\r\n",
-                   (RCC_LSE_ON == RCC_OscInitStruct.LSEState) ? ("On") : ((RCC_LSE_OFF == RCC_OscInitStruct.LSEState) ? ("Off") : ("Bypass")));
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    HSI State               : %s\r\n",
-                   (RCC_HSI_ON == RCC_OscInitStruct.HSIState) ? ("On") : ("Off"));
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    LSI State               : %s\r\n",
-                   (RCC_LSI_ON == RCC_OscInitStruct.LSIState) ? ("On") : ("Off"));
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    PLL State               : %s\r\n",
-                   (RCC_PLL_ON == RCC_OscInitStruct.PLL.PLLState) ? ("On") : ((RCC_PLL_OFF == RCC_OscInitStruct.PLL.PLLState) ? ("Off") : ("None")));
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    PLL Source              : %s\r\n",
-                   (RCC_PLLSOURCE_HSE == RCC_OscInitStruct.PLL.PLLSource) ? ("HSE") : ("HSI"));
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    PLL                     : M = /%lu, N = x%lu, P = /%lu, Q = /%lu\r\n",
-                   RCC_OscInitStruct.PLL.PLLM, RCC_OscInitStruct.PLL.PLLN,
-                   RCC_OscInitStruct.PLL.PLLP, RCC_OscInitStruct.PLL.PLLQ);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
+    printf("    MCU Revision ID         : 0x%04lx\r\n", revid);
+    printf("    MCU Device ID           : 0x%3lx\r\n", devid);
+    printf("    MCU UID                 : %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\r\n",
+                                          uidw2.b3, uidw2.b2, uidw2.b1, uidw2.b0,
+                                          uidw1.b3, uidw1.b2, uidw1.b1, uidw1.b0,
+                                          uidw0.b3, uidw0.b2, uidw0.b1, uidw0.b0);
+    printf("    HSE State               : %s\r\n", (RCC_HSE_ON == RCC_OscInitStruct.HSEState) ? ("On") : ((RCC_HSE_OFF == RCC_OscInitStruct.HSEState) ? ("Off") : ("Bypass")));
+    printf("    LSE State               : %s\r\n", (RCC_LSE_ON == RCC_OscInitStruct.LSEState) ? ("On") : ((RCC_LSE_OFF == RCC_OscInitStruct.LSEState) ? ("Off") : ("Bypass")));
+    printf("    HSI State               : %s\r\n", (RCC_HSI_ON == RCC_OscInitStruct.HSIState) ? ("On") : ("Off"));
+    printf("    LSI State               : %s\r\n", (RCC_LSI_ON == RCC_OscInitStruct.LSIState) ? ("On") : ("Off"));
+    printf("    PLL State               : %s\r\n", (RCC_PLL_ON == RCC_OscInitStruct.PLL.PLLState) ? ("On") : ((RCC_PLL_OFF == RCC_OscInitStruct.PLL.PLLState) ? ("Off") : ("None")));
+    printf("    PLL Source              : %s\r\n", (RCC_PLLSOURCE_HSE == RCC_OscInitStruct.PLL.PLLSource) ? ("HSE") : ("HSI"));
+    printf("    PLL                     : M = /%lu, N = x%lu, P = /%lu, Q = /%lu\r\n",
+                                          RCC_OscInitStruct.PLL.PLLM, RCC_OscInitStruct.PLL.PLLN,
+                                          RCC_OscInitStruct.PLL.PLLP, RCC_OscInitStruct.PLL.PLLQ);
 
     uint32_t sysclk_source_idx = find(hal_sysclk_source, (uint32_t)(sizeof(hal_sysclk_source) / sizeof(uint32_t)), RCC_ClkInitStruct.SYSCLKSource);
-    assert_param(0xFFFFFFFFUL != sysclk_source_idx);
-    assert_param(sysclk_source_idx < sizeof(sysclk_source) / sizeof(char *));
+    assert(0xFFFFFFFFUL != sysclk_source_idx);
+    assert(sysclk_source_idx < sizeof(sysclk_source) / sizeof(char *));
 
     uint32_t ahbclk_div_idx = find(hal_ahbclk_div, (uint32_t)(sizeof(hal_ahbclk_div) / sizeof(uint32_t)), RCC_ClkInitStruct.AHBCLKDivider);
-    assert_param(0xFFFFFFFFUL != ahbclk_div_idx);
-    assert_param(ahbclk_div_idx < sizeof(ahbclk_div) / sizeof(char *));
+    assert(0xFFFFFFFFUL != ahbclk_div_idx);
+    assert(ahbclk_div_idx < sizeof(ahbclk_div) / sizeof(char *));
 
     uint32_t apb1clk_div_idx = find(hal_apbclk_div, (uint32_t)(sizeof(hal_apbclk_div) / sizeof(uint32_t)), RCC_ClkInitStruct.APB1CLKDivider);
-    assert_param(0xFFFFFFFFUL != apb1clk_div_idx);
-    assert_param(apb1clk_div_idx < sizeof(apbclk_div) / sizeof(char *));
+    assert(0xFFFFFFFFUL != apb1clk_div_idx);
+    assert(apb1clk_div_idx < sizeof(apbclk_div) / sizeof(char *));
 
     uint32_t apb2clk_div_idx = find(hal_apbclk_div, (uint32_t)(sizeof(hal_apbclk_div) / sizeof(uint32_t)), RCC_ClkInitStruct.APB2CLKDivider);
-    assert_param(0xFFFFFFFFUL != apb2clk_div_idx);
-    assert_param(apb2clk_div_idx < sizeof(apbclk_div) / sizeof(char *));
+    assert(0xFFFFFFFFUL != apb2clk_div_idx);
+    assert(apb2clk_div_idx < sizeof(apbclk_div) / sizeof(char *));
 
     RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit = {0};
     HAL_RCCEx_GetPeriphCLKConfig(&RCC_PeriphClkInit);
 
     uint32_t rtc_clksrc_idx = find(hal_rtc_clksrc, (uint32_t)(sizeof(hal_rtc_clksrc) / sizeof(uint32_t)), RCC_PeriphClkInit.RTCClockSelection);
-    assert_param(0xFFFFFFFFUL != rtc_clksrc_idx);
-    assert_param(rtc_clksrc_idx < sizeof(rtc_clksrc) / sizeof(char *));
+    assert(0xFFFFFFFFUL != rtc_clksrc_idx);
+    assert(rtc_clksrc_idx < sizeof(rtc_clksrc) / sizeof(char *));
 
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    SYSCLK Source           : %s\r\n",
-                   sysclk_source[sysclk_source_idx]);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    SYSCLK Frequency        : %lu Hz\r\n",
-                   sysclk);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    AHB Prescaler           : %s\r\n",
-                   ahbclk_div[ahbclk_div_idx]);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    HCLK Frequency          : %lu Hz\r\n",
-                   hclk);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    APB1 Prescaler          : %s\r\n",
-                   apbclk_div[apb1clk_div_idx]);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    APB1 (PCLK1) Frequency  : %lu Hz\r\n",
-                   pclk1);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    APB2 Prescaler          : %s\r\n",
-                   apbclk_div[apb2clk_div_idx]);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    APB2 (PCLK2) Frequency  : %lu Hz\r\n",
-                   pclk2);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    SysTick Clock Source    : %s\r\n",
-                   (SYSTICK_CLKSOURCE_HCLK == (SYSTICK_CLKSOURCE_HCLK & SysTick->CTRL)) ? ("HCLK") : ("HCLK /8"));
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    RTC Clock source        : %s\r\n",
-                   rtc_clksrc[rtc_clksrc_idx]);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
-
-    len = snprintf(cli_output_buffer,
-                   sizeof(cli_output_buffer),
-                   "    PLLI2S                  : N = x%lu, R = /%lu\r\n",
-                   RCC_PeriphClkInit.PLLI2S.PLLI2SN, RCC_PeriphClkInit.PLLI2S.PLLI2SR);
-    assert_param(len > 0);
-    stdio_write(cli_output_buffer, len);
+    printf("    SYSCLK Source           : %s\r\n", sysclk_source[sysclk_source_idx]);
+    printf("    SYSCLK Frequency        : %lu Hz\r\n", sysclk);
+    printf("    AHB Prescaler           : %s\r\n", ahbclk_div[ahbclk_div_idx]);
+    printf("    HCLK Frequency          : %lu Hz\r\n", hclk);
+    printf("    APB1 Prescaler          : %s\r\n", apbclk_div[apb1clk_div_idx]);
+    printf("    APB1 (PCLK1) Frequency  : %lu Hz\r\n", pclk1);
+    printf("    APB2 Prescaler          : %s\r\n", apbclk_div[apb2clk_div_idx]);
+    printf("    APB2 (PCLK2) Frequency  : %lu Hz\r\n", pclk2);
+    printf("    SysTick Clock Source    : %s\r\n", (SYSTICK_CLKSOURCE_HCLK == (SYSTICK_CLKSOURCE_HCLK & SysTick->CTRL)) ? ("HCLK") : ("HCLK /8"));
+    printf("    RTC Clock source        : %s\r\n", rtc_clksrc[rtc_clksrc_idx]);
+    printf("    PLLI2S                  : N = x%lu, R = /%lu\r\n", RCC_PeriphClkInit.PLLI2S.PLLI2SN, RCC_PeriphClkInit.PLLI2S.PLLI2SR);
 }
 
 /**

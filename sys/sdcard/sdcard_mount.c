@@ -34,9 +34,6 @@ static vfs_mount_t _fatfs_sdcard_vfs_mount = {
     .private_data = (void *)&_fatfs_sdcard_desc,
 };
 
-//mtd_sdcard_t mtd_sdcard_devs[1];
-///* always default to first sdcard*/
-//static mtd_dev_t *mtd_sdcard = (mtd_dev_t *)&mtd_sdcard_devs[0];
 static mtd_sdcard_t mtd_sdcard;
 
 TCHAR current_directory[512] = {'\0'};
@@ -76,7 +73,6 @@ enum _SDCARD_CARD_PRESENCE_STATE
     SDCARD_CARD_PRESENCE_STATE_UNSTABLE = 0x00000003ul,
     SDCARD_CARD_PRESENCE_STATE_INT_MAX  = 0x7FFFFFFFul,
 };
-
 
 static void exti_sdcard_cd_pin_callback(void);
 static void wait_for_stable_cd_pin_signal(const uint32_t timeout_ms, uint32_t *state);
