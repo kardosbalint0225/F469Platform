@@ -41,6 +41,7 @@
 									<listOptionValue builtIn="false" value="STM32F469xx"/>
 									<listOptionValue builtIn="false" value="MODULE_STDIO_UART_ONLCR=1"/>
 									<listOptionValue builtIn="false" value="MODULE_VFS=1"/>
+									<listOptionValue builtIn="false" value="VFS_MAX_OPEN_FILES=4"/>
 									<listOptionValue builtIn="false" value="MODULE_MTD_WRITE_PAGE=1"/>
 									<listOptionValue builtIn="false" value="CONFIG_MTD_SDCARD_ERASE=1"/>
 									<listOptionValue builtIn="false" value="MODULE_FATFS_VFS=1"/>
@@ -171,6 +172,7 @@
 									<listOptionValue builtIn="false" value="STM32F469xx"/>
 									<listOptionValue builtIn="false" value="MODULE_STDIO_UART_ONLCR=1"/>
 									<listOptionValue builtIn="false" value="MODULE_VFS=1"/>
+									<listOptionValue builtIn="false" value="VFS_MAX_OPEN_FILES=4"/>
 									<listOptionValue builtIn="false" value="MODULE_MTD_WRITE_PAGE=1"/>
 									<listOptionValue builtIn="false" value="CONFIG_MTD_SDCARD_ERASE=1"/>
 									<listOptionValue builtIn="false" value="MODULE_FATFS_VFS=1"/>

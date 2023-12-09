@@ -27,16 +27,13 @@
 
 #define SDCARD_MOUNT_PATH  "/sd"
 
-static fatfs_desc_t _fatfs_sdcard_desc;
+static fatfs_desc_t _fatfs_desc;
 static vfs_mount_t _fatfs_sdcard_vfs_mount = {
     .mount_point = SDCARD_MOUNT_PATH,
     .fs = &fatfs_file_system,
-    .private_data = (void *)&_fatfs_sdcard_desc,
+    .private_data = (void *)&_fatfs_desc,
 };
-
 static mtd_sdcard_t mtd_sdcard;
-
-TCHAR current_directory[512] = {'\0'};
 
 typedef union {
     struct {
@@ -118,43 +115,6 @@ static void sdcard_mount_task(void *params)
         {
             is_mounted = true;
         }
-
-        DIR dir;
-        FILINFO fno;
-
-        if (is_mounted && FR_OK == f_getcwd(current_directory, sizeof(current_directory)))
-        {
-            if (FR_OK == f_opendir(&dir, current_directory))
-            {
-                f_readdir(&dir, &fno);
-
-                for (uint32_t i = 0; (i < 255) && (0 != fno.fname[0]); i++)
-                {
-//                    fattime_t fattime = {
-//                        .w = fno.ftime,
-//                    };
-//
-//                    fatdate_t fatdate = {
-//                        .w = fno.fdate,
-//                    };
-//
-//                    printf("%04d.%02d.%02d  %02d:%02d  %s  %16llu  %s\r\n",
-//                           (fatdate.year+1980),
-//                           fatdate.month,
-//                           fatdate.day,
-//                           fattime.hour,
-//                           fattime.min,
-//                           (fno.fattrib & AM_DIR) ? ("<DIR>") : ("     "),
-//                           fno.fsize,
-//                           fno.fname);
-                    printf("%s\r\n", fno.fname);
-
-                    f_readdir(&dir, &fno);
-                }
-            }
-
-            f_closedir(&dir);
-        }
     }
 
     BaseType_t ret;
@@ -231,7 +191,7 @@ static int sdcard_mount(void)
     int err;
 
     mtd_sdcard.base.driver = &mtd_sdcard_driver;
-    _fatfs_sdcard_desc.dev = (mtd_dev_t *)&mtd_sdcard;
+    _fatfs_desc.dev = (mtd_dev_t *)&mtd_sdcard;
 
     err = vfs_mount(&_fatfs_sdcard_vfs_mount);
     printf("sdcard_mount : %s\r\n", strerror(-err));
@@ -259,7 +219,7 @@ static int sdcard_unmount(void)
     vPortFree(mtd_sdcard.base.work_area);
 
     mtd_sdcard.base.driver = NULL;
-    _fatfs_sdcard_desc.dev = NULL;
+    _fatfs_desc.dev = NULL;
 
     return 0;
 }

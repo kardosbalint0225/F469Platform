@@ -76,6 +76,7 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
         hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
         if (HAL_OK != hal_status)
         {
+            assert(0);
             return sd_error_to_errno(h_sdio.ErrorCode);
         }
 
@@ -83,6 +84,7 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
         BaseType_t ret = xSemaphoreTake(_rx_cplt_semphr, ticks_to_wait);
         if (pdTRUE != ret)
         {
+            assert(0);
             return -ETIMEDOUT;
         }
     }
