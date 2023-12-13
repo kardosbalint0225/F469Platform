@@ -100,10 +100,10 @@ __attribute__((weak)) void heap_stats(void)
     struct mallinfo minfo = mallinfo();
 
     const uint32_t end = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
-    const uint32_t start = (uint32_t)_end;
+    const uint32_t start = (uint32_t)&_end;
     const uint32_t heap_size = end - start;
 
-    printf("heap: %lu (used %d, free %ld) [bytes]\n",
+    printf("\r\n    heap: %lu (used %d, free %ld) [bytes]\r\n",
            heap_size, minfo.uordblks, heap_size - minfo.uordblks);
 }
 #endif /* HAVE_HEAP_STATS */

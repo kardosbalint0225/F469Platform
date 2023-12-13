@@ -20,6 +20,7 @@ extern void cli_command_get_time(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_set_date(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_set_time(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_version(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_heapstats(EmbeddedCli *cli, char *args, void *context);
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -93,6 +94,14 @@ static CliCommandBinding version_binding = {
     .binding = cli_command_version
 };
 
+static CliCommandBinding heapstats_binding = {
+    .name = "heapstats",
+    .help = "Displays the state of the heap",
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_heapstats
+};
+
 static CliCommandBinding ls_binding = {
     .name = "ls",
     .help = "Lists all files and folders in the current working directory",
@@ -119,6 +128,7 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, set_time_binding);
     embeddedCliAddBinding(cli, sysinfo_binding);
     embeddedCliAddBinding(cli, version_binding);
+    embeddedCliAddBinding(cli, heapstats_binding);
     embeddedCliAddBinding(cli, ls_binding);
 }
 
