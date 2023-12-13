@@ -55,7 +55,7 @@ static CliCommandBinding get_date_binding = {
 
 static CliCommandBinding get_time_binding = {
     .name = "time",
-    .help = "Displays the time in hh:mm:ss format",
+    .help = "Displays the time in hh:mm:ss format. Optional -ms argument can be used to display the millisecond component",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_get_time

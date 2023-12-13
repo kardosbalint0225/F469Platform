@@ -36,8 +36,6 @@ static void rtc_unlock(void);
 
 int rtc_init(void)
 {
-    RTC_TimeTypeDef sTime = {0};
-    RTC_DateTypeDef sDate = {0};
     HAL_StatusTypeDef ret;
 
     _error = HAL_OK;
@@ -84,27 +82,18 @@ int rtc_init(void)
         return hal_statustypedef_to_errno(ret);
     }
 
-    sTime.Hours = 12;
-    sTime.Minutes = 0;
-    sTime.Seconds = 0;
-    sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    struct tm inittime = {
+        .tm_year = 2024 - 1900,
+        .tm_mon = 1 - 1,
+        .tm_mday = 1,
+        .tm_hour = 12,
+        .tm_min = 0,
+        .tm_sec = 0,
+    };
 
-    ret = HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-    if (HAL_OK != ret)
+    if (0 != rtc_set_time(&inittime))
     {
-        return hal_statustypedef_to_errno(ret);
-    }
-
-    sDate.WeekDay = RTC_WEEKDAY_SATURDAY;
-    sDate.Month = RTC_MONTH_JANUARY;
-    sDate.Date = 1;
-    sDate.Year = 22;
-
-    ret = HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-    if (HAL_OK != ret)
-    {
-        return hal_statustypedef_to_errno(ret);
+        return -EIO;
     }
 
     ret = HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0x7FF, RTC_WAKEUPCLOCK_RTCCLK_DIV16);

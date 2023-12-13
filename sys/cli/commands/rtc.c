@@ -8,11 +8,12 @@
 #include "cli_config.h"
 #include "rtc.h"
 
-#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <time.h>
+#include <sys/time.h>
 
 static char _buffer[CLI_PRINT_BUFFER_SIZE];
 
@@ -58,17 +59,28 @@ void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 {
     (void)cli;
-    (void)args;
     (void)context;
 
-    time_t rawtime;
+    embeddedCliTokenizeArgs(args);
+    const char *ms_arg = embeddedCliGetToken(args, 1);
+
+    struct timeval tv;
     struct tm *timeinfo;
 
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
+    gettimeofday(&tv, NULL);
+    const uint32_t ms = (uint32_t)(tv.tv_usec / 1000);
+    timeinfo = localtime(&tv.tv_sec);
 
     strftime(_buffer, sizeof(_buffer), "%T", timeinfo);
-    printf("    %s\r\n", _buffer);
+
+    if (0 == strncmp(ms_arg, "-ms", CLI_CMD_BUFFER_SIZE))
+    {
+        printf("    %s:%04lu\r\n", _buffer, ms);
+    }
+    else
+    {
+        printf("    %s\r\n", _buffer);
+    }
 }
 
 /**
@@ -113,9 +125,13 @@ void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
         return;
     }
 
-    convert_string_to_date(&t.tm_mday, &t.tm_mon, &t.tm_year, date_to_set);
-    t.tm_year = t.tm_year - 1900;
-    t.tm_mon = t.tm_mon - 1;
+    int mday;
+    int mon;
+    int year;
+    convert_string_to_date(&mday, &mon, &year, date_to_set);
+    t.tm_year = year - 1900;
+    t.tm_mon = mon - 1;
+    t.tm_mday = mday;
     t.tm_isdst = -1;
 
     ret = rtc_set_time(&t);
@@ -125,7 +141,7 @@ void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
         return;
     }
 
-    printf("\r\n    Date set to: %04d.%02d.%02d.\r\n", t.tm_year, t.tm_mon, t.tm_mday);
+    printf("\r\n    Date set to: %04d.%02d.%02d.\r\n", year, mon, mday);
 }
 
 /**
@@ -210,7 +226,7 @@ static bool is_time_command_string_valid(const char *time_string, const uint32_t
     uint32_t non_number_chars = 0;
     for (uint32_t i = 0; i < len; i++)
     {
-        if (true != isdigit((unsigned char)time_string[i]))
+        if (0 == isdigit((unsigned char)time_string[i]))
         {
             non_number_chars = non_number_chars + 1;
         }
@@ -250,7 +266,7 @@ static bool is_date_command_string_valid(const char *date_string, const uint32_t
     uint32_t non_number_chars = 0;
     for (uint32_t i = 0; i < len; i++)
     {
-        if (true != isdigit((unsigned char)date_string[i]))
+        if (0 == isdigit((unsigned char)date_string[i]))
         {
             non_number_chars = non_number_chars + 1;
         }
