@@ -20,7 +20,7 @@ extern void cli_command_get_time(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_set_date(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_set_time(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_version(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_heapstats(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_memstat(EmbeddedCli *cli, char *args, void *context);
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -95,11 +95,11 @@ static CliCommandBinding version_binding = {
 };
 
 static CliCommandBinding heapstats_binding = {
-    .name = "heapstats",
-    .help = "Displays the state of the heap",
+    .name = "memstat",
+    .help = "Displays the detailed state of the application and system memory",
     .tokenizeArgs = true,
     .context = NULL,
-    .binding = cli_command_heapstats
+    .binding = cli_command_memstat
 };
 
 static CliCommandBinding ls_binding = {
