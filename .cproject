@@ -26,6 +26,7 @@
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults.1302909904" name="Defaults" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults" useByScannerDiscovery="false" value="com.st.stm32cube.ide.common.services.build.inputs.revA.1.0.5 || Debug || true || Executable || com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain.value.workspace || STM32F469I-DISCO || 0 || 0 || arm-none-eabi- || ${gnu_tools_for_stm32_compiler_path} || ../Core/Inc | ../FATFS/Target | ../FATFS/App | ../USB_HOST/App | ../USB_HOST/Target | ../Drivers/STM32F4xx_HAL_Driver/Inc | ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy | ../Middlewares/Third_Party/FreeRTOS/Source/include | ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS | ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F | ../Middlewares/Third_Party/FatFs/src | ../Middlewares/ST/STM32_USB_Host_Library/Core/Inc | ../Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc | ../Drivers/CMSIS/Device/ST/STM32F4xx/Include | ../Drivers/CMSIS/Include | ../Core/ThreadSafe ||  ||  || USE_HAL_DRIVER | STM32F469xx | STM32_THREAD_SAFE_STRATEGY=5 ||  || Core/ThreadSafe | Drivers | USB_HOST | Core/Startup | Middlewares | Core | FATFS ||  ||  || ${workspace_loc:/${ProjName}/STM32F469NIHX_FLASH.ld} || true || NonSecure ||  || secure_nsclib.o ||  || FreeRTOS_DenyLockFromIRQ || " valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.nanoprintffloat.1231038099" name="Use float with printf from newlib-nano (-u _printf_float)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.nanoprintffloat" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.nanoscanffloat.601881783" name="Use float with scanf from newlib-nano (-u _scanf_float)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.nanoscanffloat" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c.761791158" name="Runtime library" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c.value.standard_c" valueType="enumerated"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform.1389260543" isAbstract="false" osList="all" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform"/>
 							<builder buildPath="${workspace_loc:/f469_media_player}/Debug" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder.996736641" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder"/>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.1237320277" name="MCU GCC Assembler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler">
@@ -41,6 +42,7 @@
 									<listOptionValue builtIn="false" value="STM32F469xx"/>
 									<listOptionValue builtIn="false" value="MODULE_STDIO_UART_ONLCR=1"/>
 									<listOptionValue builtIn="false" value="MODULE_VFS=1"/>
+									<listOptionValue builtIn="false" value="VFS_NAME_MAX=255"/>
 									<listOptionValue builtIn="false" value="VFS_MAX_OPEN_FILES=4"/>
 									<listOptionValue builtIn="false" value="MODULE_MTD_WRITE_PAGE=1"/>
 									<listOptionValue builtIn="false" value="CONFIG_MTD_SDCARD_ERASE=1"/>
@@ -170,6 +172,7 @@
 									<listOptionValue builtIn="false" value="STM32F469xx"/>
 									<listOptionValue builtIn="false" value="MODULE_STDIO_UART_ONLCR=1"/>
 									<listOptionValue builtIn="false" value="MODULE_VFS=1"/>
+									<listOptionValue builtIn="false" value="VFS_NAME_MAX=255"/>
 									<listOptionValue builtIn="false" value="VFS_MAX_OPEN_FILES=4"/>
 									<listOptionValue builtIn="false" value="MODULE_MTD_WRITE_PAGE=1"/>
 									<listOptionValue builtIn="false" value="CONFIG_MTD_SDCARD_ERASE=1"/>

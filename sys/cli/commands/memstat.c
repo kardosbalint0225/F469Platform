@@ -31,14 +31,17 @@ static void print_application_heap_statistics(void);
  */
 void cli_command_memstat(EmbeddedCli *cli, char *args, void *context)
 {
-    printf("\r\n  Internal memory layout:\r\n");
-    printf("    CCM data RAM : 0x%08lx - 0x%08lx | size = %4lu [KB]\r\n",
+    printf("\r\n  Internal memory layout:\r\n\r\n");
+    printf("           RAM         |      Base      |      End       |      Size    \r\n");
+    printf("  ---------------------+----------------+----------------+--------------\r\n");
+
+    printf("   CCM data RAM        |   0x%08lx   |   0x%08lx   | %9lu KB\r\n",
            CCMDATARAM_BASE, CCMDATARAM_END, (CCMDATARAM_END + 1 - CCMDATARAM_BASE) / 1024);
-    printf("    SRAM1        : 0x%08lx - 0x%08lx | size = %4lu [KB]\r\n",
+    printf("   SRAM1               |   0x%08lx   |   0x%08lx   | %9lu KB\r\n",
            SRAM1_BASE, SRAM2_BASE - 1, (SRAM2_BASE - SRAM1_BASE) / 1024);
-    printf("    SRAM2        : 0x%08lx - 0x%08lx | size = %4lu [KB]\r\n",
+    printf("   SRAM2               |   0x%08lx   |   0x%08lx   | %9lu KB\r\n",
            SRAM2_BASE, SRAM3_BASE - 1, (SRAM3_BASE - SRAM2_BASE) / 1024);
-    printf("    SRAM3        : 0x%08lx - 0x%08lx | size = %4lu [KB]\r\n",
+    printf("   SRAM3               |   0x%08lx   |   0x%08lx   | %9lu KB\r\n",
            SRAM3_BASE, SRAM3_END, (SRAM3_END + 1 - SRAM3_BASE) / 1024);
 
     print_system_heap_statistics();
@@ -57,12 +60,15 @@ static void print_system_heap_statistics(void)
     HeapStats_t stats;
     vPortGetHeapStats(&stats);
 
-    printf("\r\n  System (FreeRTOS) Heap statistics:\r\n");
-    printf("    size = %8u [byte]\r\n", size);
-    printf("    used = %8u [byte] | %.2f%%\r\n",
-           size - stats.xAvailableHeapSpaceInBytes, 100.0f * ((float)(size - stats.xAvailableHeapSpaceInBytes) / (float)size));
-    printf("    free = %8u [byte] | %.2f%%\r\n",
-           stats.xAvailableHeapSpaceInBytes, 100.0f * ((float)stats.xAvailableHeapSpaceInBytes / (float)size));
+    printf("\r\n\r\n  System (FreeRTOS) Heap statistics:\r\n\r\n");
+    printf("       Size     |     Used     |     Free     |    Used  %% |    Free  %% \r\n");
+    printf("  --------------+--------------+--------------+------------+------------\r\n");
+    printf("   %10u B | %10u B | %10u B | %8.4f %% | %8.4f %%\r\n",
+           size,
+           size - stats.xAvailableHeapSpaceInBytes,
+           stats.xAvailableHeapSpaceInBytes,
+           100.0f * ((float)(size - stats.xAvailableHeapSpaceInBytes) / (float)size),
+           100.0f * ((float)stats.xAvailableHeapSpaceInBytes / (float)size));
 }
 
 static void print_tasks_stack_usage_statistics(void)
@@ -77,8 +83,9 @@ static void print_tasks_stack_usage_statistics(void)
         return;
     }
 
-    printf("\r\n  FreeRTOS tasks stack usage statistics:\r\n\r\n");
-    printf("    ID     Name               Stack size       Free         | %%     Address\r\n");
+    printf("\r\n\r\n  FreeRTOS tasks stack usage statistics:\r\n\r\n");
+    printf("  ID |      Name       | Stack size |    Free    |   Used %% |  Address\r\n");
+    printf("  ---+-----------------+------------+------------+----------+-----------\r\n");
 
     uxTaskGetSystemState(tasks, number_of_tasks, NULL);
 
@@ -86,8 +93,8 @@ static void print_tasks_stack_usage_statistics(void)
     {
         const uint32_t stack_size = uxTaskGetStackSize(tasks[i].xHandle);
         const uint32_t free = tasks[i].usStackHighWaterMark * sizeof(StackType_t);
-        const float stack_usage = 100.0f * ((float)free / (float)stack_size);
-        printf("    %2lu     %-15s %8lu [byte]  %8lu [byte] | %.2f 0x%08lx\r\n",
+        const float stack_usage = 100.0f * ((float)(stack_size - free) / (float)stack_size);
+        printf("  %2lu | %-15s | %8lu B | %8lu B | %6.2f %% | 0x%08lx\r\n",
                tasks[i].xTaskNumber, tasks[i].pcTaskName, stack_size, free, stack_usage, (uint32_t)tasks[i].pxStackBase);
     }
 
@@ -107,13 +114,15 @@ static void print_application_heap_statistics(void)
     const uint32_t start = (uint32_t)&_end;
     const uint32_t heap_size = end - start;
 
-    printf("\r\n  Application Heap statistics:\r\n");
-    printf("    address (_end) = 0x%08lx\r\n", start);
-    printf("    size = %8lu [byte]\r\n", heap_size);
-    printf("    used = %8u [byte] | %.2f%%\r\n",
-           minfo.uordblks, 100.0f * ((float)minfo.uordblks / (float)heap_size));
-    printf("    free = %8lu [byte] | %.2f%%\r\n",
-           heap_size - minfo.uordblks, 100.0f * ((float)(heap_size - minfo.uordblks) / (float)heap_size));
+    printf("\r\n\r\n  Application Heap statistics: base address = 0x%08lx\r\n\r\n", start);
+    printf("       Size     |     Used     |     Free     |    Used  %% |    Free  %% \r\n");
+    printf("  --------------+--------------+--------------+------------+------------\r\n");
+    printf("   %10lu B | %10lu B | %10lu B | %8.4f %% | %8.4f %%\r\n",
+           heap_size,
+           (uint32_t)minfo.uordblks,
+           heap_size - (uint32_t)minfo.uordblks,
+           100.0f * ((float)minfo.uordblks / (float)heap_size),
+           100.0f * ((float)(heap_size - (uint32_t)minfo.uordblks) / (float)heap_size));
 }
 
 

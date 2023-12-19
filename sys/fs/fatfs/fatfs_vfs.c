@@ -31,7 +31,7 @@
 #include <time.h>
 #include "container.h"
 
-#define ENABLE_DEBUG 1
+#define ENABLE_DEBUG 0
 #include "debug.h"
 
 #define TEST_FATFS_MAX_VOL_STR_LEN 14 /* "-2147483648:/\0" */
@@ -173,7 +173,8 @@ static int _statvfs(vfs_mount_t *mountp, const char *restrict path, struct statv
 
     buf->f_bsize  = fs->csize * sector_size;
     buf->f_frsize = fs->csize * sector_size;
-    buf->f_blocks = mtd->sector_count / fs->csize;
+    //buf->f_blocks = mtd->sector_count / fs->csize;
+    buf->f_blocks = (fs->n_fatent - 2);
     buf->f_bfree  = nclst;
     buf->f_bavail = nclst;
     buf->f_namemax = FF_USE_LFN ? FF_LFN_BUF : FF_SFN_BUF;
@@ -373,7 +374,7 @@ static int _fstat(vfs_file_t *filp, struct stat *buf)
     buf->st_size = fi.fsize;
 
     /* set last modification timestamp */
-#ifdef SYS_STAT_H
+#ifdef _SYS_STAT_H
     _fatfs_time_to_timespec(fi.fdate, fi.ftime, &(buf->st_mtim.tv_sec));
 #else
     _fatfs_time_to_timespec(fi.fdate, fi.ftime, &(buf->st_mtime));
