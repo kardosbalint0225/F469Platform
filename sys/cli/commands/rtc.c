@@ -39,12 +39,12 @@ void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
     (void)context;
 
     time_t rawtime;
-    struct tm *timeinfo;
+    struct tm timeinfo;
 
     time(&rawtime);
-    timeinfo = localtime(&rawtime);
+    localtime_r(&rawtime, &timeinfo);
 
-    strftime(_buffer, sizeof(_buffer), "%F", timeinfo);
+    strftime(_buffer, sizeof(_buffer), "%F", &timeinfo);
     printf("    %s\r\n", _buffer);
 }
 
@@ -66,13 +66,13 @@ void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
     const char *ms_arg = embeddedCliGetToken(args, 1);
 
     struct timeval tv;
-    struct tm *timeinfo;
+    struct tm timeinfo;
 
     gettimeofday(&tv, NULL);
     const uint32_t ms = (uint32_t)(tv.tv_usec / 1000);
-    timeinfo = localtime(&tv.tv_sec);
+    localtime_r(&tv.tv_sec, &timeinfo);
 
-    strftime(_buffer, sizeof(_buffer), "%T", timeinfo);
+    strftime(_buffer, sizeof(_buffer), "%T", &timeinfo);
 
     if (0 == strncmp(ms_arg, "-ms", CLI_CMD_BUFFER_SIZE))
     {

@@ -22,10 +22,6 @@ static const char * const _units[] = {
     "B", "KB", "MB", "GB", "TB"
 };
 
-static const char * const _attributes[] = {
-    "<DIR>", "     "
-};
-
 enum UNIT_ID
 {
     UNIT_ID_BYTE = 0,
@@ -35,16 +31,11 @@ enum UNIT_ID
     UNIT_ID_TERABYTE
 };
 
-enum ATTRIBUTE_ID
-{
-    ATTRIBUTE_ID_DIR = 0,
-    ATTRIBUTE_ID_FILE
-};
-
 static char _cwd[FF_MAX_LFN] = {'\0'};
 
 static const char *get_unit(const uint64_t size, uint64_t *converted);
-static void print_mountpoints(void);
+static void list_mountpoints(void);
+static void list_files_in_directory(const char *path);
 
 void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
 {
@@ -54,95 +45,33 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
     if (NULL != args)
     {
         embeddedCliTokenizeArgs(args);
-        const char *arg_path = embeddedCliGetToken(args, 1);
-        assert(arg_path);
+        const char *path = embeddedCliGetToken(args, 1);
+        assert(path);
 
-        char path[CLI_CMD_BUFFER_SIZE + 1];
-
-        int res = vfs_normalize_path(path, arg_path, strnlen(arg_path, CLI_CMD_BUFFER_SIZE) + 1);
-        if (res < 0) {
-            printf("\r\n  Invalid path \"%s\": %s\r\n", arg_path, strerror(-res));
-            return;
-        }
-
-        vfs_DIR dir;
-        res = vfs_opendir(&dir, path);
-        if (res < 0) {
-            printf("\r\n  vfs_opendir error: %s\r\n", strerror(-res));
-            return;
-        }
-
-        unsigned int nfiles = 0;
-        unsigned int ndirs = 0;
-        res = 1;
-
-        printf("\r\n  Directory of %s\r\n\r\n", path);
-
-        for (uint32_t i = 0; (i < MAX_NUM_OF_FILES) && (res > 0); i++)
+        if (0 == strncmp(path, "-mp", sizeof("-mp")))
         {
-            char path_name[2 * (VFS_NAME_MAX + 1)];
-            vfs_dirent_t entry;
-            struct stat stat;
-
-            res = vfs_readdir(&dir, &entry);
-            if (res < 0) {
-                printf("\r\n  vfs_readdir error: %s\r\n", strerror(-res));
-                break;
-            }
-
-            vfs_stat(path_name, &stat);
-            char mdate[11] = {'\0'};
-            char mtime[6] = {'\0'};
-            int attrib_id;
-            char filesize[32] = {'\0'};
-            if (stat.st_mode & S_IFDIR)
-            {
-                snprintf(filesize, sizeof(filesize), "                  ");
-                attrib_id = ATTRIBUTE_ID_DIR;
-                ndirs++;
-            }
-            else if (stat.st_mode & S_IFREG)
-            {
-                snprintf(filesize, sizeof(filesize), "%16lu B", stat.st_size);
-                attrib_id = ATTRIBUTE_ID_FILE;
-                nfiles++;
-            }
-            else
-            {
-                snprintf(filesize, sizeof(filesize), "                  ");
-                attrib_id = ATTRIBUTE_ID_FILE;
-            }
-            strftime(mdate, sizeof(mdate), "%m/%d/%Y", localtime(&stat.st_mtim.tv_sec));
-            strftime(mtime, sizeof(mtime), "%H:%M", localtime(&stat.st_mtim.tv_sec));
-
-            printf("  %10s %5s %5s %16s %s\r\n",
-                   mdate, mtime, _attributes[attrib_id], filesize, entry.d_name);
+            list_mountpoints();
         }
-
-        printf("\r\n%16u Dir(s)\r\n", ndirs);
-        printf("%16u File(s)\r\n", nfiles);
-
-        res = vfs_closedir(&dir);
-        if (res < 0) {
-            printf("vfs_closedir error: %s\n", strerror(-res));
-            return;
+        else
+        {
+            list_files_in_directory(path);
         }
     }
     else
     {
         if (0 == strnlen(_cwd, sizeof(_cwd)))
         {
-            print_mountpoints();
+            list_mountpoints();
         }
         else
         {
-
+            list_files_in_directory(_cwd);
         }
     }
 
 }
 
-static void print_mountpoints(void)
+static void list_mountpoints(void)
 {
     printf("\r\n  Mountpoint |     Total     |     Used      |   Available   |     Use %%\r\n");
     printf("  -----------+---------------+---------------+---------------+-----------\r\n");
@@ -177,7 +106,6 @@ static void print_mountpoints(void)
     }
 }
 
-
 static const char *get_unit(const uint64_t size, uint64_t *converted)
 {
     assert(converted);
@@ -209,6 +137,86 @@ static const char *get_unit(const uint64_t size, uint64_t *converted)
     }
 }
 
+static void list_files_in_directory(const char *path)
+{
+    char npath[CLI_CMD_BUFFER_SIZE + 1];
+
+    int res = vfs_normalize_path(npath, path, strnlen(path, CLI_CMD_BUFFER_SIZE) + 1);
+    if (res < 0) {
+        printf("\r\n  Invalid path \"%s\": %s\r\n", path, strerror(-res));
+        return;
+    }
+
+    vfs_DIR dir;
+    res = vfs_opendir(&dir, npath);
+    if (res < 0) {
+        printf("\r\n  vfs_opendir error: %s\r\n", strerror(-res));
+        return;
+    }
+
+    unsigned int nfiles = 0;
+    unsigned int ndirs = 0;
+
+    printf("\r\n  Directory of %s\r\n\r\n", path);
+
+    for (uint32_t i = 0; i < MAX_NUM_OF_FILES; i++)
+    {
+        vfs_dirent_t entry;
+        res = vfs_readdir(&dir, &entry);
+        if (res < 0) {
+            printf("\r\n  vfs_readdir error: %s\r\n", strerror(-res));
+            break;
+        }
+        if (res == 0) {
+            break;
+        }
+
+        char path_name[2 * (VFS_NAME_MAX + 1)];
+        snprintf(path_name, sizeof(path_name), "%s/%s", npath, entry.d_name);
+
+        struct stat stat;
+        int err = vfs_stat(path_name, &stat);
+        if (err < 0) {
+            printf("\r\n  vfs_stat error: %s\r\n", strerror(-err));
+            break;
+        }
+
+        struct tm tbuf;
+        char mdate[11] = {'\0'};
+        strftime(mdate, sizeof(mdate), "%m/%d/%Y", localtime_r(&stat.st_mtim.tv_sec, &tbuf));
+        char mtime[6] = {'\0'};
+        strftime(mtime, sizeof(mtime), "%H:%M", localtime_r(&stat.st_mtim.tv_sec, &tbuf));
+
+        char filesize[17] = {'\0'};
+        if (stat.st_mode & S_IFDIR)
+        {
+            snprintf(filesize, sizeof(filesize), "%-16s", "<DIR>");
+            ndirs++;
+        }
+        else if (stat.st_mode & S_IFREG)
+        {
+            snprintf(filesize, sizeof(filesize), "%16lu", stat.st_size);
+            nfiles++;
+        }
+        else
+        {
+            snprintf(filesize, sizeof(filesize), " ");
+        }
+
+
+        printf("%10s  %5s  %16s %s\r\n",
+               mdate, mtime, filesize, entry.d_name);
+    }
+
+    printf("\r\n%16u Dir(s)\r\n", ndirs);
+    printf("%16u File(s)\r\n", nfiles);
+
+    res = vfs_closedir(&dir);
+    if (res < 0) {
+        printf("vfs_closedir error: %s\n", strerror(-res));
+        return;
+    }
+}
 
 
 

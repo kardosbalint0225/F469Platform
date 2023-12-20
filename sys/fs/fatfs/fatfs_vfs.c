@@ -374,7 +374,7 @@ static int _fstat(vfs_file_t *filp, struct stat *buf)
     buf->st_size = fi.fsize;
 
     /* set last modification timestamp */
-#ifdef _SYS_STAT_H
+#ifdef SYS_STAT_H
     _fatfs_time_to_timespec(fi.fdate, fi.ftime, &(buf->st_mtim.tv_sec));
 #else
     _fatfs_time_to_timespec(fi.fdate, fi.ftime, &(buf->st_mtime));
@@ -464,34 +464,17 @@ static int _rmdir (vfs_mount_t *mountp, const char *name)
 
 static void _fatfs_time_to_timespec(WORD fdate, WORD ftime, time_t *time)
 {
-    const uint16_t days_for_month[12] = { 0, 31, 59, 90, 120, 151, 181, 212,
-                                          243, 273, 304, 334 };
+    struct tm t = {
+        .tm_year = ((fdate >> 9) & 0x7F) + FATFS_YEAR_OFFSET - 1900,
+        .tm_mon = ((fdate >> 5) & 0x0F) - 1,
+        .tm_mday = fdate & 0x1F,
+        .tm_hour = (ftime >> 11) & 0x1F,
+        .tm_min = (ftime >> 5) & 0x3F,
+        .tm_sec = ftime & 0x1F,
+        .tm_isdst = -1,
+    };
 
-    int year =  ((fdate >> 9) & 0x7F) + FATFS_YEAR_OFFSET - EPOCH_YEAR_OFFSET;
-    int month = ((fdate >> 5) & 0x0F) - 1;                      /**< 0..11 */
-    int day =    (fdate & 0x1F) - 1;                            /**< 0..31 */
-
-    int hour = (ftime >> 11) & 0x1F;                            /**< 0..23 */
-    int min  = (ftime >> 5) & 0x3F;                             /**< 0..59 */
-    int sec  = (ftime & 0x1F) * 2;                              /**< 0..58 */
-
-    /* leap years since 1970 */
-    int leap_years = ((year - 1 - EPOCH_YEAR_OFFSET - 2) / 4) -
-                     ((year - 1 - 1900) / 100) +
-                     ((year - 1 - 1600) / 400);
-
-    long days_since_epoch = (year - EPOCH_YEAR_OFFSET) * 365 +
-                            days_for_month[month] +
-                            leap_years +
-                            day;
-
-    if ((month > 2) &&
-        ((year % 4 == 0) &&
-         ((year % 100 != 0) || (year % 400 == 0)))) {
-        days_since_epoch++; /* add one day if this is a leap year */
-    }
-
-    *time = ((((days_since_epoch * 24) + hour) * 60) + min) * 60 + sec;
+    *time = mktime(&t);
 }
 
 static int fatfs_err_to_errno(int32_t err)
