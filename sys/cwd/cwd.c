@@ -17,7 +17,7 @@
 #include <errno.h>
 
 static char _cwd_work_area[2 * (VFS_NAME_MAX + 1)];
-static char _cwd[VFS_NAME_MAX + 1] = {'\0'};
+static char _cwd[VFS_NAME_MAX + 1];
 static SemaphoreHandle_t _cwd_mutex = NULL;
 static StaticSemaphore_t _cwd_mutex_storage;
 
