@@ -15,6 +15,7 @@ extern void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *contex
 extern void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_ls(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_get_date(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_get_time(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_set_date(EmbeddedCli *cli, char *args, void *context);
@@ -94,7 +95,7 @@ static CliCommandBinding version_binding = {
     .binding = cli_command_version
 };
 
-static CliCommandBinding heapstats_binding = {
+static CliCommandBinding memstat_binding = {
     .name = "memstat",
     .help = "Displays the detailed state of the application and system memory",
     .tokenizeArgs = true,
@@ -108,6 +109,14 @@ static CliCommandBinding ls_binding = {
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_ls
+};
+
+static CliCommandBinding cd_binding = {
+    .name = "cd",
+    .help = "todo",
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_cd
 };
 
 /**
@@ -128,8 +137,9 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, set_time_binding);
     embeddedCliAddBinding(cli, sysinfo_binding);
     embeddedCliAddBinding(cli, version_binding);
-    embeddedCliAddBinding(cli, heapstats_binding);
+    embeddedCliAddBinding(cli, memstat_binding);
     embeddedCliAddBinding(cli, ls_binding);
+    embeddedCliAddBinding(cli, cd_binding);
 }
 
 /**

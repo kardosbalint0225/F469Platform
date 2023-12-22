@@ -23,7 +23,6 @@ struct __lock __lock___tz_mutex;
 struct __lock __lock___dd_hash_mutex;
 struct __lock __lock___arc4random_mutex;
 
-
 __attribute__((constructor))
 static void init_retarget_locks(void)
 {
@@ -100,3 +99,4 @@ void __retarget_lock_release_recursive(_LOCK_T lock)
 {
     xSemaphoreGiveRecursive(lock->sem);
 }
+

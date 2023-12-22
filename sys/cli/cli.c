@@ -21,7 +21,6 @@
 #include "stm32f4xx_hal.h"
 
 extern QueueHandle_t stdio_uart_rx_queue;
-
 static EmbeddedCli *_cli;
 static CLI_UINT _cli_buffer[BYTES_TO_CLI_UINTS(CLI_BUFFER_SIZE)];
 

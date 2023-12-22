@@ -16,6 +16,7 @@
 #include "cli.h"
 #include "vfs.h"
 #include "sdcard_mount.h"
+#include "cwd.h"
 
 #if RUN_TESTS
     #include "tests.h"
@@ -45,6 +46,7 @@ void vApplicationDaemonTaskStartupHook(void)
     vfs_bind_stdio();
     sdcard_mount_init();
     cli_init();
+    cwd_init();
 #if RUN_TESTS
     start_tests();
 #endif

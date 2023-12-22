@@ -7,6 +7,10 @@
 #include "embedded_cli.h"
 #include "cli_config.h"
 
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "task.h"
+
 #include "vfs.h"
 #include "macros/units.h"
 
@@ -15,27 +19,34 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #define MAX_NUM_OF_FILES    2796202ul
-
-static const char * const _units[] = {
-    "B", "KB", "MB", "GB", "TB"
-};
-
-enum UNIT_ID
-{
-    UNIT_ID_BYTE = 0,
-    UNIT_ID_KILOBYTE,
-    UNIT_ID_MEGABYTE,
-    UNIT_ID_GIGABYTE,
-    UNIT_ID_TERABYTE
-};
-
-static char _cwd[FF_MAX_LFN] = {'\0'};
 
 static const char *get_unit(const uint64_t size, uint64_t *converted);
 static void list_mountpoints(void);
 static void list_files_in_directory(const char *path);
+
+void cli_command_cd(EmbeddedCli *cli, char *args, void *context)
+{
+    (void)cli;
+    (void)context;
+
+    if (NULL == args)
+    {
+        printf("\r\n  Invalid command argument\r\n");
+        return;
+    }
+
+    embeddedCliTokenizeArgs(args);
+    const char *path = embeddedCliGetToken(args, 1);
+    assert(path);
+
+    int res = chdir(path);
+    if (res < 0) {
+        printf("\r\n  The system cannot find the path specified. error: %s\r\n", strerror(-res));
+    }
+}
 
 void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
 {
@@ -59,13 +70,19 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
     }
     else
     {
-        if (0 == strnlen(_cwd, sizeof(_cwd)))
+        char cwd[VFS_NAME_MAX];
+        if (NULL == getcwd(cwd, sizeof(cwd))) {
+            printf("\r\n  Current working directory cannot be retrieved.\r\n");
+            return;
+        }
+
+        if (0 == strnlen(cwd, sizeof(cwd)))
         {
             list_mountpoints();
         }
         else
         {
-            list_files_in_directory(_cwd);
+            list_files_in_directory(cwd);
         }
     }
 
@@ -118,22 +135,22 @@ static const char *get_unit(const uint64_t size, uint64_t *converted)
     else if ((size & (GiB(1) - 1)) == 0)
     {
         *converted = size / GiB(1);
-        return _units[UNIT_ID_GIGABYTE];
+        return "GB";
     }
     else if ((size & (MiB(1) - 1)) == 0)
     {
         *converted = size / MiB(1);
-        return _units[UNIT_ID_MEGABYTE];
+        return "MB";
     }
     else if ((size & (KiB(1) - 1)) == 0)
     {
         *converted = size / KiB(1);
-        return _units[UNIT_ID_KILOBYTE];
+        return "KB";
     }
     else
     {
         *converted = size;
-        return _units[UNIT_ID_BYTE];
+        return "B";
     }
 }
 
@@ -217,8 +234,5 @@ static void list_files_in_directory(const char *path)
         return;
     }
 }
-
-
-
 
 
