@@ -70,7 +70,7 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
     }
     else
     {
-        char cwd[VFS_NAME_MAX];
+        char cwd[VFS_NAME_MAX + 1];
         if (NULL == getcwd(cwd, sizeof(cwd))) {
             printf("\r\n  Current working directory cannot be retrieved.\r\n");
             return;
