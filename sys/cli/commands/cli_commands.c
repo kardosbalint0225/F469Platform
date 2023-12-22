@@ -14,14 +14,15 @@
 extern void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_ls(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_get_date(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_get_time(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_set_date(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_set_time(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_version(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_memstat(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_ls(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_cp(EmbeddedCli *cli, char *args, void *context);
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -113,10 +114,18 @@ static CliCommandBinding ls_binding = {
 
 static CliCommandBinding cd_binding = {
     .name = "cd",
-    .help = "todo",
+    .help = "todo",//TODO
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_cd
+};
+
+static CliCommandBinding cp_binding = {
+    .name = "cp",
+    .help = "todo",//TODO
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_cp
 };
 
 /**
@@ -141,6 +150,7 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, memstat_binding);
     embeddedCliAddBinding(cli, ls_binding);
     embeddedCliAddBinding(cli, cd_binding);
+    embeddedCliAddBinding(cli, cp_binding);
 }
 
 /**

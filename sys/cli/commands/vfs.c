@@ -28,6 +28,81 @@ static void list_mountpoints(void);
 static void list_items_in_path(const char *path);
 
 /**
+ * @brief  Function that is executed when the cp command is entered.
+ *         TODO
+ *
+ * @param  cli (not used)
+ * @param  args string containing TODO
+ * @param  context (not used)
+ *
+ * @retval None
+ */
+void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
+{
+
+}
+
+/**
+ * @brief  Function that is executed when the mv command is entered.
+ *         TODO
+ *
+ * @param  cli (not used)
+ * @param  args string containing TODO
+ * @param  context (not used)
+ *
+ * @retval None
+ */
+void cli_command_mv(EmbeddedCli *cli, char *args, void *context)
+{
+
+}
+
+/**
+ * @brief  Function that is executed when the rm command is entered.
+ *         TODO
+ *
+ * @param  cli (not used)
+ * @param  args string containing TODO
+ * @param  context (not used)
+ *
+ * @retval None
+ */
+void cli_command_rm(EmbeddedCli *cli, char *args, void *context)
+{
+
+}
+
+/**
+ * @brief  Function that is executed when the mkdir command is entered.
+ *         TODO
+ *
+ * @param  cli (not used)
+ * @param  args string containing TODO
+ * @param  context (not used)
+ *
+ * @retval None
+ */
+void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context)
+{
+
+}
+
+/**
+ * @brief  Function that is executed when the rmdir command is entered.
+ *         TODO
+ *
+ * @param  cli (not used)
+ * @param  args string containing TODO
+ * @param  context (not used)
+ *
+ * @retval None
+ */
+void cli_command_rmdir(EmbeddedCli *cli, char *args, void *context)
+{
+
+}
+
+/**
  * @brief  Function that is executed when the cd command is entered.
  *         Changes the current working directory to the given <path>
  *
