@@ -23,11 +23,12 @@ static void print_application_heap_statistics(void);
 /**
  * @brief  Function that is executed when the memstat command is entered.
  *         Displays the detailed state of the application and system memory
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_memstat(EmbeddedCli *cli, char *args, void *context)
 {
@@ -48,11 +49,17 @@ void cli_command_memstat(EmbeddedCli *cli, char *args, void *context)
     print_tasks_stack_usage_statistics();
     print_application_heap_statistics();
 
-
-
     // Application Stack statistics:
+    // TODO:
 }
 
+/**
+ * @brief  Prints System (FreeRTOS) Heap statistics
+ *
+ * @param  None
+ *
+ * @retval None
+ */
 static void print_system_heap_statistics(void)
 {
     // System (FreRTOS) Heap statistics:
@@ -71,6 +78,13 @@ static void print_system_heap_statistics(void)
            100.0f * ((float)stats.xAvailableHeapSpaceInBytes / (float)size));
 }
 
+/**
+ * @brief  Prints FreeRTOS tasks stack usage statistics
+ *
+ * @param  None
+ *
+ * @retval None
+ */
 static void print_tasks_stack_usage_statistics(void)
 {
     // FreeRTOS tasks stack usage statistics:
@@ -101,6 +115,14 @@ static void print_tasks_stack_usage_statistics(void)
     vPortFree(tasks);
 }
 
+/**
+ * @brief  Prints Application Heap statistics
+ *         Heap memory that is used by newlib
+ *
+ * @param  None
+ *
+ * @retval None
+ */
 static void print_application_heap_statistics(void)
 {
     // Application Heap statistics:

@@ -121,9 +121,10 @@ static CliCommandBinding cd_binding = {
 
 /**
  * @brief  Adds the command bindings to the cli instance
+ *
  * @param  None
+ *
  * @retval None
- * @note   -
  */
 void cli_init_command_bindings(void)
 {
@@ -144,11 +145,12 @@ void cli_init_command_bindings(void)
 
 /**
  * @brief  Clears the terminal
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
 {

@@ -17,11 +17,12 @@ static char _buffer[CLI_PRINT_BUFFER_SIZE];
 /**
  * @brief  Function that is executed when runtimestats command entered
  *         Displays the absolute and relative times of each task
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context)
 {
@@ -40,11 +41,12 @@ void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context)
 /**
  * @brief  Function that is executed when taskstats command entered
  *         Displays the state, priority and stack usage of each task
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context)
 {

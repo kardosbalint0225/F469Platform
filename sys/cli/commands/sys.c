@@ -81,11 +81,12 @@ static uint32_t find(const uint32_t *array, const uint32_t size, const uint32_t 
 /**
  * @brief  Function that is executed when the sysinfo command is entered.
  *         Displays system related informations (versions, clock states)
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
 {
@@ -185,6 +186,7 @@ void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
  * @param  array the array to be checked
  * @param  size  the size of the array
  * @param  value the value to be found
+ *
  * @retval returns the index of the value,
  *         0xFFFFFFFFul if the value can not be found
  */

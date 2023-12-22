@@ -26,11 +26,12 @@ static void convert_string_to_date(int *day, int *month, int *year, const char *
 /**
  * @brief  Function that is executed when date command entered
  *         Displays the current date set to the RTC
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 {
@@ -51,11 +52,12 @@ void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 /**
  * @brief  Function that is executed when time command entered
  *         Displays the current time set to the RTC
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 {
@@ -87,11 +89,12 @@ void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 /**
  * @brief  Function that is executed when setdate command entered
  *         Sets the current date to the RTC
+ *
  * @param  cli (not used)
  * @param  args command argument holding the date to be set
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
 {
@@ -148,11 +151,12 @@ void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
 /**
  * @brief  Function that is executed when settime command entered
  *         Sets the current time to the RTC
+ *
  * @param  cli (not used)
  * @param  args command argument holding the time to be set
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
 {
@@ -205,9 +209,9 @@ void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
  *
  * @param  time_string the string containing the argument of the settime command
  * @param  len the length of the time_string
+ *
  * @retval true if the time command string is valid (hh:mm:ss format)
  * @retval false otherwise
- * @note   -
  */
 static bool is_time_command_string_valid(const char *time_string, const uint32_t len)
 {
@@ -246,6 +250,7 @@ static bool is_time_command_string_valid(const char *time_string, const uint32_t
  *
  * @param  date_string the string containing the argument of the setdate command
  * @param  len the length of the date_string
+ *
  * @retval true if the date command string is valid (yyyy.mm.dd. format)
  * @retval false otherwise
  */
@@ -288,8 +293,8 @@ static bool is_date_command_string_valid(const char *date_string, const uint32_t
  * @param  min  where the min value can be stored
  * @param  sec  where the sec value can be stored
  * @param  time_string the string to be extracted
+ *
  * @retval None
- * @note   -
  */
 static void convert_string_to_time(int *hour, int *min, int *sec, const char *time_string)
 {
@@ -310,8 +315,8 @@ static void convert_string_to_time(int *hour, int *min, int *sec, const char *ti
  * @param  month where the month value can be stored
  * @param  year  where the year value can be stored
  * @param  date_string the string to be extracted
+ *
  * @retval None
- * @note   -
  */
 static void convert_string_to_date(int *day, int *month, int *year, const char *date_string)
 {

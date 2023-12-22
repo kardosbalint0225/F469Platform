@@ -12,11 +12,12 @@
 /**
  * @brief  Function that is executed when the version command is entered.
  *         Displays the application version and the used library versions
+ *
  * @param  cli (not used)
  * @param  args (not used)
  * @param  context (not used)
+ *
  * @retval None
- * @note   -
  */
 void cli_command_version(EmbeddedCli *cli, char *args, void *context)
 {

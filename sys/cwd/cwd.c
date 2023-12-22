@@ -42,6 +42,14 @@ void cwd_deinit(void)
     _cwd_mutex = NULL;
 }
 
+/**
+ * @brief  Change the current working directory to the given path
+ *
+ * @param  __path pointer where the path is stored
+ *
+ * @return 0 if changing the current working directory was successful
+ * @return -ENAMETOOLONG if the path combined with cwd is larger than VFS_NAME_MAX
+ */
 int chdir(const char *__path)
 {
     char path[VFS_NAME_MAX + 1];
@@ -79,6 +87,15 @@ int chdir(const char *__path)
     return 0;
 }
 
+/**
+ * @brief  Get the current working directory
+ *
+ * @param  __buf pointer where the CWD can be stored
+ * @param  __size the size of the given __buf
+ *
+ * @return the address of __bug if storing the current working directory was successful
+ * @return NULL if __buf is NULL or the size of __buf is smaller than length of the cwd
+ */
 char *getcwd(char *__buf, size_t __size)
 {
     if ((NULL == __buf) || (__size < sizeof(_cwd))) {
@@ -108,6 +125,19 @@ static void cwd_unlock(void)
     xSemaphoreGiveRecursive(_cwd_mutex);
 }
 
+/**
+ * @brief  Normalize (absolutize) the given path
+ *
+ * @param  to pointer where the normalized path can be stored
+ * @param  length of the to buffer
+ * @param  from pointer where the path to be normalized is stored
+ * @param  from_len the length of the from path string
+ * @param  work_area working area for the normalization should be (from_len + VFS_NAME_MAX + 2) long
+ * @param  work_area_len the size of the working area
+ *
+ * @return 0 if the normalization was successful
+ * @return -ENAMETOOLONG if the path combined with cwd is larger than VFS_NAME_MAX
+ */
 static int normalize_path(char *to, size_t to_len, const char *from, size_t from_len, char *work_area, size_t work_area_len)
 {
     char *cpath;
@@ -125,7 +155,7 @@ static int normalize_path(char *to, size_t to_len, const char *from, size_t from
     // We can use strcpy / strcat functions because destination string has enough
     // allocated space.
     if (((from_len + VFS_NAME_MAX + 2) > work_area_len) || (to_len < VFS_NAME_MAX)) {
-        return -ENOMEM;
+        return -ENAMETOOLONG;
     }
 
     memset(work_area, 0x00, work_area_len);
@@ -134,7 +164,7 @@ static int normalize_path(char *to, size_t to_len, const char *from, size_t from
 
         // It's a relative path, so prepend the current working directory
         if (NULL == getcwd(work_area, work_area_len)) {
-            return -ENOMEM;
+            return -ENAMETOOLONG;
         }
 
         // Append / if the current working directory doesn't end with /

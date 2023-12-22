@@ -25,8 +25,18 @@
 
 static const char *get_unit(const uint64_t size, uint64_t *converted);
 static void list_mountpoints(void);
-static void list_files_in_directory(const char *path);
+static void list_items_in_path(const char *path);
 
+/**
+ * @brief  Function that is executed when the cd command is entered.
+ *         Changes the current working directory to the given <path>
+ *
+ * @param  cli (not used)
+ * @param  args string containing the absolute or relative path
+ * @param  context (not used)
+ *
+ * @retval None
+ */
 void cli_command_cd(EmbeddedCli *cli, char *args, void *context)
 {
     (void)cli;
@@ -48,6 +58,17 @@ void cli_command_cd(EmbeddedCli *cli, char *args, void *context)
     }
 }
 
+/**
+ * @brief  Function that is executed when the ls command is entered.
+ *         Lists the files and folders in the given directory. If the argument
+ *         is NULL then the CWD is used
+ *
+ * @param  cli (not used)
+ * @param  args string containing the absolute or relative path or NULL
+ * @param  context (not used)
+ *
+ * @retval None
+ */
 void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
 {
     (void)cli;
@@ -65,7 +86,7 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
         }
         else
         {
-            list_files_in_directory(path);
+            list_items_in_path(path);
         }
     }
     else
@@ -82,12 +103,19 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
         }
         else
         {
-            list_files_in_directory(cwd);
+            list_items_in_path(cwd);
         }
     }
 
 }
 
+/**
+ * @brief  Prints every Mountpoints
+ *
+ * @param  None
+ *
+ * @retval None
+ */
 static void list_mountpoints(void)
 {
     printf("\r\n  Mountpoint |     Total     |     Used      |   Available   |     Use %%\r\n");
@@ -123,6 +151,16 @@ static void list_mountpoints(void)
     }
 }
 
+/**
+ * @brief  Converts the given size to the nearest byte unit
+ *         and returns the unit in string format
+ *
+ * @param  size the size to be converted
+ * @param  converted pointer where the result of the conversion can be stored
+ *
+ * @retval "B", "KB", "MB", "GB" or "TB" according to the conversion
+ * @retvan NULL if size is 0
+ */
 static const char *get_unit(const uint64_t size, uint64_t *converted)
 {
     assert(converted);
@@ -154,7 +192,14 @@ static const char *get_unit(const uint64_t size, uint64_t *converted)
     }
 }
 
-static void list_files_in_directory(const char *path)
+/**
+ * @brief  Lists every file and folder in the given path
+ *
+ * @param  path pointer where the path to be listed is stored
+ *
+ * @retval None
+ */
+static void list_items_in_path(const char *path)
 {
     char npath[CLI_CMD_BUFFER_SIZE + 1];
 
