@@ -71,23 +71,27 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
 
     HAL_StatusTypeDef hal_status;
 
+    while (HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio))
+    {
+        ;//vTaskDelay(1);
+    }
+
     if (true == is_word_aligned(data))
     {
-//        hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
-        hal_status = HAL_SD_ReadBlocks(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num, 0x00000FFFul);
+        hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
         if (HAL_OK != hal_status)
         {
             assert(0);
             return sd_error_to_errno(h_sdio.ErrorCode);
         }
 
-//        const TickType_t ticks_to_wait = pdMS_TO_TICKS(SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS * block_num);
-//        BaseType_t ret = xSemaphoreTake(_rx_cplt_semphr, ticks_to_wait);
-//        if (pdTRUE != ret)
-//        {
-//            assert(0);
-//            return -ETIMEDOUT;
-//        }
+        const TickType_t ticks_to_wait = pdMS_TO_TICKS(SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS * block_num);
+        BaseType_t ret = xSemaphoreTake(_rx_cplt_semphr, ticks_to_wait);
+        if (pdTRUE != ret)
+        {
+            assert(0);
+            return -ETIMEDOUT;
+        }
     }
     else
     {
@@ -130,21 +134,25 @@ int sdcard_write_blocks(uint32_t block_addr, uint16_t block_num, const void *dat
 
     HAL_StatusTypeDef hal_status;
 
+    while (HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio))
+    {
+        ;//vTaskDelay(1);
+    }
+
     if (true == is_word_aligned(data))
     {
-        //hal_status = HAL_SD_WriteBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
-        hal_status = HAL_SD_WriteBlocks(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num, 0x000000FFul);
+        hal_status = HAL_SD_WriteBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
         if (HAL_OK != hal_status)
         {
             return sd_error_to_errno(h_sdio.ErrorCode);
         }
 
-//        const TickType_t ticks_to_wait = pdMS_TO_TICKS(2 * SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS * block_num);
-//        BaseType_t ret = xSemaphoreTake(_tx_cplt_semphr, ticks_to_wait);
-//        if (pdTRUE != ret)
-//        {
-//            return -ETIMEDOUT;
-//        }
+        const TickType_t ticks_to_wait = pdMS_TO_TICKS(2 * SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS * block_num);
+        BaseType_t ret = xSemaphoreTake(_tx_cplt_semphr, ticks_to_wait);
+        if (pdTRUE != ret)
+        {
+            return -ETIMEDOUT;
+        }
     }
     else
     {
@@ -183,6 +191,11 @@ int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num)
 {
     assert(block_num);
     HAL_StatusTypeDef hal_status;
+
+    while (HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio))
+    {
+        ;//vTaskDelay(1);
+    }
 
     hal_status = HAL_SD_Erase(&h_sdio, block_addr, block_addr + (uint32_t)block_num);
     if (HAL_OK != hal_status)
@@ -224,8 +237,7 @@ static int sdio_init(void)
     h_sdio.Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE;
     h_sdio.Init.BusWide = SDIO_BUS_WIDE_1B;
     h_sdio.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_ENABLE;
-//    h_sdio.Init.ClockDiv = SDIO_TRANSFER_CLK_DIV;
-    h_sdio.Init.ClockDiv = 255;
+    h_sdio.Init.ClockDiv = SDIO_TRANSFER_CLK_DIV;
 
     HAL_StatusTypeDef ret;
 
@@ -252,23 +264,23 @@ static int sdio_init(void)
         return hal_statustypedef_to_errno(_error);
     }
 
-//    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_TX_CPLT_CB_ID, sdio_tx_cplt_callback);
-//    if (HAL_OK != ret)
-//    {
-//        return hal_statustypedef_to_errno(ret);
-//    }
-//
-//    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_RX_CPLT_CB_ID, sdio_rx_cplt_callback);
-//    if (HAL_OK != ret)
-//    {
-//        return hal_statustypedef_to_errno(ret);
-//    }
-//
-//    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_ERROR_CB_ID, sdio_error_callback);
-//    if (HAL_OK != ret)
-//    {
-//        return hal_statustypedef_to_errno(ret);
-//    }
+    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_TX_CPLT_CB_ID, sdio_tx_cplt_callback);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_RX_CPLT_CB_ID, sdio_rx_cplt_callback);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_SD_RegisterCallback(&h_sdio, HAL_SD_ERROR_CB_ID, sdio_error_callback);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
 
     ret = HAL_SD_ConfigWideBusOperation(&h_sdio, SDIO_BUS_WIDE_4B);
     if (HAL_OK != ret)
@@ -287,6 +299,7 @@ static void sdio_msp_init(SD_HandleTypeDef *h_sd)
     RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
     RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
     RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
+
     _error = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
     if (HAL_OK != _error)
     {
@@ -294,50 +307,30 @@ static void sdio_msp_init(SD_HandleTypeDef *h_sd)
     }
 
     __HAL_RCC_SDIO_CLK_ENABLE();
-//    __HAL_RCC_SDIO_FORCE_RESET();
-//    __HAL_RCC_SDIO_RELEASE_RESET();
+    __HAL_RCC_SDIO_FORCE_RESET();
+    __HAL_RCC_SDIO_RELEASE_RESET();
 
-    GPIO_InitTypeDef gpio_init_structure;
-    /* Enable GPIOs clock */
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
+    sdcard_cmd_pin_init();
+    sdcard_clk_pin_init();
+    sdcard_d3_pin_init();
+    sdcard_d2_pin_init();
+    sdcard_d1_pin_init();
+    sdcard_d0_pin_init();
 
-    /* Common GPIO configuration */
-    gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
-    gpio_init_structure.Pull      = GPIO_PULLUP;
-    gpio_init_structure.Speed     = GPIO_SPEED_HIGH;
-    gpio_init_structure.Alternate = GPIO_AF12_SDIO;
+    _error = sdcard_sdio_dma_rx_init(h_sd);
+    if (HAL_OK != _error)
+    {
+        return;
+    }
 
-    /* GPIOC configuration */
-    gpio_init_structure.Pin = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
+    _error = sdcard_sdio_dma_tx_init(h_sd);
+    if (HAL_OK != _error)
+    {
+        return;
+    }
 
-    HAL_GPIO_Init(GPIOC, &gpio_init_structure);
-
-    /* GPIOD configuration */
-    gpio_init_structure.Pin = GPIO_PIN_2;
-    HAL_GPIO_Init(GPIOD, &gpio_init_structure);
-
-//    sdcard_cmd_pin_init();
-//    sdcard_clk_pin_init();
-//    sdcard_d3_pin_init();
-//    sdcard_d2_pin_init();
-//    sdcard_d1_pin_init();
-//    sdcard_d0_pin_init();
-//
-//    _error = sdcard_sdio_dma_rx_init(h_sd);
-//    if (HAL_OK != _error)
-//    {
-//        return;
-//    }
-//
-//    _error = sdcard_sdio_dma_tx_init(h_sd);
-//    if (HAL_OK != _error)
-//    {
-//        return;
-//    }
-//
-//    HAL_NVIC_SetPriority(SDIO_IRQn, SDCARD_SDIO_IRQ_PRIORITY, 0);
-//    HAL_NVIC_EnableIRQ(SDIO_IRQn);
+    HAL_NVIC_SetPriority(SDIO_IRQn, SDCARD_SDIO_IRQ_PRIORITY, 0);
+    HAL_NVIC_EnableIRQ(SDIO_IRQn);
 }
 
 static int sdio_deinit(void)

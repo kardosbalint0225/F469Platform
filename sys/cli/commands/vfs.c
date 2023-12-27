@@ -29,12 +29,91 @@
 
 #define MAX_NUM_OF_FILES    2796202ul
 
-#define SHELL_VFS_BUFSIZE   512
+#define SHELL_VFS_BUFSIZE   4096ul
 static uint8_t _shell_vfs_data_buffer[SHELL_VFS_BUFSIZE];
 
 static const char *get_unit(const uint64_t size, uint64_t *converted);
 static void list_mountpoints(void);
 static void list_items_in_path(const char *path);
+
+/**
+ * @brief  Function that is executed when the w command is entered.
+ *         TODO
+ *
+ * @param  cli (not used)
+ * @param  args string containing TODO
+ * @param  context (not used)
+ *
+ * @retval None
+ */
+void cli_command_w(EmbeddedCli *cli, char *args, void *context)
+{
+    (void)cli;
+    (void)args;
+    (void)context;
+
+    const char *dest_name = "/sd/STM32.TXT";
+
+    uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
+    uint8_t rtext[100];                                   /* File read buffer */
+
+    int fd_out = vfs_open(dest_name, O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd_out < 0) {
+        printf("Error opening file for writing \"%s\": %s\r\n", dest_name, strerror(-fd_out));
+        return;
+    }
+
+//    char data_buffer[33];
+//    for (int i = 0; i < 32; i++)
+//    {
+//        data_buffer[i] = ' ' + i;
+//    }
+
+    //int res = vfs_write(fd_out, data_buffer, 32);
+    int res = vfs_write(fd_out, wtext, sizeof(wtext));
+    if (res <= 0) {
+        printf("Error writing file: %s\r\n", strerror(-res));
+    }
+
+    res = vfs_close(fd_out);
+    if (res < 0) {
+        printf("Error closing file: %s\r\n", strerror(-res));
+    }
+
+    int fd = vfs_open(dest_name, O_RDONLY, 0);
+    if (fd < 0) {
+        printf("Error opening file for reading\"%s\": %s\n", dest_name, strerror(-fd));
+        return;
+    }
+
+    res = vfs_read(fd, rtext, sizeof(rtext));
+    if (res < 0) {
+        printf("Read error: %s\n", strerror(-res));
+        vfs_close(fd);
+        return;
+    }
+
+    if (res != sizeof(wtext))
+    {
+        printf("bytes read does not equal to bytes written.\r\n");
+        vfs_close(fd);
+        return;
+    }
+
+    res = vfs_close(fd);
+    if (res < 0) {
+        printf("Error closing file: %s\r\n", strerror(-res));
+        return;
+    }
+
+    if (0 != strncmp((char *)wtext, (char *)rtext, sizeof(wtext)))
+    {
+        printf("wtext rtext mismatch.\r\n");
+        return;
+    }
+
+    printf("Success. ------------------------------------------------\r\n");
+}
 
 /**
  * @brief  Function that is executed when the r command is entered.
@@ -48,6 +127,9 @@ static void list_items_in_path(const char *path);
  */
 void cli_command_r(EmbeddedCli *cli, char *args, void *context)
 {
+    (void)cli;
+    (void)context;
+
     uint8_t buf[16];
     size_t nbytes = sizeof(buf);
     off_t offset = 0;
@@ -194,8 +276,9 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
     uint64_t filesize = stat.st_size;
     uint64_t progress = 0;
     float percentage;
-    float prev_percentage = 0;
-    printf("[----------]\r\n");
+    float last_percent = 0.0f;
+    TickType_t t1 = 0;
+    TickType_t t2 = 0;
 
     int eof = 0;
     while (eof == 0)
@@ -257,16 +340,11 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
         }
 
         percentage = 100.0f * ((float)progress / (float)filesize);
-        if ((int)percentage != (int)prev_percentage)
-        {
-            char buf[11] = {'\0'};
-            memset(buf, '-', 10);
-            for (int i = 0; i < (int)percentage; i++)
-            {
-                buf[i] = '#';
-            }
-            printf("[%s]\r\n", buf);
-            prev_percentage = percentage;
+        if ((int)percentage != (int)last_percent) {
+            t2 = t1;
+            printf("  %3f   %f s\r\n", percentage, ((float)(t2 - t1))/1000.0f);
+            last_percent = percentage;
+            t1 = xTaskGetTickCount();
         }
     }
 
