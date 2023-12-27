@@ -49,6 +49,6 @@
 #define SDCARD_DMAx_RX_IRQn                     DMA2_Stream3_IRQn
 #define SDCARD_DMAx_TX_IRQ_PRIORITY             15
 #define SDCARD_DMAx_RX_IRQ_PRIORITY             15
-#define SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS    50
+#define SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS    5000
 
 #endif /* _SDCARD_CONFIG_H_ */

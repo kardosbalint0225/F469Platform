@@ -23,6 +23,7 @@ extern void cli_command_memstat(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_ls(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_cp(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_r(EmbeddedCli *cli, char *args, void *context);
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -128,6 +129,14 @@ static CliCommandBinding cp_binding = {
     .binding = cli_command_cp
 };
 
+static CliCommandBinding r_binding = {
+    .name = "r",
+    .help = "todo",//TODO
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_r
+};
+
 /**
  * @brief  Adds the command bindings to the cli instance
  *
@@ -151,6 +160,7 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, ls_binding);
     embeddedCliAddBinding(cli, cd_binding);
     embeddedCliAddBinding(cli, cp_binding);
+    embeddedCliAddBinding(cli, r_binding);
 }
 
 /**
