@@ -70,10 +70,15 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
     assert(block_num);
 
     HAL_StatusTypeDef hal_status;
+    TimeOut_t timeout;
+    TickType_t ticks_to_wait = pdMS_TO_TICKS(2 * SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS);
+    vTaskSetTimeOutState(&timeout);
+    BaseType_t timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
 
-    while (HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio))
+    while ((HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio)) && (pdFALSE == timedout))
     {
-        ;//vTaskDelay(1);
+        vTaskDelay(pdMS_TO_TICKS(1));
+        timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
     }
 
     if (true == is_word_aligned(data))
@@ -81,7 +86,6 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
         hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
         if (HAL_OK != hal_status)
         {
-            assert(0);
             return sd_error_to_errno(h_sdio.ErrorCode);
         }
 
@@ -89,7 +93,6 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
         BaseType_t ret = xSemaphoreTake(_rx_cplt_semphr, ticks_to_wait);
         if (pdTRUE != ret)
         {
-            assert(0);
             return -ETIMEDOUT;
         }
     }
@@ -133,10 +136,15 @@ int sdcard_write_blocks(uint32_t block_addr, uint16_t block_num, const void *dat
     assert(block_num);
 
     HAL_StatusTypeDef hal_status;
+    TimeOut_t timeout;
+    TickType_t ticks_to_wait = pdMS_TO_TICKS(2 * SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS);
+    vTaskSetTimeOutState(&timeout);
+    BaseType_t timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
 
-    while (HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio))
+    while ((HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio)) && (pdFALSE == timedout))
     {
-        ;//vTaskDelay(1);
+        vTaskDelay(pdMS_TO_TICKS(1));
+        timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
     }
 
     if (true == is_word_aligned(data))
@@ -191,10 +199,15 @@ int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num)
 {
     assert(block_num);
     HAL_StatusTypeDef hal_status;
+    TimeOut_t timeout;
+    TickType_t ticks_to_wait = pdMS_TO_TICKS(2 * SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS);
+    vTaskSetTimeOutState(&timeout);
+    BaseType_t timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
 
-    while (HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio))
+    while ((HAL_SD_CARD_TRANSFER != HAL_SD_GetCardState(&h_sdio)) && (pdFALSE == timedout))
     {
-        ;//vTaskDelay(1);
+        vTaskDelay(pdMS_TO_TICKS(1));
+        timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
     }
 
     hal_status = HAL_SD_Erase(&h_sdio, block_addr, block_addr + (uint32_t)block_num);

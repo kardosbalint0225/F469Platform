@@ -24,7 +24,6 @@ extern void cli_command_ls(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_cp(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_r(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_w(EmbeddedCli *cli, char *args, void *context);
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -138,14 +137,6 @@ static CliCommandBinding r_binding = {
     .binding = cli_command_r
 };
 
-static CliCommandBinding w_binding = {
-    .name = "w",
-    .help = "todo",//TODO
-    .tokenizeArgs = true,
-    .context = NULL,
-    .binding = cli_command_w
-};
-
 /**
  * @brief  Adds the command bindings to the cli instance
  *
@@ -170,7 +161,6 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, cd_binding);
     embeddedCliAddBinding(cli, cp_binding);
     embeddedCliAddBinding(cli, r_binding);
-    embeddedCliAddBinding(cli, w_binding);
 }
 
 /**

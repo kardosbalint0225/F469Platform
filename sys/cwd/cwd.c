@@ -16,6 +16,7 @@
 #include <string.h>
 #include <errno.h>
 
+static char _path[VFS_NAME_MAX + 1];
 static char _cwd_work_area[2 * (VFS_NAME_MAX + 1)];
 static char _cwd[VFS_NAME_MAX + 1];
 static SemaphoreHandle_t _cwd_mutex = NULL;
@@ -52,17 +53,17 @@ void cwd_deinit(void)
  */
 int chdir(const char *__path)
 {
-    char path[VFS_NAME_MAX + 1];
-    int res = normalize_path(path, sizeof(path),
+    //memset(_path, 0x00, sizeof(_path));
+    int res = normalize_path(_path, sizeof(_path),
                              __path, strnlen(__path, VFS_NAME_MAX),
                              _cwd_work_area, sizeof(_cwd_work_area));
     if (res < 0) {
         return res;
     }
 
-    int path_len = strnlen(path, VFS_NAME_MAX);
+    int path_len = strnlen(_path, VFS_NAME_MAX);
 
-    if (1 == path_len && '/' == path[0]) {
+    if (1 == path_len && '/' == _path[0]) {
         cwd_lock();
         memset(_cwd, 0x00, sizeof(_cwd));
         cwd_unlock();
@@ -70,7 +71,7 @@ int chdir(const char *__path)
     }
 
     vfs_DIR dir;
-    res = vfs_opendir(&dir, path);
+    res = vfs_opendir(&dir, _path);
     if (res < 0) {
         return res;
     }
@@ -81,7 +82,7 @@ int chdir(const char *__path)
     }
 
     cwd_lock();
-    strncpy(_cwd, path, VFS_NAME_MAX);
+    strncpy(_cwd, _path, VFS_NAME_MAX);
     cwd_unlock();
 
     return 0;

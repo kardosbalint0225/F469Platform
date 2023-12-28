@@ -29,91 +29,12 @@
 
 #define MAX_NUM_OF_FILES    2796202ul
 
-#define SHELL_VFS_BUFSIZE   4096ul
-static uint8_t _shell_vfs_data_buffer[SHELL_VFS_BUFSIZE];
+static char _work_area[1024ul];
+static char _path[VFS_NAME_MAX + 1];
 
 static const char *get_unit(const uint64_t size, uint64_t *converted);
 static void list_mountpoints(void);
 static void list_items_in_path(const char *path);
-
-/**
- * @brief  Function that is executed when the w command is entered.
- *         TODO
- *
- * @param  cli (not used)
- * @param  args string containing TODO
- * @param  context (not used)
- *
- * @retval None
- */
-void cli_command_w(EmbeddedCli *cli, char *args, void *context)
-{
-    (void)cli;
-    (void)args;
-    (void)context;
-
-    const char *dest_name = "/sd/STM32.TXT";
-
-    uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
-    uint8_t rtext[100];                                   /* File read buffer */
-
-    int fd_out = vfs_open(dest_name, O_WRONLY | O_TRUNC | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
-    if (fd_out < 0) {
-        printf("Error opening file for writing \"%s\": %s\r\n", dest_name, strerror(-fd_out));
-        return;
-    }
-
-//    char data_buffer[33];
-//    for (int i = 0; i < 32; i++)
-//    {
-//        data_buffer[i] = ' ' + i;
-//    }
-
-    //int res = vfs_write(fd_out, data_buffer, 32);
-    int res = vfs_write(fd_out, wtext, sizeof(wtext));
-    if (res <= 0) {
-        printf("Error writing file: %s\r\n", strerror(-res));
-    }
-
-    res = vfs_close(fd_out);
-    if (res < 0) {
-        printf("Error closing file: %s\r\n", strerror(-res));
-    }
-
-    int fd = vfs_open(dest_name, O_RDONLY, 0);
-    if (fd < 0) {
-        printf("Error opening file for reading\"%s\": %s\n", dest_name, strerror(-fd));
-        return;
-    }
-
-    res = vfs_read(fd, rtext, sizeof(rtext));
-    if (res < 0) {
-        printf("Read error: %s\n", strerror(-res));
-        vfs_close(fd);
-        return;
-    }
-
-    if (res != sizeof(wtext))
-    {
-        printf("bytes read does not equal to bytes written.\r\n");
-        vfs_close(fd);
-        return;
-    }
-
-    res = vfs_close(fd);
-    if (res < 0) {
-        printf("Error closing file: %s\r\n", strerror(-res));
-        return;
-    }
-
-    if (0 != strncmp((char *)wtext, (char *)rtext, sizeof(wtext)))
-    {
-        printf("wtext rtext mismatch.\r\n");
-        return;
-    }
-
-    printf("Success. ------------------------------------------------\r\n");
-}
 
 /**
  * @brief  Function that is executed when the r command is entered.
@@ -130,8 +51,7 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
     (void)cli;
     (void)context;
 
-    uint8_t buf[16];
-    size_t nbytes = sizeof(buf);
+    size_t nbytes = sizeof(_work_area);
     off_t offset = 0;
 
     int argc = embeddedCliGetTokenCount(args);
@@ -143,21 +63,21 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
     if (argc > 1) {
         nbytes = atoi(embeddedCliGetToken(args, 2));
     }
+
     if (argc > 2) {
         offset = atoi(embeddedCliGetToken(args, 3));
     }
 
-    char npath[VFS_NAME_MAX];
     const char *path = embeddedCliGetToken(args, 1);
-    int res = vfs_normalize_path(npath, path, strlen(path) + 1);
+    int res = vfs_normalize_path(_path, path, strlen(path) + 1);
     if (res < 0) {
         printf("Invalid path \"%s\": %s\n", path, strerror(-res));
         return;
     }
 
-    int fd = vfs_open(npath, O_RDONLY, 0);
+    int fd = vfs_open(_path, O_RDONLY, 0);
     if (fd < 0) {
-        printf("Error opening file \"%s\": %s\n", npath, strerror(-fd));
+        printf("Error opening file \"%s\": %s\n", _path, strerror(-fd));
         return;
     }
 
@@ -170,9 +90,9 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
 
     while (nbytes > 0)
     {
-        memset(buf, 0, sizeof(buf));
-        size_t line_len = (nbytes < sizeof(buf) ? nbytes : sizeof(buf));
-        res = vfs_read(fd, buf, line_len);
+        memset(_work_area, 0, sizeof(_work_area));
+        size_t line_len = (nbytes < 16 ? nbytes : 16);
+        res = vfs_read(fd, _work_area, line_len);
         if (res < 0) {
             printf("Read error: %s\n", strerror(-res));
             vfs_close(fd);
@@ -195,10 +115,10 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
             if ((k % 2) == 0) {
                 putchar(' ');
             }
-            printf("%02x", buf[k]);
+            printf("%02x", _work_area[k]);
         }
 
-        for (unsigned k = res; k < sizeof(buf); ++k) {
+        for (unsigned k = res; k < 16; ++k) {
             if ((k % 2) == 0) {
                 putchar(' ');
             }
@@ -210,8 +130,8 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
         putchar(' ');
 
         for (int k = 0; k < res; ++k) {
-            if (isprint(buf[k])) {
-                putchar(buf[k]);
+            if (isprint((int)_work_area[k])) {
+                putchar(_work_area[k]);
             }
             else {
                 putchar('.');
@@ -224,7 +144,6 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
     }
 
     vfs_close(fd);
-    return;
 }
 
 /**
@@ -244,12 +163,12 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
         printf("Invalid command argument.\r\n");
         return;
     }
-    //embeddedCliTokenizeArgs(args);
 
     const char *src_name = embeddedCliGetToken(args, 1);
     const char *dest_name = embeddedCliGetToken(args, 2);
     assert(src_name);
     assert(dest_name);
+
     printf("copy src: %s dest: %s\r\n", src_name, dest_name);
 
     int fd_in = vfs_open(src_name, O_RDONLY, 0);
@@ -273,22 +192,15 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
         return;
     }
 
-    uint64_t filesize = stat.st_size;
-    uint64_t progress = 0;
-    float percentage;
-    float last_percent = 0.0f;
-    TickType_t t1 = 0;
-    TickType_t t2 = 0;
-
     int eof = 0;
     while (eof == 0)
     {
-        size_t bufspace = sizeof(_shell_vfs_data_buffer);
+        size_t bufspace = sizeof(_work_area);
         size_t pos = 0;
 
         while (bufspace > 0)
         {
-            int res = vfs_read(fd_in, &_shell_vfs_data_buffer[pos], bufspace);
+            int res = vfs_read(fd_in, &_work_area[pos], bufspace);
             if (res < 0) {
                 printf("Error reading %lu bytes @ 0x%lx in \"%s\" (%d): %s\r\n",
                        (unsigned long)bufspace, (unsigned long)pos, src_name, fd_in, strerror(-res));
@@ -319,7 +231,7 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
 
         while (bufspace > 0)
         {
-            int res = vfs_write(fd_out, &_shell_vfs_data_buffer[pos], bufspace);
+            int res = vfs_write(fd_out, &_work_area[pos], bufspace);
             if (res <= 0) {
                 printf("Error writing %lu bytes @ 0x%lx in \"%s\" (%d): %s\r\n",
                        (unsigned long)bufspace, (unsigned long)pos, dest_name, fd_out, strerror(-res));
@@ -335,24 +247,13 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
                 return;
             }
 
-            progress += res;
             bufspace -= res;
-        }
-
-        percentage = 100.0f * ((float)progress / (float)filesize);
-        if ((int)percentage != (int)last_percent) {
-            t2 = t1;
-            printf("  %3f   %f s\r\n", percentage, ((float)(t2 - t1))/1000.0f);
-            last_percent = percentage;
-            t1 = xTaskGetTickCount();
         }
     }
 
     printf("Copied: %s -> %s\r\n", src_name, dest_name);
     vfs_close(fd_in);
     vfs_close(fd_out);
-
-    return;
 }
 
 /**
@@ -436,7 +337,6 @@ void cli_command_cd(EmbeddedCli *cli, char *args, void *context)
         return;
     }
 
-    embeddedCliTokenizeArgs(args);
     const char *path = embeddedCliGetToken(args, 1);
     assert(path);
 
@@ -464,7 +364,6 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
 
     if (NULL != args)
     {
-        embeddedCliTokenizeArgs(args);
         const char *path = embeddedCliGetToken(args, 1);
         assert(path);
 
@@ -479,26 +378,25 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
     }
     else
     {
-        char cwd[VFS_NAME_MAX + 1];
-        if (NULL == getcwd(cwd, sizeof(cwd))) {
+        if (NULL == getcwd(_path, sizeof(_path))) {
             printf("\r\n  Current working directory cannot be retrieved.\r\n");
             return;
         }
 
-        if (0 == strnlen(cwd, sizeof(cwd)))
+        if (0 == strnlen(_path, sizeof(_path)))
         {
             list_mountpoints();
         }
         else
         {
-            list_items_in_path(cwd);
+            list_items_in_path(_path);
         }
     }
 
 }
 
 /**
- * @brief  Prints every Mountpoints
+ * @brief  Prints every Mount-point
  *
  * @param  None
  *
@@ -589,16 +487,16 @@ static const char *get_unit(const uint64_t size, uint64_t *converted)
  */
 static void list_items_in_path(const char *path)
 {
-    char npath[CLI_CMD_BUFFER_SIZE + 1];
+    //char npath[CLI_CMD_BUFFER_SIZE + 1];
 
-    int res = vfs_normalize_path(npath, path, strnlen(path, CLI_CMD_BUFFER_SIZE) + 1);
+    int res = vfs_normalize_path(_path, path, strnlen(path, CLI_CMD_BUFFER_SIZE) + 1);
     if (res < 0) {
         printf("\r\n  Invalid path \"%s\": %s\r\n", path, strerror(-res));
         return;
     }
 
     vfs_DIR dir;
-    res = vfs_opendir(&dir, npath);
+    res = vfs_opendir(&dir, _path);
     if (res < 0) {
         printf("\r\n  vfs_opendir error: %s\r\n", strerror(-res));
         return;
@@ -621,11 +519,11 @@ static void list_items_in_path(const char *path)
             break;
         }
 
-        char path_name[2 * (VFS_NAME_MAX + 1)];
-        snprintf(path_name, sizeof(path_name), "%s/%s", npath, entry.d_name);
+        memset(_work_area, 0x00, (2 * (VFS_NAME_MAX + 1)));
+        snprintf(_work_area, sizeof(_work_area), "%s/%s", _path, entry.d_name);
 
         struct stat stat;
-        int err = vfs_stat(path_name, &stat);
+        int err = vfs_stat(_work_area, &stat);
         if (err < 0) {
             printf("\r\n  vfs_stat error: %s\r\n", strerror(-err));
             break;

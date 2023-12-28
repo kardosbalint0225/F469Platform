@@ -35,24 +35,6 @@ static vfs_mount_t _fatfs_sdcard_vfs_mount = {
 };
 static mtd_sdcard_t mtd_sdcard;
 
-typedef union {
-    struct {
-        uint16_t sec  : 5;
-        uint16_t min  : 6;
-        uint16_t hour : 5;
-    };
-    uint16_t w;
-} fattime_t;
-
-typedef union {
-    struct {
-        uint16_t day  : 5;
-        uint16_t month: 4;
-        uint16_t year : 7;
-    };
-    uint16_t w;
-} fatdate_t;
-
 static StackType_t _sdcard_mount_task_stack[SDCARD_MOUNT_TASK_STACKSIZE];
 static StaticTask_t _sdcard_mount_task_tcb;
 static TaskHandle_t h_sdcard_mount_task = NULL;
@@ -110,7 +92,6 @@ static void sdcard_mount_task(void *params)
 
     if ((uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED == card_presence_state)
     {
-        //TODO: vfs_mount
         if (0 == sdcard_mount())
         {
             is_mounted = true;
@@ -136,7 +117,6 @@ static void sdcard_mount_task(void *params)
                 {
                     if (false == is_mounted)
                     {
-                        //TODO: vfs_mount
                         if (0 == sdcard_mount())
                         {
                             is_mounted = true;
@@ -154,7 +134,6 @@ static void sdcard_mount_task(void *params)
                 {
                     if (true == is_mounted)
                     {
-                        //TODO: vfs_umount
                         if (0 == sdcard_unmount())
                         {
                             is_mounted = false;
@@ -194,7 +173,7 @@ static int sdcard_mount(void)
     _fatfs_desc.dev = (mtd_dev_t *)&mtd_sdcard;
 
     err = vfs_mount(&_fatfs_sdcard_vfs_mount);
-    printf("sdcard_mount : %s\r\n", strerror(-err));
+    printf("\r\n  sdcard_mount : %s\r\n", strerror(-err));
 
     return err;
 }
@@ -204,7 +183,7 @@ static int sdcard_unmount(void)
     int err;
 
     err = vfs_umount(&_fatfs_sdcard_vfs_mount, true);
-    printf("sdcard_unmount : %s\r\n", strerror(-err));
+    printf("\r\n  sdcard_unmount : %s\r\n", strerror(-err));
     if (err < 0)
     {
         return err;
