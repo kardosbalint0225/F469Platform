@@ -195,59 +195,25 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
     int eof = 0;
     while (eof == 0)
     {
-        size_t bufspace = sizeof(_work_area);
-        size_t pos = 0;
-
-        while (bufspace > 0)
-        {
-            int res = vfs_read(fd_in, &_work_area[pos], bufspace);
-            if (res < 0) {
-                printf("Error reading %lu bytes @ 0x%lx in \"%s\" (%d): %s\r\n",
-                       (unsigned long)bufspace, (unsigned long)pos, src_name, fd_in, strerror(-res));
-                vfs_close(fd_in);
-                vfs_close(fd_out);
-                return;
-            }
-
-            if (res == 0) {
-                /* EOF */
-                eof = 1;
-                break;
-            }
-
-            if (((unsigned)res) > bufspace) {
-                printf("READ BUFFER OVERRUN! %d > %lu\r\n", res, (unsigned long)bufspace);
-                vfs_close(fd_in);
-                vfs_close(fd_out);
-                return;
-            }
-
-            pos += res;
-            bufspace -= res;
+        int bytes_read = vfs_read(fd_in, _work_area, sizeof(_work_area));
+        if (bytes_read < 0) {
+            printf("  Error reading in \"%s\" (%d): %s\r\n", src_name, fd_in, strerror(-bytes_read));
+            vfs_close(fd_in);
+            vfs_close(fd_out);
+            return;
         }
 
-        bufspace = pos;
-        pos = 0;
+        if (bytes_read == 0) {
+            /* EOF */
+            eof = 1;
+        }
 
-        while (bufspace > 0)
-        {
-            int res = vfs_write(fd_out, &_work_area[pos], bufspace);
-            if (res <= 0) {
-                printf("Error writing %lu bytes @ 0x%lx in \"%s\" (%d): %s\r\n",
-                       (unsigned long)bufspace, (unsigned long)pos, dest_name, fd_out, strerror(-res));
-                vfs_close(fd_in);
-                vfs_close(fd_out);
-                return;
-            }
-
-            if (((unsigned)res) > bufspace) {
-                printf("WRITE BUFFER OVERRUN! %d > %lu\r\n", res, (unsigned long)bufspace);
-                vfs_close(fd_in);
-                vfs_close(fd_out);
-                return;
-            }
-
-            bufspace -= res;
+        int bytes_written = vfs_write(fd_out, _work_area, bytes_read);
+        if (bytes_written < 0) {
+            printf("Error writing in \"%s\" (%d): %s\r\n", dest_name, fd_out, strerror(-bytes_written));
+            vfs_close(fd_in);
+            vfs_close(fd_out);
+            return;
         }
     }
 
