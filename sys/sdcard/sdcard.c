@@ -81,6 +81,11 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data)
         timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
     }
 
+    if (pdTRUE == timedout)
+    {
+        return -ETIMEDOUT;
+    }
+
     if (true == is_word_aligned(data))
     {
         hal_status = HAL_SD_ReadBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
@@ -147,6 +152,11 @@ int sdcard_write_blocks(uint32_t block_addr, uint16_t block_num, const void *dat
         timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
     }
 
+    if (pdTRUE == timedout)
+    {
+        return -ETIMEDOUT;
+    }
+
     if (true == is_word_aligned(data))
     {
         hal_status = HAL_SD_WriteBlocks_DMA(&h_sdio, (uint8_t *)data, block_addr, (uint32_t)block_num);
@@ -208,6 +218,11 @@ int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num)
     {
         vTaskDelay(pdMS_TO_TICKS(1));
         timedout = xTaskCheckForTimeOut(&timeout, &ticks_to_wait);
+    }
+
+    if (pdTRUE == timedout)
+    {
+        return -ETIMEDOUT;
     }
 
     hal_status = HAL_SD_Erase(&h_sdio, block_addr, block_addr + (uint32_t)block_num);

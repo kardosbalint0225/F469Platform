@@ -78,7 +78,7 @@ void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 
     if (0 == strncmp(ms_arg, "-ms", CLI_CMD_BUFFER_SIZE))
     {
-        printf("    %s:%04lu\r\n", _buffer, ms);
+        printf("    %s:%03lu\r\n", _buffer, ms);
     }
     else
     {

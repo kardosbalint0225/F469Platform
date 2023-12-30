@@ -16,7 +16,6 @@
 #include "macros/units.h"
 
 #include <assert.h>
-#include <time.h>
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdlib.h>
@@ -26,6 +25,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
+#include <sys/time.h>
 
 #define MAX_NUM_OF_FILES    2796202ul
 
@@ -98,18 +99,14 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
             vfs_close(fd);
             return;
         }
-        else if ((size_t)res > line_len) {
-            printf("BUFFER OVERRUN! %d > %lu\n", res, (unsigned long)line_len);
-            vfs_close(fd);
-            return;
-        }
-        else if (res == 0) {
+
+        if (res == 0) {
             /* EOF */
             printf("-- EOF --\n");
             break;
         }
 
-        printf("%08lx:", (unsigned long)offset);
+        printf("  %08lx:", (unsigned long)offset);
 
         for (int k = 0; k < res; ++k) {
             if ((k % 2) == 0) {
@@ -169,7 +166,7 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
     assert(src_name);
     assert(dest_name);
 
-    printf("copy src: %s dest: %s\r\n", src_name, dest_name);
+    printf("  copy src: %s dest: %s\r\n", src_name, dest_name);
 
     int fd_in = vfs_open(src_name, O_RDONLY, 0);
     if (fd_in < 0) {
@@ -191,6 +188,22 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
         vfs_close(fd_in);
         return;
     }
+
+    char tbuf[10] = {'\0'};
+    struct timeval tv;
+    struct tm timeinfo;
+
+    gettimeofday(&tv, NULL);
+    localtime_r(&tv.tv_sec, &timeinfo);
+    strftime(tbuf, sizeof(tbuf), "%T", &timeinfo);
+    printf("  Started at  %s\r\n", tbuf);
+
+    uint64_t bytes_copied = 0;
+    uint64_t file_size = (uint64_t)stat.st_size;
+    int progress = 0;
+    int bytes_copied_between = 0;
+    printf("    [--------------------------------------------------] %3d %%\r\n\b\r", progress);
+    TickType_t tstart = xTaskGetTickCount();
 
     int eof = 0;
     while (eof == 0)
@@ -215,9 +228,37 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
             vfs_close(fd_out);
             return;
         }
+
+        bytes_copied_between += bytes_written;
+        bytes_copied += bytes_written;
+        const double percent = 100.0f * ((double)bytes_copied / (double)file_size);
+        const int diff = (int)percent - progress;
+        if (diff > 2) {
+            TickType_t tend = xTaskGetTickCount();
+            const float tdiff = (float)(tend - tstart) / 1000.0f;
+            const float bps = (float)bytes_copied_between / tdiff;
+            bytes_copied_between = 0;
+
+            progress = (int)percent;
+            char buf[51] = {'\0'};
+            for (int i = 0; i < 50; i++) {
+                if (i < (percent / 2)) {
+                    buf[i] = '#';
+                } else {
+                    buf[i] = '-';
+                }
+            }
+            printf("  [%50s] %3d %%  | %10.3f KB/s\r\n\b\r", buf, progress, bps / 1024);
+            tstart = xTaskGetTickCount();
+        }
     }
 
-    printf("Copied: %s -> %s\r\n", src_name, dest_name);
+    gettimeofday(&tv, NULL);
+    localtime_r(&tv.tv_sec, &timeinfo);
+    strftime(tbuf, sizeof(tbuf), "%T", &timeinfo);
+    printf("\r\n  Finished at %s\r\n", tbuf);
+
+    printf("  Copied: %s -> %s\r\n", src_name, dest_name);
     vfs_close(fd_in);
     vfs_close(fd_out);
 }
