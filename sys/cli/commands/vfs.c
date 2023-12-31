@@ -290,7 +290,31 @@ void cli_command_mv(EmbeddedCli *cli, char *args, void *context)
  */
 void cli_command_rm(EmbeddedCli *cli, char *args, void *context)
 {
+    int argc = embeddedCliGetTokenCount(args);
+    if (argc < 1) {
+        printf("  Invalid command argument.\r\n");
+        return;
+    }
 
+    bool recursive = !strncmp(embeddedCliGetToken(args, 1), "-r", CLI_CMD_BUFFER_SIZE);
+    if (recursive && argc < 2) {
+        printf("  Invalid command argument.\r\n");
+        return;
+    }
+
+    const char *rm_name = recursive ? embeddedCliGetToken(args, 2) : embeddedCliGetToken(args, 1);
+    printf("  unlink: %s\n", rm_name);
+
+    int res;
+    if (recursive) {
+        res = vfs_unlink_recursive(rm_name, _path, sizeof(_path));
+    } else {
+        res = vfs_unlink(rm_name);
+    }
+
+    if (res < 0) {
+        printf("  rm error: %s\n", strerror(-res));
+    }
 }
 
 /**
