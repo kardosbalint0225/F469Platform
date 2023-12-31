@@ -305,22 +305,19 @@ void cli_command_rm(EmbeddedCli *cli, char *args, void *context)
  */
 void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context)
 {
+    int argc = embeddedCliGetTokenCount(args);
+    if (argc < 1) {
+        printf("  Invalid command argument.\r\n");
+        return;
+    }
+    const char *dir_name = embeddedCliGetToken(args, 1);
+    assert(dir_name);
+    printf("  mkdir: %s\n", dir_name);
 
-}
-
-/**
- * @brief  Function that is executed when the rmdir command is entered.
- *         TODO
- *
- * @param  cli (not used)
- * @param  args string containing TODO
- * @param  context (not used)
- *
- * @retval None
- */
-void cli_command_rmdir(EmbeddedCli *cli, char *args, void *context)
-{
-
+    int res = vfs_mkdir(dir_name, 0);
+    if (res < 0) {
+        printf("  mkdir error: %s\n", strerror(-res));
+    }
 }
 
 /**

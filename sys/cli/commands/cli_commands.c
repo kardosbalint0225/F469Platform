@@ -24,6 +24,8 @@ extern void cli_command_ls(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_cp(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_r(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_rm(EmbeddedCli *cli, char *args, void *context);
+extern void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context);
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -137,6 +139,22 @@ static CliCommandBinding r_binding = {
     .binding = cli_command_r
 };
 
+static CliCommandBinding rm_binding = {
+    .name = "rm",
+    .help = "todo",//TODO
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_rm
+};
+
+static CliCommandBinding mkdir_binding = {
+    .name = "mkdir",
+    .help = "todo",//TODO
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_mkdir
+};
+
 /**
  * @brief  Adds the command bindings to the cli instance
  *
@@ -161,6 +179,8 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, cd_binding);
     embeddedCliAddBinding(cli, cp_binding);
     embeddedCliAddBinding(cli, r_binding);
+    embeddedCliAddBinding(cli, rm_binding);
+    embeddedCliAddBinding(cli, mkdir_binding);
 }
 
 /**
