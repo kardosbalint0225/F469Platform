@@ -10,5 +10,6 @@
 
 #define BITARITHM_HAS_CLZ
 #define TASK_EXTRA_STACKSIZE_PRINTF    (2048)
+#define PRIxTXTPTR                     PRIxPTR
 
 #endif /* LIB_INCLUDE_CPU_CONF_H_ */

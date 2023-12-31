@@ -275,7 +275,11 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
  */
 void cli_command_mv(EmbeddedCli *cli, char *args, void *context)
 {
+    (void)cli;
+    (void)args;
+    (void)context;
 
+    assert(0);
 }
 
 /**
