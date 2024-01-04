@@ -26,9 +26,10 @@
 
 #include "tusb_option.h"
 
-#if CFG_TUH_ENABLED && CFG_TUSB_MCU == OPT_MCU_NONE
+#if CFG_TUH_ENABLED// && CFG_TUSB_MCU == OPT_MCU_NONE
 
 #include "host/hcd.h"
+#include "stm32f4xx.h"
 
 //--------------------------------------------------------------------+
 // Controller API
@@ -57,8 +58,11 @@ void hcd_int_handler(uint8_t rhport, bool in_isr) {
 }
 
 // Enable USB interrupt
-void hcd_int_enable (uint8_t rhport) {
-  (void) rhport;
+void hcd_int_enable(uint8_t rhport)
+{
+    IRQn_Type irqn = rhport == 0 ? OTG_FS_IRQn : OTG_HS_IRQn;
+
+    NVIC_EnableIRQ(irqn);
 }
 
 // Disable USB interrupt

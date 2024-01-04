@@ -29,6 +29,7 @@ void DMA2_Stream3_IRQHandler(void);
 void DMA2_Stream6_IRQHandler(void);
 void SDIO_IRQHandler(void);
 void RTC_WKUP_IRQHandler(void);
+void OTG_FS_IRQHandler(void);
 
 #ifdef __cplusplus
 }

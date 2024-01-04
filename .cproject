@@ -41,6 +41,7 @@
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32F469xx"/>
 									<listOptionValue builtIn="false" value="CFG_TUSB_MCU=OPT_MCU_STM32F4"/>
+									<listOptionValue builtIn="false" value="CFG_TUSB_DEBUG=3"/>
 									<listOptionValue builtIn="false" value="MODULE_STDIO_UART_ONLCR=1"/>
 									<listOptionValue builtIn="false" value="MODULE_VFS=1"/>
 									<listOptionValue builtIn="false" value="VFS_NAME_MAX=255"/>
@@ -144,6 +145,7 @@
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32F469xx"/>
 									<listOptionValue builtIn="false" value="CFG_TUSB_MCU=OPT_MCU_STM32F4"/>
+									<listOptionValue builtIn="false" value="CFG_TUSB_DEBUG=3"/>
 									<listOptionValue builtIn="false" value="MODULE_STDIO_UART_ONLCR=1"/>
 									<listOptionValue builtIn="false" value="MODULE_VFS=1"/>
 									<listOptionValue builtIn="false" value="VFS_NAME_MAX=255"/>

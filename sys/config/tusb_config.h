@@ -131,6 +131,11 @@
 // bit rate = 115200, 1 stop bit, no parity, 8 bit data width
 #define CFG_TUH_CDC_LINE_CODING_ON_ENUM   { 115200, CDC_LINE_CODING_STOP_BITS_1, CDC_LINE_CODING_PARITY_NONE, 8 }
 
+//--------------------------------------------------------------------
+// Task Configuration
+//--------------------------------------------------------------------
+#define USB_HOST_TASK_PRIORITY      3
+#define USB_HOST_TASK_STACK_SIZE    (configMINIMAL_STACK_SIZE + 3 * configMINIMAL_STACK_SIZE)
 
 #ifdef __cplusplus
  }

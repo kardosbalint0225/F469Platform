@@ -10,6 +10,8 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
+#include "tusb.h"
+
 extern UART_HandleTypeDef h_stdio_uart;
 extern DMA_HandleTypeDef h_stdio_uart_dma_tx;
 extern TIM_HandleTypeDef h_tim2;
@@ -168,5 +170,13 @@ void SDIO_IRQHandler(void)
 void RTC_WKUP_IRQHandler(void)
 {
     HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
+}
+
+/**
+ * @brief This function handles USB FS interrupt.
+ */
+void OTG_FS_IRQHandler(void)
+{
+    tuh_int_handler(0);
 }
 
