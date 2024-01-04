@@ -7,6 +7,7 @@
 #include "cli.h"
 #include "cli_commands.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -27,6 +28,54 @@ extern void cli_command_r(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_rm(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_mv(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context);
+
+void cli_command_assert(EmbeddedCli *cli, char *args, void *context)
+{
+    (void)cli;
+    (void)args;
+    (void)context;
+
+    printf(" 1.  0123456789ABCDEFGHIJKLMNOPQSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n");
+    printf(" 2.  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
+    printf(" 3.  0001112222222222233ddddddddddddddDDDDDDDDDDDDDDDDDDDDDDDDDDDD\r\n");
+    printf(" 4.  EEEEEEEEEHAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
+    printf(" 5.  01234567CCCCCCCCCCCCCCCCCCCCccccccccccccccccccccccccccccccccc\r\n");
+    printf(" 6.  abhbhdsfdsfhjkhkdjhfbsdfjhsdjjbnfdsbvdhfjdhfusdhfksjfdhsdvfdd\r\n");
+    printf(" 7.  zurewrhdfhmfbdcvbusdhbfusjfuewhbdatfsdajhdvjhgfkjfdghskufhukh\r\n");
+    printf(" 8.  01234567CCCCCCCCCCCCCCBbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\r\n");
+    printf(" 9.  01RrrrrrrrrRRRRrrrrrrrrrrrRRRRRRRRrrrrrrrrrrrrrrrrrrrrrrrrrrr\r\n");
+    printf(" 10. iuifdshfdsztrwezubcdsziuczfuzwkjfuihgdsfkjhdfdsiuzfukiefhskud\r\n");
+    printf(" 11. 0123456789ABCDEFGHIJKLMNOPQSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n");
+    printf(" 12. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
+    printf(" 13. 0001112222222222233ddddddddddddddDDDDDDDDDDDDDDDDDDDDDDDDDDDD\r\n");
+    printf(" 14. EEEEEEEEEHAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
+    printf(" 15. 01234567CCCCCCCCCCCCCCCCCCCCccccccccccccccccccccccccccccccccc\r\n");
+    printf(" 16. abhbhdsfdsfhjkhkdjhfbsdfjhsdjjbnfdsbvdhfjdhfusdhfksjfdhsdvfdd\r\n");
+    printf(" 17. zurewrhdfhmfbdcvbusdhbfusjfuewhbdatfsdajhdvjhgfkjfdghskufhukh\r\n");
+    printf(" 18. 01234567CCCCCCCCCCCCCCBbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\r\n");
+    printf(" 19. 01RrrrrrrrrRRRRrrrrrrrrrrrRRRRRRRRrrrrrrrrrrrrrrrrrrrrrrrrrrr\r\n");
+    printf(" 20. iuifdshfdsztrwezubcdsziuczfuzwkjfuihgdsfkjhdfdsiuzfukiefhskud\r\n");
+    printf(" 21. 0123456789ABCDEFGHIJKLMNOPQSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n");
+    printf(" 22. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
+    printf(" 23. 0001112222222222233ddddddddddddddDDDDDDDDDDDDDDDDDDDDDDDDDDDD\r\n");
+    printf(" 24. EEEEEEEEEHAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
+    printf(" 25. 01234567CCCCCCCCCCCCCCCCCCCCccccccccccccccccccccccccccccccccc\r\n");
+    printf(" 26. abhbhdsfdsfhjkhkdjhfbsdfjhsdjjbnfdsbvdhfjdhfusdhfksjfdhsdvfdd\r\n");
+    printf(" 27. zurewrhdfhmfbdcvbusdhbfusjfuewhbdatfsdajhdvjhgfkjfdghskufhukh\r\n");
+    printf(" 28. 01234567CCCCCCCCCCCCCCBbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\r\n");
+    printf(" 29. 01RrrrrrrrrRRRRrrrrrrrrrrrRRRRRRRRrrrrrrrrrrrrrrrrrrrrrrrrrrr\r\n");
+    printf(" 30. iuifdshfdsztrwezubcdsziuczfuzwkjfuihgdsfkjhdfdsiuzfukiefhskud\r\n");
+    assert(0);
+
+}
+
+static CliCommandBinding assert_binding = {
+    .name = "assert",
+    .help = "Assert",
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_assert
+};
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -191,6 +240,8 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, rm_binding);
     embeddedCliAddBinding(cli, mv_binding);
     embeddedCliAddBinding(cli, mkdir_binding);
+
+    embeddedCliAddBinding(cli, assert_binding);
 }
 
 /**

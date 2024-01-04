@@ -28,40 +28,7 @@
 extern "C" {
 #endif
 
-#ifdef DOXYGEN
-/**
- * @brief   Activate verbose output for @ref assert() when defined.
- *
- * Without this macro defined the @ref assert() macro will just print the
- * address of the code line the assertion failed in. With the macro defined
- * the macro will also print the file, the code line and the function this macro
- * failed in.
- *
- * To define just add it to your `CFLAGS` in your application's Makefile:
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ {.mk}
- * CFLAGS += -DDEBUG_ASSERT_VERBOSE
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- */
-#define DEBUG_ASSERT_VERBOSE
-
-/**
- * @brief   Activate breakpoints for @ref assert() when defined
- *
- * Without this macro defined the @ref assert() macro will just print some
- * information about the failed assertion, see @ref assert and
- * @ref DEBUG_ASSERT_VERBOSE.
- * If @ref DEBUG_ASSERT_BREAKPOINT is defined, the execution will stop on a
- * failed assertion instead of producing the output. If the architecture
- * defines the macro @ref DEBUG_BREAKPOINT, a breakpoint is inserted and the
- * execution is stopped directly in the debugger. Otherwise the execution stops
- * in an endless while loop.
- */
-#define DEBUG_ASSERT_BREAKPOINT
-#else
-/* we should not include custom headers in standard headers */
 #define _likely(x)      __builtin_expect((uintptr_t)(x), 1)
-#endif
 
 /**
  * @def __NORETURN
@@ -82,7 +49,7 @@ extern "C" {
 
 #ifdef NDEBUG
 #define assert(ignore)((void)0)
-#elif defined(DEBUG_ASSERT_VERBOSE)
+#else
 /**
  * @brief   Function to handle failed assertion
  *
@@ -99,46 +66,9 @@ __NORETURN void _assert_failure(const char *file, unsigned line);
  *
  * If the macro NDEBUG was defined at the moment <assert.h> was last included,
  * the macro assert() generates no code, and hence does nothing at all.
- *
- * Otherwise, the macro assert() prints an error message to standard error and
- * terminates the application by calling core_panic().
- *
- * The purpose of this macro is to help programmers find bugs in their
- * programs.
- *
- * With @ref DEBUG_ASSERT_VERBOSE defined this will print also the file, the
- * line and the function this assertion failed in.
- *
- * If `NDEBUG` and @ref DEBUG_ASSERT_VERBOSE are not defined, a failed assertion
- * generates output similar to:
- *
- *     0x89abcdef
- *     *** RIOT kernel panic:
- *     FAILED ASSERTION.
- *
- *     ...
- *
- * Where 0x89abcdef is an address. This address can be used with tools like
- * `addr2line` (or e.g. `arm-none-eabi-addr2line` for ARM-based code), `objdump`,
- * or `gdb` (with the command `info line *(0x89abcdef)`) to identify the line
- * the assertion failed in.
- *
- * If the `backtrace` module is enabled (and implemented for architecture in use)
- * a backtrace will be printed in addition to the location of the failed assertion.
- *
- * If @ref DEBUG_ASSERT_BREAKPOINT is defined, the execution will stop on a
- * failed assertion instead of producing the above output. If the architecture
- * defines the macro @ref DEBUG_BREAKPOINT, a breakpoint is inserted and the
- * execution is stopped directly in the debugger. Otherwise the execution stops
- * in an endless while loop.
- *
- * @see http://pubs.opengroup.org/onlinepubs/9699919799/functions/assert.html
  */
 #define assert(cond) (_likely(cond) ? (void)0 :  _assert_failure(__FILE__, __LINE__))
-#else /* DEBUG_ASSERT_VERBOSE */
-__NORETURN void _assert_panic(void);
-#define assert(cond) (_likely(cond) ? (void)0 : _assert_panic())
-#endif /* DEBUG_ASSERT_VERBOSE */
+#endif
 
 #if !defined __cplusplus
 #if __STDC_VERSION__ >= 201112L
