@@ -21,7 +21,7 @@
 /* struct tm counts years since 1900 but RTC has only two-digit year, hence the offset */
 #define YEAR_OFFSET    (_EPOCH_YEAR - 1900)
 
-RTC_HandleTypeDef hrtc;
+RTC_HandleTypeDef h_rtc;
 static SemaphoreHandle_t _rtc_mutex = NULL;
 static StaticSemaphore_t _rtc_mutex_storage;
 static HAL_StatusTypeDef _error = HAL_OK; /**< for msp init/deinit error handling */
@@ -45,27 +45,27 @@ int rtc_init(void)
         return -ENOMEM;
     }
 
-    hrtc.Instance = RTC;
-    hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
-    hrtc.Init.AsynchPrediv = 127;
-    hrtc.Init.SynchPrediv = 255;
-    hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
-    hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-    hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+    h_rtc.Instance = RTC;
+    h_rtc.Init.HourFormat = RTC_HOURFORMAT_24;
+    h_rtc.Init.AsynchPrediv = 127;
+    h_rtc.Init.SynchPrediv = 255;
+    h_rtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+    h_rtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+    h_rtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
 
-    ret = HAL_RTC_RegisterCallback(&hrtc, HAL_RTC_MSPINIT_CB_ID, rtc_msp_init);
+    ret = HAL_RTC_RegisterCallback(&h_rtc, HAL_RTC_MSPINIT_CB_ID, rtc_msp_init);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_RegisterCallback(&hrtc, HAL_RTC_MSPDEINIT_CB_ID, rtc_msp_deinit);
+    ret = HAL_RTC_RegisterCallback(&h_rtc, HAL_RTC_MSPDEINIT_CB_ID, rtc_msp_deinit);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_Init(&hrtc);
+    ret = HAL_RTC_Init(&h_rtc);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -76,7 +76,7 @@ int rtc_init(void)
         return hal_statustypedef_to_errno(_error);
     }
 
-    ret = HAL_RTC_RegisterCallback(&hrtc, HAL_RTC_WAKEUPTIMER_EVENT_CB_ID, rtc_wakeuptimer_event_callback);
+    ret = HAL_RTC_RegisterCallback(&h_rtc, HAL_RTC_WAKEUPTIMER_EVENT_CB_ID, rtc_wakeuptimer_event_callback);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -96,7 +96,7 @@ int rtc_init(void)
         return -EIO;
     }
 
-    ret = HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 0x7FF, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+    ret = HAL_RTCEx_SetWakeUpTimer_IT(&h_rtc, 0x7FF, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -131,19 +131,19 @@ int rtc_deinit(void)
 {
     HAL_StatusTypeDef ret;
 
-    ret = HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    ret = HAL_RTCEx_DeactivateWakeUpTimer(&h_rtc);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_UnRegisterCallback(&hrtc, HAL_RTC_WAKEUPTIMER_EVENT_CB_ID);
+    ret = HAL_RTC_UnRegisterCallback(&h_rtc, HAL_RTC_WAKEUPTIMER_EVENT_CB_ID);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_DeInit(&hrtc);
+    ret = HAL_RTC_DeInit(&h_rtc);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -154,13 +154,13 @@ int rtc_deinit(void)
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_UnRegisterCallback(&hrtc, HAL_RTC_MSPINIT_CB_ID);
+    ret = HAL_RTC_UnRegisterCallback(&h_rtc, HAL_RTC_MSPINIT_CB_ID);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_UnRegisterCallback(&hrtc, HAL_RTC_MSPDEINIT_CB_ID);
+    ret = HAL_RTC_UnRegisterCallback(&h_rtc, HAL_RTC_MSPDEINIT_CB_ID);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -201,14 +201,14 @@ int rtc_set_time(struct tm *time)
 
     rtc_lock();
 
-    ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
+    ret = HAL_RTC_GetTime(&h_rtc, &stime, RTC_FORMAT_BIN);
     if (HAL_OK != ret)
     {
         rtc_unlock();
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
+    ret = HAL_RTC_GetDate(&h_rtc, &sdate, RTC_FORMAT_BIN);
     if (HAL_OK != ret)
     {
         rtc_unlock();
@@ -219,7 +219,7 @@ int rtc_set_time(struct tm *time)
     sdate.Month = time->tm_mon + 1;
     sdate.Date = time->tm_mday;
 
-    ret = HAL_RTC_SetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
+    ret = HAL_RTC_SetDate(&h_rtc, &sdate, RTC_FORMAT_BIN);
     if (HAL_OK != ret)
     {
         rtc_unlock();
@@ -230,7 +230,7 @@ int rtc_set_time(struct tm *time)
     stime.Minutes = time->tm_min;
     stime.Seconds = time->tm_sec;
 
-    ret = HAL_RTC_SetTime(&hrtc, &stime, RTC_FORMAT_BIN);
+    ret = HAL_RTC_SetTime(&h_rtc, &stime, RTC_FORMAT_BIN);
     if (HAL_OK != ret)
     {
         rtc_unlock();
@@ -260,14 +260,14 @@ int rtc_get_time_ms(struct tm *time, uint16_t *ms)
 
     rtc_lock();
 
-    ret = HAL_RTC_GetTime(&hrtc, &stime, RTC_FORMAT_BIN);
+    ret = HAL_RTC_GetTime(&h_rtc, &stime, RTC_FORMAT_BIN);
     if (HAL_OK != ret)
     {
         rtc_unlock();
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_RTC_GetDate(&hrtc, &sdate, RTC_FORMAT_BIN);
+    ret = HAL_RTC_GetDate(&h_rtc, &sdate, RTC_FORMAT_BIN);
     if (HAL_OK != ret)
     {
         rtc_unlock();

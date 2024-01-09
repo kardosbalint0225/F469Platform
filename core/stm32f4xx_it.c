@@ -10,8 +10,6 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
-#include "tusb.h"
-
 extern UART_HandleTypeDef h_stdio_uart;
 extern DMA_HandleTypeDef h_stdio_uart_dma_tx;
 extern TIM_HandleTypeDef h_tim2;
@@ -20,7 +18,8 @@ extern EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 extern SD_HandleTypeDef h_sdio;
 extern DMA_HandleTypeDef h_sdio_dma_tx;
 extern DMA_HandleTypeDef h_sdio_dma_rx;
-extern RTC_HandleTypeDef hrtc;
+extern RTC_HandleTypeDef h_rtc;
+extern HCD_HandleTypeDef h_hcd_fs;
 
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
@@ -169,7 +168,7 @@ void SDIO_IRQHandler(void)
  */
 void RTC_WKUP_IRQHandler(void)
 {
-    HAL_RTCEx_WakeUpTimerIRQHandler(&hrtc);
+    HAL_RTCEx_WakeUpTimerIRQHandler(&h_rtc);
 }
 
 /**
@@ -177,6 +176,6 @@ void RTC_WKUP_IRQHandler(void)
  */
 void OTG_FS_IRQHandler(void)
 {
-    tuh_int_handler(0);
+    HAL_HCD_IRQHandler(&h_hcd_fs);
 }
 
