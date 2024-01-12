@@ -19,14 +19,14 @@
 
 USBH_HandleTypeDef h_usb_host;
 
-static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
+static void usb_host_event_callback(USBH_HandleTypeDef *phost, uint8_t id);
 static int usbh_status_to_errno(const USBH_StatusTypeDef status);
 
 int usb_host_init(void)
 {
     USBH_StatusTypeDef ret;
 
-    ret = USBH_Init(&h_usb_host, USBH_UserProcess, HOST_FS);
+    ret = USBH_Init(&h_usb_host, usb_host_event_callback, HOST_FS);
     if (ret != USBH_OK)
     {
         return usbh_status_to_errno(ret);
@@ -52,7 +52,7 @@ int usb_host_deinit(void)
     return 0;
 }
 
-static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
+static void usb_host_event_callback(USBH_HandleTypeDef *phost, uint8_t id)
 {
     switch (id)
     {
@@ -98,7 +98,7 @@ static int usbh_status_to_errno(const USBH_StatusTypeDef status)
         default                       : return -EIO;
     }
 
-    return -EIO;
+    return (int)status;
 }
 
 

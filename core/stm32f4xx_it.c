@@ -20,6 +20,7 @@ extern DMA_HandleTypeDef h_sdio_dma_tx;
 extern DMA_HandleTypeDef h_sdio_dma_rx;
 extern RTC_HandleTypeDef h_rtc;
 extern HCD_HandleTypeDef h_hcd_fs;
+extern EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
 /******************************************************************************/
 /*           Cortex-M4 Processor Interruption and Exception Handlers          */
@@ -172,10 +173,18 @@ void RTC_WKUP_IRQHandler(void)
 }
 
 /**
- * @brief This function handles USB FS interrupt.
+ * @brief This function handles USB FS global interrupt.
  */
 void OTG_FS_IRQHandler(void)
 {
     HAL_HCD_IRQHandler(&h_hcd_fs);
+}
+
+/**
+ * @brief This function handles External Line[9:5] global interrupts .
+ */
+void EXTI9_5_IRQHandler(void)
+{
+    HAL_EXTI_IRQHandler(&h_exti_usb_host_overcurrent_pin);
 }
 

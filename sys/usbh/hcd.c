@@ -4,70 +4,38 @@
  *  Created on: Jan 9, 2024
  *      Author: Balint
  */
-#include "hcd.h"
-#include "gpio_defs.h"
+#include "gpio.h"
 #include "usbh_conf.h"
 #include "usbh_core.h"
 
 HCD_HandleTypeDef h_hcd_fs;
+static HAL_StatusTypeDef _error = HAL_OK;
 
+static void hcd_msp_init(HCD_HandleTypeDef *hhcd);
+static void hcd_msp_deinit(HCD_HandleTypeDef *hhcd);
+static void hcd_sof_callback(HCD_HandleTypeDef *hhcd);
+static void hcd_connect_callback(HCD_HandleTypeDef *hhcd);
+static void hcd_disconnect_callback(HCD_HandleTypeDef *hhcd);
+static void hcd_hc_notify_urb_change_callback(HCD_HandleTypeDef *hhcd, uint8_t chnum, HCD_URBStateTypeDef urb_state);
+static void hcd_port_enabled_callback(HCD_HandleTypeDef *hhcd);
+static void hcd_port_disabled_callback(HCD_HandleTypeDef *hhcd);
 static USBH_StatusTypeDef hal_status_to_usbh_status(HAL_StatusTypeDef hal_status);
 
-
-void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
+static void hcd_msp_init(HCD_HandleTypeDef *hhcd)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
     RCC_PeriphCLKInitTypeDef RCC_PeriphClkInitStruct;
     RCC_PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CLK48;
     RCC_PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
     RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
     RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
     RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
-    HAL_StatusTypeDef ret = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
-    assert(ret == HAL_OK);
+    _error = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
 
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-
-    GPIO_InitStruct.Pin = OTG_FS1_PowerSwitchOn_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(OTG_FS1_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
-    HAL_GPIO_WritePin(OTG_FS1_PowerSwitchOn_GPIO_Port, OTG_FS1_PowerSwitchOn_Pin, GPIO_PIN_SET);
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /** USB_OTG_FS GPIO Configuration
-        PA12     ------> USB_OTG_FS_DP
-        PA11     ------> USB_OTG_FS_DM
-        PA10     ------> USB_OTG_FS_ID
-        PA9     ------> USB_OTG_FS_VBUS
-    */
-    GPIO_InitStruct.Pin = USB_FS1_P_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-    HAL_GPIO_Init(USB_FS1_P_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = USB_FS1_N_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-    HAL_GPIO_Init(USB_FS1_N_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = USB_FS1_ID_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-    HAL_GPIO_Init(USB_FS1_ID_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = VBUS_FS1_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(VBUS_FS1_GPIO_Port, &GPIO_InitStruct);
+    usb_host_powerswitch_pin_init();
+    usb_host_dp_pin_init();
+    usb_host_dm_pin_init();
+    usb_host_id_pin_init();
+    usb_host_vbus_pin_init();
 
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
@@ -75,21 +43,17 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
     HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
 }
 
-void HAL_HCD_MspDeInit(HCD_HandleTypeDef* hhcd)
+static void hcd_msp_deinit(HCD_HandleTypeDef *hhcd)
 {
     __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
-
-    /** USB_OTG_FS GPIO Configuration
-        PA12     ------> USB_OTG_FS_DP
-        PA11     ------> USB_OTG_FS_DM
-        PA10     ------> USB_OTG_FS_ID
-        PA9     ------> USB_OTG_FS_VBUS
-    */
-    HAL_GPIO_DeInit(USB_FS1_P_GPIO_Port, USB_FS1_P_Pin);
-    HAL_GPIO_DeInit(USB_FS1_N_GPIO_Port, USB_FS1_N_Pin);
-    HAL_GPIO_DeInit(USB_FS1_ID_GPIO_Port, USB_FS1_ID_Pin);
-    HAL_GPIO_DeInit(VBUS_FS1_GPIO_Port, VBUS_FS1_Pin);
     HAL_NVIC_DisableIRQ(OTG_FS_IRQn);
+
+    usb_host_dp_pin_deinit();
+    usb_host_dm_pin_deinit();
+    usb_host_id_pin_deinit();
+    usb_host_vbus_pin_deinit();
+    usb_host_powerswitch_disable();
+    usb_host_powerswitch_pin_deinit();
 }
 
 /**
@@ -97,27 +61,27 @@ void HAL_HCD_MspDeInit(HCD_HandleTypeDef* hhcd)
   * @param  hhcd: HCD handle
   * @retval None
   */
-void HAL_HCD_SOF_Callback(HCD_HandleTypeDef *hhcd)
+static void hcd_sof_callback(HCD_HandleTypeDef *hhcd)
 {
     USBH_LL_IncTimer(hhcd->pData);
 }
 
 /**
-  * @brief  SOF callback.
+  * @brief  Connect callback.
   * @param  hhcd: HCD handle
   * @retval None
   */
-void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd)
+static void hcd_connect_callback(HCD_HandleTypeDef *hhcd)
 {
     USBH_LL_Connect(hhcd->pData);
 }
 
 /**
-  * @brief  SOF callback.
+  * @brief  Disconnect callback.
   * @param  hhcd: HCD handle
   * @retval None
   */
-void HAL_HCD_Disconnect_Callback(HCD_HandleTypeDef *hhcd)
+static void hcd_disconnect_callback(HCD_HandleTypeDef *hhcd)
 {
     USBH_LL_Disconnect(hhcd->pData);
 }
@@ -129,28 +93,28 @@ void HAL_HCD_Disconnect_Callback(HCD_HandleTypeDef *hhcd)
   * @param  urb_state: state
   * @retval None
   */
-void HAL_HCD_HC_NotifyURBChange_Callback(HCD_HandleTypeDef *hhcd, uint8_t chnum, HCD_URBStateTypeDef urb_state)
+static void hcd_hc_notify_urb_change_callback(HCD_HandleTypeDef *hhcd, uint8_t chnum, HCD_URBStateTypeDef urb_state)
 {
 #if (USBH_USE_OS == 1)
     USBH_LL_NotifyURBChange(hhcd->pData);
 #endif
 }
 /**
-* @brief  Port Port Enabled callback.
+  * @brief  Port Enabled callback.
   * @param  hhcd: HCD handle
   * @retval None
   */
-void HAL_HCD_PortEnabled_Callback(HCD_HandleTypeDef *hhcd)
+static void hcd_port_enabled_callback(HCD_HandleTypeDef *hhcd)
 {
     USBH_LL_PortEnabled(hhcd->pData);
 }
 
 /**
-  * @brief  Port Port Disabled callback.
+  * @brief  Port Disabled callback.
   * @param  hhcd: HCD handle
   * @retval None
   */
-void HAL_HCD_PortDisabled_Callback(HCD_HandleTypeDef *hhcd)
+static void hcd_port_disabled_callback(HCD_HandleTypeDef *hhcd)
 {
     USBH_LL_PortDisabled(hhcd->pData);
 }
@@ -162,6 +126,8 @@ void HAL_HCD_PortDisabled_Callback(HCD_HandleTypeDef *hhcd)
   */
 USBH_StatusTypeDef USBH_LL_Init(USBH_HandleTypeDef *phost)
 {
+    _error = HAL_OK;
+
     h_hcd_fs.pData = phost;
     phost->pData = &h_hcd_fs;
 
@@ -172,10 +138,65 @@ USBH_StatusTypeDef USBH_LL_Init(USBH_HandleTypeDef *phost)
     h_hcd_fs.Init.phy_itface = HCD_PHY_EMBEDDED;
     h_hcd_fs.Init.Sof_enable = DISABLE;
 
-    HAL_StatusTypeDef ret = HAL_HCD_Init(&h_hcd_fs);
+    HAL_StatusTypeDef ret;
+
+    ret = HAL_HCD_RegisterCallback(&h_hcd_fs, HAL_HCD_MSPINIT_CB_ID, hcd_msp_init);
     if (ret != HAL_OK)
     {
-        return USBH_FAIL;
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_RegisterCallback(&h_hcd_fs, HAL_HCD_MSPDEINIT_CB_ID, hcd_msp_deinit);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_Init(&h_hcd_fs);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    if (_error != HAL_OK)
+    {
+        return hal_status_to_usbh_status(_error);
+    }
+
+    ret = HAL_HCD_RegisterCallback(&h_hcd_fs, HAL_HCD_SOF_CB_ID, hcd_sof_callback);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_RegisterCallback(&h_hcd_fs, HAL_HCD_CONNECT_CB_ID, hcd_connect_callback);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_RegisterCallback(&h_hcd_fs, HAL_HCD_DISCONNECT_CB_ID, hcd_disconnect_callback);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_RegisterCallback(&h_hcd_fs, HAL_HCD_PORT_ENABLED_CB_ID, hcd_port_enabled_callback);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_RegisterCallback(&h_hcd_fs, HAL_HCD_PORT_DISABLED_CB_ID, hcd_port_disabled_callback);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_RegisterHC_NotifyURBChangeCallback(&h_hcd_fs, hcd_hc_notify_urb_change_callback);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
     }
 
     USBH_LL_SetTimer(phost, HAL_HCD_GetCurrentFrame(&h_hcd_fs));
@@ -190,9 +211,67 @@ USBH_StatusTypeDef USBH_LL_Init(USBH_HandleTypeDef *phost)
   */
 USBH_StatusTypeDef USBH_LL_DeInit(USBH_HandleTypeDef *phost)
 {
-    HAL_StatusTypeDef hal_status = HAL_HCD_DeInit(phost->pData);
+    HAL_StatusTypeDef ret;
+    ret = HAL_HCD_UnRegisterCallback(&h_hcd_fs, HAL_HCD_SOF_CB_ID);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
 
-    return hal_status_to_usbh_status(hal_status);
+    ret = HAL_HCD_UnRegisterCallback(&h_hcd_fs, HAL_HCD_CONNECT_CB_ID);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_UnRegisterCallback(&h_hcd_fs, HAL_HCD_DISCONNECT_CB_ID);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_UnRegisterCallback(&h_hcd_fs, HAL_HCD_PORT_ENABLED_CB_ID);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_UnRegisterCallback(&h_hcd_fs, HAL_HCD_PORT_DISABLED_CB_ID);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_UnRegisterHC_NotifyURBChangeCallback(&h_hcd_fs);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_DeInit(&h_hcd_fs);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    if (_error != HAL_OK)
+    {
+        return hal_status_to_usbh_status(_error);
+    }
+
+    ret = HAL_HCD_UnRegisterCallback(&h_hcd_fs, HAL_HCD_MSPINIT_CB_ID);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    ret = HAL_HCD_UnRegisterCallback(&h_hcd_fs, HAL_HCD_MSPDEINIT_CB_ID);
+    if (ret != HAL_OK)
+    {
+        return hal_status_to_usbh_status(ret);
+    }
+
+    return USBH_OK;
 }
 
 /**
@@ -360,9 +439,16 @@ USBH_URBStateTypeDef USBH_LL_GetURBState(USBH_HandleTypeDef *phost, uint8_t pipe
   */
 USBH_StatusTypeDef USBH_LL_DriverVBUS(USBH_HandleTypeDef *phost, uint8_t state)
 {
-    GPIO_PinState pin_state = state == 0 ? GPIO_PIN_RESET : GPIO_PIN_SET;
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, pin_state);
-    HAL_Delay(200);
+    if (state == 0)
+    {
+        usb_host_powerswitch_disable();
+    }
+    else
+    {
+        usb_host_powerswitch_enable();
+    }
+
+    USBH_Delay(200);
 
     return USBH_OK;
 }
@@ -420,7 +506,7 @@ uint8_t USBH_LL_GetToggle(USBH_HandleTypeDef *phost, uint8_t pipe)
   */
 void USBH_Delay(uint32_t Delay)
 {
-    HAL_Delay(Delay);
+    vTaskDelay(pdMS_TO_TICKS(Delay));
 }
 
 /**

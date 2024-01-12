@@ -14,8 +14,10 @@
 
 #include "stdio_uart_config.h"
 #include "sdcard_config.h"
+#include "usbh_conf.h"
 
 EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
+EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
 void stdio_uart_tx_pin_init(void)
 {
@@ -171,6 +173,8 @@ void sdcard_d0_pin_deinit(void)
 
 int sdcard_cd_pin_init(void (*exti_callback_fn)(void))
 {
+    assert(exti_callback_fn);
+
     SDCARD_CD_PIN_GPIO_CLK_ENABLE();
 
     GPIO_InitTypeDef card_detect_pin_config = {
@@ -223,6 +227,165 @@ int sdcard_cd_pin_deinit(void)
     return 0;
 }
 
+void usb_host_vbus_pin_init(void)
+{
+    USB_HOST_VBUS_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef vbus_pin = {
+       .Pin = USB_HOST_VBUS_PIN,
+       .Mode = GPIO_MODE_AF_PP,
+       .Pull = GPIO_NOPULL,
+       .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+       .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
+    };
+    HAL_GPIO_Init(USB_HOST_VBUS_PIN_GPIO_PORT, &vbus_pin);
+}
+
+void usb_host_dp_pin_init(void)
+{
+    USB_HOST_DP_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef dp_pin = {
+       .Pin = USB_HOST_DP_PIN,
+       .Mode = GPIO_MODE_AF_PP,
+       .Pull = GPIO_NOPULL,
+       .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+       .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
+    };
+    HAL_GPIO_Init(USB_HOST_DP_PIN_GPIO_PORT, &dp_pin);
+}
+
+void usb_host_dm_pin_init(void)
+{
+    USB_HOST_DM_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef dm_pin = {
+       .Pin = USB_HOST_DM_PIN,
+       .Mode = GPIO_MODE_AF_PP,
+       .Pull = GPIO_NOPULL,
+       .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+       .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
+    };
+    HAL_GPIO_Init(USB_HOST_DM_PIN_GPIO_PORT, &dm_pin);
+}
+
+void usb_host_id_pin_init(void)
+{
+    USB_HOST_ID_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef id_pin = {
+       .Pin = USB_HOST_ID_PIN,
+       .Mode = GPIO_MODE_AF_PP,
+       .Pull = GPIO_NOPULL,
+       .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+       .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
+    };
+    HAL_GPIO_Init(USB_HOST_ID_PIN_GPIO_PORT, &id_pin);
+}
+
+void usb_host_powerswitch_pin_init(void)
+{
+    USB_HOST_POWERSWITCH_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef ps_pin = {
+       .Pin = USB_HOST_POWERSWITCH_PIN,
+       .Mode = GPIO_MODE_OUTPUT_PP,
+       .Pull = GPIO_NOPULL,
+       .Speed = GPIO_SPEED_FREQ_LOW,
+    };
+    HAL_GPIO_Init(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, &ps_pin);
+}
+
+int usb_host_overcurrent_pin_init(void (*exti_callback_fn)(void))
+{
+    assert(exti_callback_fn);
+
+    USB_HOST_OVERCURRENT_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef overcurrent_pin_config = {
+        .Pin = USB_HOST_OVERCURRENT_PIN,
+        .Mode = GPIO_MODE_IT_FALLING,
+        .Pull = GPIO_NOPULL,
+    };
+    HAL_GPIO_Init(USB_HOST_OVERCURRENT_PIN_GPIO_PORT, &overcurrent_pin_config);
+
+    EXTI_ConfigTypeDef exti_config = {
+        .Line = USB_HOST_OVERCURRENT_PIN_EXTI_LINE,
+        .Mode = EXTI_MODE_INTERRUPT,
+        .Trigger = EXTI_TRIGGER_FALLING,
+        .GPIOSel = USB_HOST_OVERCURRENT_PIN_EXTI_GPIO
+    };
+
+    HAL_StatusTypeDef ret;
+    ret = HAL_EXTI_SetConfigLine(&h_exti_usb_host_overcurrent_pin, &exti_config);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_EXTI_RegisterCallback(&h_exti_usb_host_overcurrent_pin, HAL_EXTI_COMMON_CB_ID, exti_callback_fn);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    HAL_NVIC_SetPriority(USB_HOST_OVERCURRENT_PIN_EXTIx_IRQn, USB_HOST_OVERCURRENT_PIN_EXTIx_IRQ_PRIORITY, 0U);
+    HAL_NVIC_EnableIRQ(USB_HOST_OVERCURRENT_PIN_EXTIx_IRQn);
+
+    return 0;
+}
+
+void usb_host_vbus_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(USB_HOST_VBUS_PIN_GPIO_PORT, USB_HOST_VBUS_PIN);
+}
+
+void usb_host_dp_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(USB_HOST_DP_PIN_GPIO_PORT, USB_HOST_DP_PIN);
+}
+
+void usb_host_dm_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(USB_HOST_DM_PIN_GPIO_PORT, USB_HOST_DM_PIN);
+}
+
+void usb_host_id_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(USB_HOST_ID_PIN_GPIO_PORT, USB_HOST_ID_PIN);
+}
+
+void usb_host_powerswitch_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, USB_HOST_POWERSWITCH_PIN);
+}
+
+int usb_host_overcurrent_pin_deinit(void)
+{
+    HAL_StatusTypeDef ret;
+
+    HAL_NVIC_DisableIRQ(USB_HOST_OVERCURRENT_PIN_EXTIx_IRQn);   //TODO: EXTI9_5_IRQn is a shared interrupt line
+
+    ret = HAL_EXTI_ClearConfigLine(&h_exti_usb_host_overcurrent_pin);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    HAL_GPIO_DeInit(USB_HOST_OVERCURRENT_PIN_GPIO_PORT, USB_HOST_OVERCURRENT_PIN);
+
+    return 0;
+}
+
+void usb_host_powerswitch_enable(void)
+{
+    HAL_GPIO_WritePin(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, USB_HOST_POWERSWITCH_PIN, GPIO_PIN_SET);
+}
+
+void usb_host_powerswitch_disable(void)
+{
+    HAL_GPIO_WritePin(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, USB_HOST_POWERSWITCH_PIN, GPIO_PIN_RESET);
+}
 
 
 
