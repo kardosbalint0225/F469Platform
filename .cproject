@@ -62,10 +62,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/core/freertos/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/core/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/core/lib/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg/embedded-cli}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg/stm32_usb_host/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg/stm32_usb_host/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/embedded-cli}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/stm32_usb_host/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/stm32_usb_host/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sys/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sys/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sys/include/fs}&quot;"/>
@@ -98,8 +98,8 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="assert_failed.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="application"/>
-						<entry excluding="ThreadSafe|Inc/_exclude|config/drivers|Src/_exclude" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="core"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="pkg"/>
+						<entry excluding="Inc/_exclude|Src/_exclude|config/drivers|ThreadSafe" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="core"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="middleware"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="sys"/>
 					</sourceEntries>
 				</configuration>
@@ -165,10 +165,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/core/freertos/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/core/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/core/lib/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg/embedded-cli}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg/stm32_usb_host/Class/MSC/Inc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/pkg/stm32_usb_host/Core/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/embedded-cli}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/stm32_usb_host/Class/MSC/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/middleware/stm32_usb_host/Core/Inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sys/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sys/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sys/include/fs}&quot;"/>
@@ -202,7 +202,7 @@
 					<sourceEntries>
 						<entry excluding="assert_failed.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="application"/>
 						<entry excluding="config/drivers" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="core"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="pkg"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="middleware"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
