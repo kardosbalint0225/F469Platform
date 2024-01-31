@@ -1,9 +1,3 @@
-/*
- * tests.c
- *
- *  Created on: 2023. apr. 5.
- *      Author: Balint
- */
 #if RUN_TESTS
 
 #include "tests.h"

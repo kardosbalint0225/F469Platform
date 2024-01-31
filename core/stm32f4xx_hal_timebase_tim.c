@@ -1,23 +1,12 @@
-/**
- ******************************************************************************
- * @file    stm32f4xx_hal_timebase_TIM.c
- * @brief   HAL time base based on the hardware TIM.
- ******************************************************************************
- *
- *
- ******************************************************************************
- */
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_tim.h"
 
-#include "stm32f4xx_hal_timebase_tim.h"
-
-TIM_HandleTypeDef h_tim6;
-static uint32_t hal_timebase_error;
-void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+TIM_HandleTypeDef h_hal_timebase_tim;
+static void hal_timebase_tim_period_elapsed_cb(TIM_HandleTypeDef *htim);
 
 /**
- * @brief  This function configures the TIM6 as a time base source.
+ * @brief  This function configures the HAL_TIMEBASE_TIM defined in stm32f4xx_hal_conf.h
+ *         as a time base source.
  *         The time source is configured  to have 1ms time base with a dedicated
  *         Tick interrupt priority.
  * @note   This function is called  automatically at the beginning of program after
@@ -27,75 +16,74 @@ void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
  */
 HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 {
-    RCC_ClkInitTypeDef clkconfig;
-    uint32_t uwTimclock, uwAPB1Prescaler = 0U;
+    RCC_ClkInitTypeDef clock_config;
+    uint32_t tim_clock;
+    uint32_t apb1_prescaler = 0ul;
 
-    uint32_t uwPrescalerValue = 0U;
-    uint32_t pFLatency;
+    uint32_t tim_prescaler = 0ul;
+    uint32_t flash_latency;
     HAL_StatusTypeDef ret;
 
     uwTickPrio = TickPriority;
-    hal_timebase_error = 0UL;
 
-    /* Enable TIM6 clock */
-    __HAL_RCC_TIM6_CLK_ENABLE();
+    HAL_TIMEBASE_TIM_CLK_ENABLE();
+    HAL_TIMEBASE_TIM_FORCE_RESET();
+    HAL_TIMEBASE_TIM_RELEASE_RESET();
 
-    /* Get clock configuration */
-    HAL_RCC_GetClockConfig(&clkconfig, &pFLatency);
+    HAL_RCC_GetClockConfig(&clock_config, &flash_latency);
 
     /* Get APB1 prescaler */
-    uwAPB1Prescaler = clkconfig.APB1CLKDivider;
-    /* Compute TIM6 clock */
-    if (uwAPB1Prescaler == RCC_HCLK_DIV1)
+    apb1_prescaler = clock_config.APB1CLKDivider;
+
+    if (RCC_HCLK_DIV1 == apb1_prescaler)
     {
-        uwTimclock = HAL_RCC_GetPCLK1Freq();
+        tim_clock = HAL_RCC_GetPCLK1Freq();
     }
     else
     {
-        uwTimclock = 2UL * HAL_RCC_GetPCLK1Freq();
+        tim_clock = 2ul * HAL_RCC_GetPCLK1Freq();
     }
 
-    /* Compute the prescaler value to have TIM6 counter clock equal to 1MHz */
-    uwPrescalerValue = (uint32_t)((uwTimclock / 1000000U) - 1U);
+    /* Compute the prescaler value to have TIM counter clock equal to 1MHz */
+    tim_prescaler = (uint32_t)((tim_clock / 1000000ul) - 1ul);
 
-    /* Initialize TIM6 */
-    h_tim6.Instance = TIM6;
 
     /* Initialize TIMx peripheral as follow:
-     + Period = [(TIM6CLK/1000) - 1]. to have a (1/1000) s time base.
+     + Period = [(TIMxCLK/1000) - 1]. to have a (1/1000) s time base.
      + Prescaler = (uwTimclock/1000000 - 1) to have a 1MHz counter clock.
      + ClockDivision = 0
      + Counter direction = Up
      */
-    h_tim6.Init.Period = (1000000U / 1000U) - 1U;
-    h_tim6.Init.Prescaler = uwPrescalerValue;
-    h_tim6.Init.ClockDivision = 0;
-    h_tim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-    h_tim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    h_hal_timebase_tim.Instance = HAL_TIMEBASE_TIMx;
+    h_hal_timebase_tim.Init.Period = (1000000ul / 1000ul) - 1ul;
+    h_hal_timebase_tim.Init.Prescaler = tim_prescaler;
+    h_hal_timebase_tim.Init.ClockDivision = 0ul;
+    h_hal_timebase_tim.Init.CounterMode = TIM_COUNTERMODE_UP;
+    h_hal_timebase_tim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
-    ret = HAL_TIM_Base_Init(&h_tim6);
-    hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_TIM_BASE_INIT : 0UL;
-    assert_param(0UL == hal_timebase_error);
+    ret = HAL_TIM_Base_Init(&h_hal_timebase_tim);
+    if (HAL_OK != ret)
+    {
+        return ret;
+    }
 
-    ret = HAL_TIM_RegisterCallback(&h_tim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM6_PeriodElapsedCallback);
-    hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_REGISTER_PERIOD_ELAPSED_CB : 0UL;
-    assert_param(0UL == hal_timebase_error);
+    ret = HAL_TIM_RegisterCallback(&h_hal_timebase_tim, HAL_TIM_PERIOD_ELAPSED_CB_ID, hal_timebase_tim_period_elapsed_cb);
+    if (HAL_OK != ret)
+    {
+        return ret;
+    }
 
-    /* Start the TIM time Base generation in interrupt mode */
-    ret = HAL_TIM_Base_Start_IT(&h_tim6);
-    hal_timebase_error |= (HAL_OK != ret) ? HAL_TIMEBASE_ERROR_TIM_BASE_START_IT : 0UL;
-    assert_param(0UL == hal_timebase_error);
+    ret = HAL_TIM_Base_Start_IT(&h_hal_timebase_tim);
+    if (HAL_OK != ret)
+    {
+        return ret;
+    }
 
-    /* Enable the TIM6 global Interrupt */
-    HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
+    assert(TickPriority < (1ul << __NVIC_PRIO_BITS));
 
-    /* Configure the SysTick IRQ priority */
-    assert_param(TickPriority < (1UL << __NVIC_PRIO_BITS));
+    HAL_NVIC_SetPriority(HAL_TIMEBASE_TIM_IRQn, TickPriority, 0ul);
+    HAL_NVIC_EnableIRQ(HAL_TIMEBASE_TIM_IRQn);
 
-    /* Configure the TIM IRQ priority */
-    HAL_NVIC_SetPriority(TIM6_DAC_IRQn, TickPriority, 0U);
-
-    /* Return function status */
     return ret;
 }
 
@@ -108,7 +96,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 void HAL_SuspendTick(void)
 {
     /* Disable TIM6 update Interrupt */
-    __HAL_TIM_DISABLE_IT(&h_tim6, TIM_IT_UPDATE);
+    __HAL_TIM_DISABLE_IT(&h_hal_timebase_tim, TIM_IT_UPDATE);
 }
 
 /**
@@ -120,32 +108,20 @@ void HAL_SuspendTick(void)
 void HAL_ResumeTick(void)
 {
     /* Enable TIM6 Update interrupt */
-    __HAL_TIM_ENABLE_IT(&h_tim6, TIM_IT_UPDATE);
+    __HAL_TIM_ENABLE_IT(&h_hal_timebase_tim, TIM_IT_UPDATE);
 }
 
 /**
  * @brief  Period elapsed callback in non blocking mode
- * @note   This function is called  when TIM6 interrupt took place, inside
+ * @note   This function is called when HAL_TIMEBASE_TIM interrupt took place, inside
  *         HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
  *         a global variable "uwTick" used as application time base.
  * @param  htim : TIM handle
  * @retval None
  */
-void TIM6_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+static void hal_timebase_tim_period_elapsed_cb(TIM_HandleTypeDef *htim)
 {
     HAL_IncTick();
 }
 
-/**
- * @brief  Gets the current error state of the HAL Timebase
- * @param  None
- * @retval 0 if no error occured
- *         positive value indicates error where each bit
- *         corresponds to a specific error defined in _HAL_TIMEBASE_ERROR
- * @note   -
- */
-uint32_t hal_timebase_get_error(void)
-{
-    return hal_timebase_error;
-}
 

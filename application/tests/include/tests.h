@@ -1,14 +1,7 @@
-/*
- * tests.h
- *
- *  Created on: 2023. apr. 5.
- *      Author: Balint
- */
-
-#ifndef TESTS_H_
-#define TESTS_H_
+#ifndef __TESTS_H__
+#define __TESTS_H__
 
 void start_tests(void);
 
-#endif /* TESTS_H_ */
+#endif /* __TESTS_H__ */
 

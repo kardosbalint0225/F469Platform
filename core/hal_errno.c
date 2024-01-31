@@ -1,9 +1,3 @@
-/*
- * hal_errno.c
- *
- *  Created on: 2023. nov. 25.
- *      Author: Balint
- */
 #include "hal_errno.h"
 #include <errno.h>
 
@@ -19,7 +13,4 @@ int hal_statustypedef_to_errno(const HAL_StatusTypeDef status)
 
     return (int)status;
 }
-
-
-
 

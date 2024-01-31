@@ -13,16 +13,16 @@
  * @author  Martine Lenders <mlenders@inf.fu-berlin.de>
  */
 #include <stdio.h>
-#include <stdlib.h>
-#include <inttypes.h>
+
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "assert.h"
-#include "cpu_conf.h"
+#include "core_config.h"
 #include "debug.h"
-#include "modules.h"
-#include "compiler_hints.h"
 
 #include "stm32f4xx_hal.h"
+
 #include "stdio_uart_config.h"
 #include "gpio.h"
 
@@ -30,6 +30,8 @@ static char _uart_tx_buffer[513];
 
 __NORETURN void _assert_failure(const char *file, unsigned line)
 {
+    vTaskSuspendAll();
+
     HAL_NVIC_DisableIRQ(STDIO_UART_USARTx_IRQn);
     HAL_NVIC_DisableIRQ(STDIO_UART_DMAx_STREAMx_IRQn);
 
@@ -58,12 +60,16 @@ __NORETURN void _assert_failure(const char *file, unsigned line)
     uint16_t len = (uint16_t)snprintf(_uart_tx_buffer, sizeof(_uart_tx_buffer), "\r\n  Assertion failed in file: ""%s on line: %u\r\n", file, line);
     HAL_UART_Transmit(&h_uart, (uint8_t *)_uart_tx_buffer, len, 0xFFFFFFFFul);
 
+    led3_pin_init();
+
 #ifdef DEBUG_ASSERT_BREAKPOINT
     DEBUG_BREAKPOINT(1);
 #endif
+
     while (1)
     {
-
+        led3_toggle();
+        HAL_Delay(250ul);
     }
 }
 

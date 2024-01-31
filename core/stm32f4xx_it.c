@@ -1,19 +1,10 @@
-/**
- ******************************************************************************
- * @file    stm32f4xx_it.c
- * @brief   Interrupt Service Routines.
- ******************************************************************************
- *
- *
- ******************************************************************************
- */
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
 extern UART_HandleTypeDef h_stdio_uart;
 extern DMA_HandleTypeDef h_stdio_uart_dma_tx;
-extern TIM_HandleTypeDef h_tim2;
-extern TIM_HandleTypeDef h_tim6;
+extern TIM_HandleTypeDef h_runtime_stats_timer;
+extern TIM_HandleTypeDef h_hal_timebase_tim;
 extern EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 extern SD_HandleTypeDef h_sdio;
 extern DMA_HandleTypeDef h_sdio_dma_tx;
@@ -121,7 +112,7 @@ void USART3_IRQHandler(void)
  */
 void TIM2_IRQHandler(void)
 {
-    HAL_TIM_IRQHandler(&h_tim2);
+    HAL_TIM_IRQHandler(&h_runtime_stats_timer);
 }
 
 /**
@@ -129,7 +120,7 @@ void TIM2_IRQHandler(void)
  */
 void TIM6_DAC_IRQHandler(void)
 {
-    HAL_TIM_IRQHandler(&h_tim6);
+    HAL_TIM_IRQHandler(&h_hal_timebase_tim);
 }
 
 /**

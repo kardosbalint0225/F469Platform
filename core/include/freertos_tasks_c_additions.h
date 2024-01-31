@@ -1,12 +1,5 @@
-/*
- * freertos_tasks_c_additions.h
- *
- *  Created on: 2023. nov. 19.
- *      Author: Balint
- */
-
-#ifndef _FREERTOS_TASKS_C_ADDITIONS_H_
-#define _FREERTOS_TASKS_C_ADDITIONS_H_
+#ifndef __FREERTOS_TASKS_C_ADDITIONS_H__
+#define __FREERTOS_TASKS_C_ADDITIONS_H__
 
 uint32_t uxTaskGetStackSize( TaskHandle_t xTask )
 {
@@ -26,4 +19,5 @@ uint32_t uxTaskGetStackSize( TaskHandle_t xTask )
     return uxReturn;
 }
 
-#endif /* _FREERTOS_TASKS_C_ADDITIONS_H_ */
+#endif /* __FREERTOS_TASKS_C_ADDITIONS_H__ */
+

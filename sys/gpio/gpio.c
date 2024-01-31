@@ -9,15 +9,153 @@
  ******************************************************************************
  */
 #include "gpio.h"
+
 #include "stm32f4xx_hal.h"
 #include "hal_errno.h"
 
-#include "stdio_uart_config.h"
+#include "led_config.h"
 #include "sdcard_config.h"
+#include "stdio_uart_config.h"
 #include "usbh_conf.h"
 
 EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
+
+void led1_pin_init(void)
+{
+    LED1_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef led1 = {
+        .Pin = LED1_PIN,
+        .Mode = GPIO_MODE_OUTPUT_OD,
+        .Pull = GPIO_NOPULL,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+    };
+
+    HAL_GPIO_Init(LED1_GPIO_PORT, &led1);
+}
+
+void led2_pin_init(void)
+{
+    LED2_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef led2 = {
+        .Pin = LED2_PIN,
+        .Mode = GPIO_MODE_OUTPUT_OD,
+        .Pull = GPIO_NOPULL,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+    };
+
+    HAL_GPIO_Init(LED2_GPIO_PORT, &led2);
+}
+
+void led3_pin_init(void)
+{
+    LED3_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef led3 = {
+        .Pin = LED3_PIN,
+        .Mode = GPIO_MODE_OUTPUT_OD,
+        .Pull = GPIO_NOPULL,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+    };
+
+    HAL_GPIO_Init(LED3_GPIO_PORT, &led3);
+}
+
+void led4_pin_init(void)
+{
+    LED4_PIN_GPIO_CLK_ENABLE();
+
+    GPIO_InitTypeDef led4 = {
+        .Pin = LED4_PIN,
+        .Mode = GPIO_MODE_OUTPUT_OD,
+        .Pull = GPIO_NOPULL,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+    };
+
+    HAL_GPIO_Init(LED4_GPIO_PORT, &led4);
+}
+
+void led1_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(LED1_GPIO_PORT, LED1_PIN);
+}
+
+void led2_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(LED2_GPIO_PORT, LED2_PIN);
+}
+
+void led3_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(LED3_GPIO_PORT, LED3_PIN);
+}
+
+void led4_pin_deinit(void)
+{
+    HAL_GPIO_DeInit(LED4_GPIO_PORT, LED4_PIN);
+}
+
+void led1_enable(void)
+{
+    HAL_GPIO_WritePin(LED1_GPIO_PORT, LED1_PIN, GPIO_PIN_SET);
+}
+
+void led2_enable(void)
+{
+    HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, GPIO_PIN_SET);
+}
+
+void led3_enable(void)
+{
+    HAL_GPIO_WritePin(LED3_GPIO_PORT, LED3_PIN, GPIO_PIN_SET);
+}
+
+void led4_enable(void)
+{
+    HAL_GPIO_WritePin(LED4_GPIO_PORT, LED4_PIN, GPIO_PIN_SET);
+}
+
+void led1_disable(void)
+{
+    HAL_GPIO_WritePin(LED1_GPIO_PORT, LED1_PIN, GPIO_PIN_RESET);
+}
+
+void led2_disable(void)
+{
+    HAL_GPIO_WritePin(LED2_GPIO_PORT, LED2_PIN, GPIO_PIN_RESET);
+}
+
+void led3_disable(void)
+{
+    HAL_GPIO_WritePin(LED3_GPIO_PORT, LED3_PIN, GPIO_PIN_RESET);
+}
+
+void led4_disable(void)
+{
+    HAL_GPIO_WritePin(LED4_GPIO_PORT, LED4_PIN, GPIO_PIN_RESET);
+}
+
+void led1_toggle(void)
+{
+    HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
+}
+
+void led2_toggle(void)
+{
+    HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+}
+
+void led3_toggle(void)
+{
+    HAL_GPIO_TogglePin(LED3_GPIO_PORT, LED3_PIN);
+}
+
+void led4_toggle(void)
+{
+    HAL_GPIO_TogglePin(LED4_GPIO_PORT, LED4_PIN);
+}
 
 void stdio_uart_tx_pin_init(void)
 {

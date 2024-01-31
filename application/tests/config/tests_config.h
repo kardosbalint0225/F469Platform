@@ -1,13 +1,6 @@
-/*
- * tests_config.h
- *
- *  Created on: 2023. apr. 19.
- *      Author: Balint
- */
-
-#ifndef _TESTS_CONFIG_H_
-#define _TESTS_CONFIG_H_
+#ifndef __TESTS_CONFIG_H__
+#define __TESTS_CONFIG_H__
 
 
-#endif /* _TESTS_CONFIG_H_ */
+#endif /* __TESTS_CONFIG_H__ */
 

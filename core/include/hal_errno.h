@@ -1,15 +1,9 @@
-/*
- * hal_errno.h
- *
- *  Created on: 2023. nov. 25.
- *      Author: Balint
- */
-
-#ifndef INCLUDE_HAL_ERRNO_H_
-#define INCLUDE_HAL_ERRNO_H_
+#ifndef __HAL_ERRNO_H__
+#define __HAL_ERRNO_H__
 
 #include "stm32f4xx_hal.h"
 
 int hal_statustypedef_to_errno(const HAL_StatusTypeDef status);
 
-#endif /* INCLUDE_HAL_ERRNO_H_ */
+#endif /* __HAL_ERRNO_H__ */
+

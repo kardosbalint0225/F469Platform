@@ -1,11 +1,3 @@
-/**
-  ******************************************************************************
-  * @file    stm32f4xx_hal_conf.h
-  ******************************************************************************
-  * 
-  *
-  ******************************************************************************
-  */
 #ifndef __STM32F4xx_HAL_CONF_H
 #define __STM32F4xx_HAL_CONF_H
 
@@ -448,9 +440,15 @@
  #include "stm32f4xx_hal_mmc.h"
 #endif /* HAL_MMC_MODULE_ENABLED */
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
  #include "stm32_assert.h"
 #endif /* USE_FULL_ASSERT */
+
+#define HAL_TIMEBASE_TIMx                 TIM6
+#define HAL_TIMEBASE_TIM_CLK_ENABLE       __HAL_RCC_TIM6_CLK_ENABLE
+#define HAL_TIMEBASE_TIM_FORCE_RESET      __HAL_RCC_TIM2_FORCE_RESET
+#define HAL_TIMEBASE_TIM_RELEASE_RESET    __HAL_RCC_TIM2_RELEASE_RESET
+#define HAL_TIMEBASE_TIM_IRQn             TIM6_DAC_IRQn
 
 #ifdef __cplusplus
 }
