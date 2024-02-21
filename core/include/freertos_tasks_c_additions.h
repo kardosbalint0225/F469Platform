@@ -1,6 +1,10 @@
 #ifndef __FREERTOS_TASKS_C_ADDITIONS_H__
 #define __FREERTOS_TASKS_C_ADDITIONS_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 uint32_t uxTaskGetStackSize( TaskHandle_t xTask )
 {
     uint32_t uxReturn;
@@ -19,5 +23,8 @@ uint32_t uxTaskGetStackSize( TaskHandle_t xTask )
     return uxReturn;
 }
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __FREERTOS_TASKS_C_ADDITIONS_H__ */
 

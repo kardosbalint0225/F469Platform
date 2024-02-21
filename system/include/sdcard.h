@@ -8,6 +8,10 @@
 #ifndef __SDCARD_H__
 #define __SDCARD_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #define SDCARD_SDHC_BLOCK_SIZE   (512ul)
@@ -110,6 +114,9 @@ int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num);
  */
 uint64_t sdcard_get_capacity(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __SDCARD_H__ */
 
 

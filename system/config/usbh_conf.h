@@ -9,7 +9,7 @@
 #define __USBH_CONF__H__
 
 #ifdef __cplusplus
-    extern "C" {
+extern "C" {
 #endif
 
 #include <stdio.h>

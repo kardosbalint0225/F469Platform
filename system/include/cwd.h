@@ -8,6 +8,10 @@
 #ifndef __CWD_H__
 #define __CWD_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief  Initialize the CWD
  *         Creates the _cwd_mutex, clears _cwd
@@ -28,4 +32,7 @@ void cwd_init(void);
  */
 void cwd_deinit(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* __CWD_H__ */
