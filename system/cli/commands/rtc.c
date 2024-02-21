@@ -64,7 +64,6 @@ void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
     (void)cli;
     (void)context;
 
-    embeddedCliTokenizeArgs(args);
     const char *ms_arg = embeddedCliGetToken(args, 1);
 
     struct timeval tv;
@@ -106,8 +105,6 @@ void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
         printf("\r\n    Invalid command argument\r\n");
         return;
     }
-
-    embeddedCliTokenizeArgs(args);
 
     const char *date_to_set = embeddedCliGetToken(args, 1);
     assert(date_to_set);
@@ -168,8 +165,6 @@ void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
         printf("\r\n    Invalid command argument\r\n");
         return;
     }
-
-    embeddedCliTokenizeArgs(args);
 
     const char *time_to_set = embeddedCliGetToken(args, 1);
     assert(time_to_set);
