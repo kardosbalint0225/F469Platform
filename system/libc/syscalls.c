@@ -87,28 +87,6 @@ void *_sbrk_r(struct _reent *ptr, ptrdiff_t incr)
 }
 
 /**
- * @brief Print heap statistics
- *
- * If the CPU does not provide its own heap handling and heap_stats function,
- * but instead uses the newlib_syscall_default function, this function outputs
- * the heap statistics. If the CPU provides its own heap_stats function, it
- * should define HAVE_HEAP_STATS in its cpu_conf.h file.
- */
-#ifndef HAVE_HEAP_STATS
-__attribute__((weak)) void heap_stats(void)
-{
-    struct mallinfo minfo = mallinfo();
-
-    const uint32_t end = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
-    const uint32_t start = (uint32_t)&_end;
-    const uint32_t heap_size = end - start;
-
-    printf("\r\n    heap: %lu (used %d, free %ld) [bytes]\r\n",
-           heap_size, minfo.uordblks, heap_size - minfo.uordblks);
-}
-#endif /* HAVE_HEAP_STATS */
-
-/**
  * @brief  Fork execution into two threads
  *
  * @note   Not supported.
