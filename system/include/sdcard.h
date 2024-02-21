@@ -5,8 +5,8 @@
  *      Author: Balint
  */
 
-#ifndef _SDCARD_H_
-#define _SDCARD_H_
+#ifndef __SDCARD_H__
+#define __SDCARD_H__
 
 #include <stdint.h>
 
@@ -110,6 +110,6 @@ int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num);
  */
 uint64_t sdcard_get_capacity(void);
 
-#endif /* _SDCARD_H_ */
+#endif /* __SDCARD_H__ */
 
 

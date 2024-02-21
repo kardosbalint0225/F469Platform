@@ -5,10 +5,10 @@
  *      Author: Balint
  */
 
-#ifndef _SDCARD_MOUNT_H_
-#define _SDCARD_MOUNT_H_
+#ifndef __SDCARD_MOUNT_H__
+#define __SDCARD_MOUNT_H__
 
 int sdcard_mount_init(void);
 int sdcard_mount_deinit(void);
 
-#endif /* _SDCARD_MOUNT_H_ */
+#endif /* __SDCARD_MOUNT_H__ */

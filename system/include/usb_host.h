@@ -5,10 +5,10 @@
  *      Author: Balint
  */
 
-#ifndef _USB_HOST_H_
-#define _USB_HOST_H_
+#ifndef __USB_HOST_H__
+#define __USB_HOST_H__
 
 int usb_host_init(void);
 int usb_host_deinit(void);
 
-#endif /* _USB_HOST_H_ */
+#endif /* __USB_HOST_H__ */

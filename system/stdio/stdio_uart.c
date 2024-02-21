@@ -54,7 +54,7 @@ static StaticSemaphore_t _tx_cplt_semphr_storage;
 
 static StaticQueue_t _rx_queue_struct;
 static uint8_t _rx_queue_storage[STDIO_UART_RX_QUEUE_LENGTH * sizeof(uint8_t)];
-QueueHandle_t stdio_uart_rx_queue = NULL;
+static QueueHandle_t _rx_queue = NULL;
 
 static StaticQueue_t _tx_avail_queue_struct;
 static uint8_t _tx_avail_queue_storage[STDIO_UART_TX_AVAIL_QUEUE_LENGTH * sizeof(uint8_t *)];
@@ -64,9 +64,20 @@ static StaticQueue_t _tx_ready_queue_struct;
 static uint8_t _tx_ready_queue_storage[STDIO_UART_TX_READY_QUEUE_LENGTH * sizeof(uart_tx_data_t)];
 static QueueHandle_t _tx_ready_queue = NULL;
 
-static StackType_t _stdio_uart_write_task_stack[STDIO_UART_WRITE_TASK_STACKSIZE];
-static StaticTask_t _stdio_uart_write_task_tcb;
-static TaskHandle_t h_stdio_uart_write_task = NULL;
+static StackType_t _write_task_stack[STDIO_UART_WRITE_TASK_STACKSIZE];
+static StaticTask_t _write_task_tcb;
+static TaskHandle_t h_write_task = NULL;
+
+static StackType_t _read_task_stack[STDIO_UART_READ_TASK_STACKSIZE];
+static StaticTask_t _read_task_tcb;
+static TaskHandle_t h_read_task = NULL;
+
+static SemaphoreHandle_t _stdin_mutex = NULL;
+static StaticSemaphore_t _stdin_mutex_storage;
+
+static StaticQueue_t _stdin_queue_struct;
+static uint8_t _stdin_queue_storage[STDIO_UART_STDIN_QUEUE_LENGTH * sizeof(uint8_t)];
+static QueueHandle_t _stdin_queue = NULL;
 
 UART_HandleTypeDef h_stdio_uart;
 
@@ -77,6 +88,9 @@ static const TickType_t dma_tx_max_time_ms = (TickType_t)((1000.0f * (((float)(1
 
 static HAL_StatusTypeDef _error = HAL_OK;
 
+static QueueHandle_t _stdin_listeners_list[STDIO_UART_MAX_NUM_OF_STDIN_LISTENERS];
+static uint32_t _stdin_listeners = 0ul;
+
 static int stdio_uart_init(void);
 static int stdio_uart_deinit(void);
 static void stdio_uart_msp_init(UART_HandleTypeDef *huart);
@@ -86,8 +100,31 @@ static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart);
 static void stdio_uart_error_callback(UART_HandleTypeDef *huart);
 
 static void stdio_uart_write_task(void *params);
+static void stdio_uart_read_task(void *params);
+static void stdin_lock(void);
+static void stdin_unlock(void);
 static void uart_write(const uint8_t *data, size_t len);
 static void error_handler(void);
+
+int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
+{
+    assert(hqueue);
+
+    int ret;
+
+    if (_stdin_listeners < STDIO_UART_MAX_NUM_OF_STDIN_LISTENERS)
+    {
+        _stdin_listeners_list[_stdin_listeners] = hqueue;
+        _stdin_listeners++;
+        ret = 0;
+    }
+    else
+    {
+        ret = -ENOMEM;
+    }
+
+    return ret;
+}
 
 /**
  * @brief  UART writer gatekeeper task
@@ -131,9 +168,42 @@ static void stdio_uart_write_task(void *params)
     }
 }
 
+static void stdio_uart_read_task(void *params)
+{
+    (void)params;
+
+    HAL_StatusTypeDef hal_status = HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
+    assert(HAL_OK == hal_status);
+
+    for ( ;; )
+    {
+        uint8_t rx_data;
+        BaseType_t ret = xQueueReceive(_rx_queue, &rx_data, portMAX_DELAY);
+        assert(ret);
+
+        hal_status = HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
+        assert(HAL_OK == hal_status);
+
+        if (NULL != xSemaphoreGetMutexHolder(_stdin_mutex))
+        {
+            ret = xQueueSend(_stdin_queue, &rx_data, portMAX_DELAY);
+            assert(ret);
+        }
+        else
+        {
+            for (uint32_t i = 0; i < _stdin_listeners; i++)
+            {
+                ret = xQueueSend(_stdin_listeners_list[i], &rx_data, portMAX_DELAY);
+                assert(ret);
+            }
+        }
+    }
+}
+
 void stdio_init(void)
 {
     int ret;
+    _stdin_listeners = 0ul;
     ret = stdio_uart_init();
     assert(0 == ret);
 
@@ -152,11 +222,20 @@ void stdio_init(void)
                                          &_tx_ready_queue_struct);
     assert(_tx_ready_queue);
 
-    stdio_uart_rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
+    _rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
                                    sizeof(uint8_t),
                                    _rx_queue_storage,
                                    &_rx_queue_struct);
-    assert(stdio_uart_rx_queue);
+    assert(_rx_queue);
+
+    _stdin_mutex = xSemaphoreCreateMutexStatic(&_stdin_mutex_storage);
+    assert(_stdin_mutex);
+
+    _stdin_queue = xQueueCreateStatic(STDIO_UART_STDIN_QUEUE_LENGTH,
+                                      sizeof(uint8_t),
+                                      _stdin_queue_storage,
+                                      &_stdin_queue_struct);
+    assert(_stdin_queue);
 
     for (uint8_t i = 0; i < STDIO_UART_TX_AVAIL_QUEUE_LENGTH; i++)
     {
@@ -165,17 +244,23 @@ void stdio_init(void)
         assert(retv);
     }
 
-    h_stdio_uart_write_task = xTaskCreateStatic(stdio_uart_write_task,
-                                                "UART Write",
-                                                STDIO_UART_WRITE_TASK_STACKSIZE,
-                                                NULL,
-                                                STDIO_UART_WRITE_TASK_PRIORITY,
-                                                _stdio_uart_write_task_stack,
-                                                &_stdio_uart_write_task_tcb);
-    assert(h_stdio_uart_write_task);
+    h_write_task = xTaskCreateStatic(stdio_uart_write_task,
+                                     "STDIO UART Write",
+                                     STDIO_UART_WRITE_TASK_STACKSIZE,
+                                     NULL,
+                                     STDIO_UART_WRITE_TASK_PRIORITY,
+                                     _write_task_stack,
+                                     &_write_task_tcb);
+    assert(h_write_task);
 
-    HAL_StatusTypeDef hal_status = HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
-    assert(HAL_OK == hal_status);
+    h_read_task = xTaskCreateStatic(stdio_uart_read_task,
+                                    "STDIO UART Read",
+                                    STDIO_UART_READ_TASK_STACKSIZE,
+                                    NULL,
+                                    STDIO_UART_READ_TASK_PRIORITY,
+                                    _read_task_stack,
+                                    &_read_task_tcb);
+    assert(h_read_task);
 }
 
 void stdio_deinit(void)
@@ -185,17 +270,23 @@ void stdio_deinit(void)
     ret = stdio_uart_deinit();
     assert(0 == ret);
 
-    vTaskDelete(h_stdio_uart_write_task);
+    vTaskDelete(h_write_task);
+    vTaskDelete(h_read_task);
     vQueueDelete(_tx_avail_queue);
     vQueueDelete(_tx_ready_queue);
-    vQueueDelete(stdio_uart_rx_queue);
+    vQueueDelete(_rx_queue);
+    vQueueDelete(_stdin_queue);
     vSemaphoreDelete(_tx_cplt_semphr);
+    vSemaphoreDelete(_stdin_mutex);
 
-    h_stdio_uart_write_task = NULL;
+    h_write_task = NULL;
+    h_read_task = NULL;
     _tx_avail_queue = NULL;
     _tx_ready_queue = NULL;
-    stdio_uart_rx_queue = NULL;
+    _rx_queue = NULL;
+    _stdin_queue = NULL;
     _tx_cplt_semphr = NULL;
+    _stdin_mutex = NULL;
 }
 
 /**
@@ -390,8 +481,7 @@ static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart)
 static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart)
 {
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
-    xQueueSendFromISR(stdio_uart_rx_queue, &_rx_buffer, &higher_priority_task_woken);
-    HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
+    xQueueSendFromISR(_rx_queue, &_rx_buffer, &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
@@ -407,14 +497,29 @@ static void error_handler(void)
     stdio_uart_init();
 }
 
+#if IS_USED(MODULE_STDIO_AVAILABLE)
 int stdio_available(void)
 {
     return -ENOTSUP;
 }
+#endif
 
-ssize_t stdio_read(void* buffer, size_t count)
+ssize_t stdio_read(void *buffer, size_t count)
 {
-    return -ENOTSUP;
+    assert(buffer);
+    uint8_t *buf = buffer;
+
+    stdin_lock();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        BaseType_t ret = xQueueReceive(_stdin_queue, &buf[i], portMAX_DELAY);
+        assert(ret);
+    }
+
+    stdin_unlock();
+
+    return count;
 }
 
 ssize_t stdio_write(const void *buffer, size_t len)
@@ -462,4 +567,21 @@ static void uart_write(const uint8_t *data, size_t len)
     ret = xQueueSend(_tx_ready_queue, &tx_data, ticks_to_wait);
     assert(ret);
 }
+
+/**
+ * @brief  Locks the stdin mutex
+ */
+static void stdin_lock(void)
+{
+    xSemaphoreTake(_stdin_mutex, portMAX_DELAY);
+}
+
+/**
+ * @brief  Unlocks the stdin mutex
+ */
+static void stdin_unlock(void)
+{
+    xSemaphoreGive(_stdin_mutex);
+}
+
 

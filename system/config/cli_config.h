@@ -5,8 +5,8 @@
  *      Author: Balint
  */
 
-#ifndef _CLI_CONFIG_H_
-#define _CLI_CONFIG_H_
+#ifndef __CLI_CONFIG_H__
+#define __CLI_CONFIG_H__
 
 // Definitions for CLI sizes
 #define CLI_BUFFER_SIZE                2048
@@ -26,6 +26,7 @@
 #define CLI_IO_READ_TASK_STACK_SIZE    (configMINIMAL_STACK_SIZE)
 #define CLI_PROCESS_TASK_PRIORITY      3
 #define CLI_PROCESS_TASK_STACK_SIZE    (32 * configMINIMAL_STACK_SIZE)
+#define CLI_RX_QUEUE_LENGTH            1
 
-#endif /* _CLI_CONFIG_H_ */
+#endif /* __CLI_CONFIG_H__ */
 

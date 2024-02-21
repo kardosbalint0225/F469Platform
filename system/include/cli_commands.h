@@ -5,13 +5,13 @@
  *      Author: Balint
  */
 
-#ifndef _COMMANDS_H_
-#define _COMMANDS_H_
+#ifndef __CLI_COMMANDS_H__
+#define __CLI_COMMANDS_H__
 
 #include "embedded_cli.h"
 
 void cli_init_command_bindings(void);
 void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context);
 
-#endif /* _COMMANDS_H_ */
+#endif /* __CLI_COMMANDS_H__ */
 

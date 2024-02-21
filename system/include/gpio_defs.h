@@ -5,8 +5,8 @@
  *      Author: Balint
  */
 
-#ifndef _GPIO_DEFS_H_
-#define _GPIO_DEFS_H_
+#ifndef __GPIO_DEFS_H__
+#define __GPIO_DEFS_H__
 
 #define SAI1_FSA_Pin                                GPIO_PIN_4
 #define SAI1_FSA_GPIO_Port                          GPIOE
@@ -209,5 +209,5 @@
 #define STLK_TX_Pin                                 GPIO_PIN_11
 #define STLK_TX_GPIO_Port                           GPIOB
 
-#endif /* _GPIO_DEFS_H_ */
+#endif /* __GPIO_DEFS_H__ */
 

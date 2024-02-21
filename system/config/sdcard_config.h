@@ -5,8 +5,8 @@
  *      Author: Balint
  */
 
-#ifndef _SDCARD_CONFIG_H_
-#define _SDCARD_CONFIG_H_
+#ifndef __SDCARD_CONFIG_H__
+#define __SDCARD_CONFIG_H__
 
 #define SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS       5000ul
 #define SDCARD_CD_PIN_GPIO_CLK_ENABLE           __HAL_RCC_GPIOG_CLK_ENABLE
@@ -51,4 +51,4 @@
 #define SDCARD_DMAx_RX_IRQ_PRIORITY             15
 #define SDCARD_DMA_BLOCK_TRANSFER_TIMEOUT_MS    5000
 
-#endif /* _SDCARD_CONFIG_H_ */
+#endif /* __SDCARD_CONFIG_H__ */

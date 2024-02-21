@@ -48,7 +48,7 @@
 									<listOptionValue builtIn="false" value="CONFIG_MTD_SDCARD_ERASE=1"/>
 									<listOptionValue builtIn="false" value="MODULE_FATFS_VFS=1"/>
 									<listOptionValue builtIn="false" value="MODULE_FATFS_VFS_FORMAT=1"/>
-									<listOptionValue builtIn="false" value="RUN_TESTS=0"/>
+									<listOptionValue builtIn="false" value="RUN_TESTS=1"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1554551946" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/application/tests/config}&quot;"/>

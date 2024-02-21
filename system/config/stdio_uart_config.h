@@ -5,8 +5,8 @@
  *      Author: Balint
  */
 
-#ifndef _STDIO_UART_CONFIG_H_
-#define _STDIO_UART_CONFIG_H_
+#ifndef __STDIO_UART_CONFIG_H__
+#define __STDIO_UART_CONFIG_H__
 
 #define STDIO_UART_RX_QUEUE_LENGTH              8
 #define STDIO_UART_TX_AVAIL_QUEUE_LENGTH        16
@@ -14,6 +14,10 @@
 #define STDIO_UART_WRITE_TASK_PRIORITY          2
 #define STDIO_UART_WRITE_TASK_STACKSIZE         configMINIMAL_STACK_SIZE
 #define STDIO_UART_TX_BUFFER_DEPTH              512
+#define STDIO_UART_READ_TASK_PRIORITY           2
+#define STDIO_UART_READ_TASK_STACKSIZE          configMINIMAL_STACK_SIZE
+#define STDIO_UART_STDIN_QUEUE_LENGTH           1
+#define STDIO_UART_MAX_NUM_OF_STDIN_LISTENERS   10
 
 #define STDIO_UART_USARTx                       USART3
 #define STDIO_UART_USARTx_CLK_ENABLE            __HAL_RCC_USART3_CLK_ENABLE
@@ -40,5 +44,5 @@
 #define STDIO_UART_DMAx_STREAMx_IRQn            DMA1_Stream3_IRQn
 #define STDIO_UART_DMAx_STREAMx_IRQ_PRIORITY    14
 
-#endif /* _STDIO_UART_CONFIG_H_ */
+#endif /* __STDIO_UART_CONFIG_H__ */
 

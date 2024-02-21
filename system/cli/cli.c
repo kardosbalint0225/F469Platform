@@ -20,7 +20,6 @@
 #include "stdio_base.h"
 #include "stm32f4xx_hal.h"
 
-extern QueueHandle_t stdio_uart_rx_queue;
 static EmbeddedCli *_cli;
 static CLI_UINT _cli_buffer[BYTES_TO_CLI_UINTS(CLI_BUFFER_SIZE)];
 
@@ -32,6 +31,11 @@ static StackType_t _cli_process_task_stack[CLI_PROCESS_TASK_STACK_SIZE];
 static StaticTask_t _cli_process_task_tcb;
 static TaskHandle_t h_cli_process_task = NULL;
 
+static StaticQueue_t _cli_rx_queue_struct;
+static uint8_t _cli_rx_queue_storage[CLI_RX_QUEUE_LENGTH * sizeof(uint8_t *)];
+static QueueHandle_t cli_rx_queue = NULL;
+
+extern int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue);
 static void cli_io_read_task(void *params);
 static void cli_process_task(void *params);
 static void cli_write_char(EmbeddedCli *cli, char c);
@@ -46,6 +50,15 @@ static void cli_write_char(EmbeddedCli *cli, char c);
 void cli_init(void)
 {
     _cli = NULL;
+
+    cli_rx_queue = xQueueCreateStatic(CLI_RX_QUEUE_LENGTH,
+                                      sizeof(uint8_t),
+                                      _cli_rx_queue_storage,
+                                      &_cli_rx_queue_struct);
+    assert(cli_rx_queue);
+
+    int ret = stdio_uart_add_stdin_listener(cli_rx_queue);
+    assert(0 == ret);
 
     h_cli_io_read_task = xTaskCreateStatic(cli_io_read_task,
                                            "CLI IO Read",
@@ -91,8 +104,10 @@ void cli_deinit(void)
 {
     vTaskDelete(h_cli_io_read_task);
     vTaskDelete(h_cli_process_task);
+    vQueueDelete(cli_rx_queue);
     h_cli_io_read_task = NULL;
     h_cli_process_task = NULL;
+    cli_rx_queue = NULL;
     // TODO: deinit command bindings
 }
 
@@ -109,7 +124,7 @@ static void cli_io_read_task(void *params)
     for ( ;; )
     {
         char c;
-        BaseType_t ret = xQueueReceive(stdio_uart_rx_queue, &c, portMAX_DELAY);
+        BaseType_t ret = xQueueReceive(cli_rx_queue, &c, portMAX_DELAY);
         assert(ret);
 
         embeddedCliReceiveChar(_cli, c);

@@ -12,6 +12,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 extern void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context);
@@ -68,6 +71,31 @@ void cli_command_assert(EmbeddedCli *cli, char *args, void *context)
     assert(0);
 
 }
+
+void cli_command_stdintest(EmbeddedCli *cli, char *args, void *context)
+{
+    (void)cli;
+    (void)args;
+    (void)context;
+
+    TaskHandle_t h;
+    h = xTaskGetHandle("stdin1test");
+    xTaskNotify(h, 0, eIncrement);
+    h = xTaskGetHandle("stdin2test");
+    xTaskNotify(h, 0, eIncrement);
+    h = xTaskGetHandle("stdin3test");
+    xTaskNotify(h, 0, eIncrement);
+    h = xTaskGetHandle("stdin4test");
+    xTaskNotify(h, 0, eIncrement);
+}
+
+static CliCommandBinding stdintest_binding = {
+    .name = "stdintest",
+    .help = "stdintest",
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_stdintest
+};
 
 static CliCommandBinding assert_binding = {
     .name = "assert",
@@ -242,6 +270,7 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, mkdir_binding);
 
     embeddedCliAddBinding(cli, assert_binding);
+    embeddedCliAddBinding(cli, stdintest_binding);
 }
 
 /**

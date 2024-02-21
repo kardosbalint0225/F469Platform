@@ -10,6 +10,7 @@
 #include "sdcard_mount.h"
 #include "usb_host.h"
 #include "cwd.h"
+#include <stdio.h>
 
 #if RUN_TESTS
     #include "tests.h"
@@ -37,6 +38,7 @@ void vApplicationDaemonTaskStartupHook(void)
     vfs_init();
     stdio_init();
     vfs_bind_stdio();
+    setvbuf(stdin, NULL, _IONBF, 0);
     sdcard_mount_init();
     usb_host_init();
     cli_init();
