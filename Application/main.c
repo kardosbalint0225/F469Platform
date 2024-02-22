@@ -2,12 +2,12 @@
 #include "task.h"
 
 #include "stm32f4xx_hal.h"
-#include "sysclk.h"
+#include "system_clock.h"
 
 int main(void)
 {
     HAL_Init();
-    sysclk_init();
+    system_clock_init();
 
     vTaskStartScheduler();
 

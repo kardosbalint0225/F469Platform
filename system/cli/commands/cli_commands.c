@@ -6,107 +6,9 @@
  */
 #include "cli.h"
 #include "cli_commands.h"
-
 #include <assert.h>
-#include <stdio.h>
-#include <string.h>
+#include <stddef.h>
 #include <stdbool.h>
-
-#include "FreeRTOS.h"
-#include "task.h"
-
-extern void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_get_date(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_get_time(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_set_date(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_set_time(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_version(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_memstat(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_ls(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_cp(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_r(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_rm(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_mv(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context);
-
-void cli_command_assert(EmbeddedCli *cli, char *args, void *context)
-{
-    (void)cli;
-    (void)args;
-    (void)context;
-
-    printf(" 1.  0123456789ABCDEFGHIJKLMNOPQSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n");
-    printf(" 2.  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
-    printf(" 3.  0001112222222222233ddddddddddddddDDDDDDDDDDDDDDDDDDDDDDDDDDDD\r\n");
-    printf(" 4.  EEEEEEEEEHAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
-    printf(" 5.  01234567CCCCCCCCCCCCCCCCCCCCccccccccccccccccccccccccccccccccc\r\n");
-    printf(" 6.  abhbhdsfdsfhjkhkdjhfbsdfjhsdjjbnfdsbvdhfjdhfusdhfksjfdhsdvfdd\r\n");
-    printf(" 7.  zurewrhdfhmfbdcvbusdhbfusjfuewhbdatfsdajhdvjhgfkjfdghskufhukh\r\n");
-    printf(" 8.  01234567CCCCCCCCCCCCCCBbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\r\n");
-    printf(" 9.  01RrrrrrrrrRRRRrrrrrrrrrrrRRRRRRRRrrrrrrrrrrrrrrrrrrrrrrrrrrr\r\n");
-    printf(" 10. iuifdshfdsztrwezubcdsziuczfuzwkjfuihgdsfkjhdfdsiuzfukiefhskud\r\n");
-    printf(" 11. 0123456789ABCDEFGHIJKLMNOPQSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n");
-    printf(" 12. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
-    printf(" 13. 0001112222222222233ddddddddddddddDDDDDDDDDDDDDDDDDDDDDDDDDDDD\r\n");
-    printf(" 14. EEEEEEEEEHAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
-    printf(" 15. 01234567CCCCCCCCCCCCCCCCCCCCccccccccccccccccccccccccccccccccc\r\n");
-    printf(" 16. abhbhdsfdsfhjkhkdjhfbsdfjhsdjjbnfdsbvdhfjdhfusdhfksjfdhsdvfdd\r\n");
-    printf(" 17. zurewrhdfhmfbdcvbusdhbfusjfuewhbdatfsdajhdvjhgfkjfdghskufhukh\r\n");
-    printf(" 18. 01234567CCCCCCCCCCCCCCBbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\r\n");
-    printf(" 19. 01RrrrrrrrrRRRRrrrrrrrrrrrRRRRRRRRrrrrrrrrrrrrrrrrrrrrrrrrrrr\r\n");
-    printf(" 20. iuifdshfdsztrwezubcdsziuczfuzwkjfuihgdsfkjhdfdsiuzfukiefhskud\r\n");
-    printf(" 21. 0123456789ABCDEFGHIJKLMNOPQSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n");
-    printf(" 22. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
-    printf(" 23. 0001112222222222233ddddddddddddddDDDDDDDDDDDDDDDDDDDDDDDDDDDD\r\n");
-    printf(" 24. EEEEEEEEEHAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n");
-    printf(" 25. 01234567CCCCCCCCCCCCCCCCCCCCccccccccccccccccccccccccccccccccc\r\n");
-    printf(" 26. abhbhdsfdsfhjkhkdjhfbsdfjhsdjjbnfdsbvdhfjdhfusdhfksjfdhsdvfdd\r\n");
-    printf(" 27. zurewrhdfhmfbdcvbusdhbfusjfuewhbdatfsdajhdvjhgfkjfdghskufhukh\r\n");
-    printf(" 28. 01234567CCCCCCCCCCCCCCBbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\r\n");
-    printf(" 29. 01RrrrrrrrrRRRRrrrrrrrrrrrRRRRRRRRrrrrrrrrrrrrrrrrrrrrrrrrrrr\r\n");
-    printf(" 30. iuifdshfdsztrwezubcdsziuczfuzwkjfuihgdsfkjhdfdsiuzfukiefhskud\r\n");
-    assert(0);
-
-}
-
-void cli_command_stdintest(EmbeddedCli *cli, char *args, void *context)
-{
-    (void)cli;
-    (void)args;
-    (void)context;
-
-    TaskHandle_t h;
-    h = xTaskGetHandle("stdin1test");
-    xTaskNotify(h, 0, eIncrement);
-    h = xTaskGetHandle("stdin2test");
-    xTaskNotify(h, 0, eIncrement);
-    h = xTaskGetHandle("stdin3test");
-    xTaskNotify(h, 0, eIncrement);
-    h = xTaskGetHandle("stdin4test");
-    xTaskNotify(h, 0, eIncrement);
-}
-
-void cli_command_malloctest(EmbeddedCli *cli, char *args, void *context)
-{
-    (void)cli;
-    (void)args;
-    (void)context;
-
-    pvPortMalloc(0xFFFFFFFFul);
-}
-
-void cli_command_hardfaulttest(EmbeddedCli *cli, char *args, void *context)
-{
-    (void)cli;
-    (void)args;
-    (void)context;
-
-    uint64_t i = *(uint64_t *)(0x20CDCDCD);
-    printf("%llu", i);
-}
 
 static CliCommandBinding stdintest_binding = {
     .name = "stdintest",
@@ -283,51 +185,57 @@ static CliCommandBinding mkdir_binding = {
  *
  * @retval None
  */
-void cli_init_command_bindings(void)
+void cli_init_command_bindings(EmbeddedCli *cli)
 {
-    EmbeddedCli *cli = cli_get_pointer();
-    embeddedCliAddBinding(cli, clear_binding);
-    embeddedCliAddBinding(cli, runtime_stats_binding);
-    embeddedCliAddBinding(cli, task_stats_binding);
-    embeddedCliAddBinding(cli, get_date_binding);
-    embeddedCliAddBinding(cli, get_time_binding);
-    embeddedCliAddBinding(cli, set_date_binding);
-    embeddedCliAddBinding(cli, set_time_binding);
-    embeddedCliAddBinding(cli, sysinfo_binding);
-    embeddedCliAddBinding(cli, version_binding);
-    embeddedCliAddBinding(cli, memstat_binding);
-    embeddedCliAddBinding(cli, ls_binding);
-    embeddedCliAddBinding(cli, cd_binding);
-    embeddedCliAddBinding(cli, cp_binding);
-    embeddedCliAddBinding(cli, r_binding);
-    embeddedCliAddBinding(cli, rm_binding);
-    embeddedCliAddBinding(cli, mv_binding);
-    embeddedCliAddBinding(cli, mkdir_binding);
+    assert(cli);
+    bool ret;
 
-    embeddedCliAddBinding(cli, assert_binding);
-    embeddedCliAddBinding(cli, stdintest_binding);
-    embeddedCliAddBinding(cli, malloctest_binding);
-    embeddedCliAddBinding(cli, hardfaulttest_binding);
+    ret = embeddedCliAddBinding(cli, clear_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, runtime_stats_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, task_stats_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, get_date_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, get_time_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, set_date_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, set_time_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, sysinfo_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, version_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, memstat_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, ls_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, cd_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, cp_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, r_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, rm_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, mv_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, mkdir_binding);
+    assert(ret);
+
+    ret = embeddedCliAddBinding(cli, assert_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, stdintest_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, malloctest_binding);
+    assert(ret);
+    ret = embeddedCliAddBinding(cli, hardfaulttest_binding);
+    assert(ret);
 }
 
-/**
- * @brief  Clears the terminal
- *
- * @param  cli (not used)
- * @param  args (not used)
- * @param  context (not used)
- *
- * @retval None
- */
-void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
-{
-    (void)cli;
-    (void)args;
-    (void)context;
 
-    const char * const clear_string = "\33[2J";
-    printf("%s", clear_string);
-}
 
 
 

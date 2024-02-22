@@ -43,14 +43,14 @@ void runtime_stats_timer_init(void)
         tim_clock = 2ul * HAL_RCC_GetPCLK1Freq();
     }
 
-    /* Compute the prescaler value to have TIM2 counter clock equal to 1MHz */
+    /* Compute the prescaler value to have TIMx counter clock equal to 1MHz */
     tim_prescaler = (uint32_t)((tim_clock / 1000000ul) - 1ul);
 
     /* Initialize TIMx peripheral as follow:
      *
-     + Period = [(TIM2CLK/10000) - 1]. to have a (1/10000) s time base.
+     + Period = [(TIMxCLK/10000) - 1]. to have a (1/10000) s time base.
 
-     + Prescaler = (uwTimclock/1000000 - 1) to have a 1MHz counter clock.
+     + Prescaler = (tim_clock/1000000 - 1) to have a 1MHz counter clock.
      + ClockDivision = 0
      + Counter direction = Up
      */
@@ -110,7 +110,7 @@ uint32_t runtime_stats_timer_get_count(void)
 }
 
 /**
- * @brief  TIM2 Period elapsed callback
+ * @brief  TIMx Period elapsed callback
  * @param  None
  * @retval None
  * @note   This function is called from the HAL library

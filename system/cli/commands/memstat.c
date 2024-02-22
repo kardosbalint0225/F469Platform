@@ -32,6 +32,10 @@ static void print_application_heap_statistics(void);
  */
 void cli_command_memstat(EmbeddedCli *cli, char *args, void *context)
 {
+    (void)cli;
+    (void)args;
+    (void)context;
+
     printf("\r\n  Internal memory layout:\r\n\r\n");
     printf("           RAM         |      Base      |      End       |      Size    \r\n");
     printf("  ---------------------+----------------+----------------+--------------\r\n");

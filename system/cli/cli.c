@@ -90,7 +90,7 @@ void cli_init(void)
     assert(_cli);
     _cli->writeChar = cli_write_char;
 
-    cli_init_command_bindings();
+    cli_init_command_bindings(_cli);
     cli_command_clear_terminal(_cli, NULL, NULL);
 }
 

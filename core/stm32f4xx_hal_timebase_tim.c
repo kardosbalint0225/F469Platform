@@ -32,7 +32,6 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 
     HAL_RCC_GetClockConfig(&clock_config, &flash_latency);
 
-    /* Get APB1 prescaler */
     apb1_prescaler = clock_config.APB1CLKDivider;
 
     if (RCC_HCLK_DIV1 == apb1_prescaler)
@@ -50,7 +49,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 
     /* Initialize TIMx peripheral as follow:
      + Period = [(TIMxCLK/1000) - 1]. to have a (1/1000) s time base.
-     + Prescaler = (uwTimclock/1000000 - 1) to have a 1MHz counter clock.
+     + Prescaler = (tim_clock/1000000 - 1) to have a 1MHz counter clock.
      + ClockDivision = 0
      + Counter direction = Up
      */
@@ -89,25 +88,23 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 
 /**
  * @brief  Suspend Tick increment.
- * @note   Disable the tick increment by disabling TIM6 update interrupt.
+ * @note   Disable the tick increment by disabling TIMx update interrupt.
  * @param  None
  * @retval None
  */
 void HAL_SuspendTick(void)
 {
-    /* Disable TIM6 update Interrupt */
     __HAL_TIM_DISABLE_IT(&h_hal_timebase_tim, TIM_IT_UPDATE);
 }
 
 /**
  * @brief  Resume Tick increment.
- * @note   Enable the tick increment by Enabling TIM6 update interrupt.
+ * @note   Enable the tick increment by Enabling TIMx update interrupt.
  * @param  None
  * @retval None
  */
 void HAL_ResumeTick(void)
 {
-    /* Enable TIM6 Update interrupt */
     __HAL_TIM_ENABLE_IT(&h_hal_timebase_tim, TIM_IT_UPDATE);
 }
 

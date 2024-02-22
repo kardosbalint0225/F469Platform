@@ -12,11 +12,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include "embedded_cli.h"
-
-void         cli_init(void);
-EmbeddedCli *cli_get_pointer(void);
+void cli_init(void);
 
 #ifdef __cplusplus
 }
