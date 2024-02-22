@@ -10,12 +10,12 @@
 #include "sdcard_mount.h"
 #include "usb_host.h"
 #include "cwd.h"
+#include "panic.h"
 #include <stdio.h>
 
 #if RUN_TESTS
     #include "tests.h"
 #endif
-
 
 /* GetIdleTaskMemory prototype (linked to static allocation support) */
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
@@ -51,26 +51,12 @@ void vApplicationDaemonTaskStartupHook(void)
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
     (void)xTask;
-    (void)pcTaskName;
-    /* Run time stack overflow checking is performed if
-       configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2. This hook function is
-       called if a stack overflow is detected. */
-    assert(0);
+    panic("\r\n Task stack overflowed. Task: %s\r\n", pcTaskName);
 }
 
 void vApplicationMallocFailedHook(void)
 {
-    /* vApplicationMallocFailedHook() will only be called if
-       configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h. It is a hook
-       function that will get called if a call to pvPortMalloc() fails.
-       pvPortMalloc() is called internally by the kernel whenever a task, queue,
-       timer or semaphore is created. It is also called by various parts of the
-       demo application. If heap_1.c or heap_2.c are used, then the size of the
-       heap available to pvPortMalloc() is defined by configTOTAL_HEAP_SIZE in
-       FreeRTOSConfig.h, and the xPortGetFreeHeapSize() API function can be used
-       to query the size of free heap space that remains (although it does not
-       provide information on how the remaining heap might be fragmented). */
-    assert(0);
+    panic("\r\n Not enough memory in system heap. (malloc failed hook checked)\r\n");
 }
 
 /* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an

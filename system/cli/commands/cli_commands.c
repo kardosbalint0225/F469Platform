@@ -89,6 +89,15 @@ void cli_command_stdintest(EmbeddedCli *cli, char *args, void *context)
     xTaskNotify(h, 0, eIncrement);
 }
 
+void cli_command_malloctest(EmbeddedCli *cli, char *args, void *context)
+{
+    (void)cli;
+    (void)args;
+    (void)context;
+
+    pvPortMalloc(0xFFFFFFFFul);
+}
+
 static CliCommandBinding stdintest_binding = {
     .name = "stdintest",
     .help = "stdintest",
@@ -103,6 +112,14 @@ static CliCommandBinding assert_binding = {
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_assert
+};
+
+static CliCommandBinding malloctest_binding = {
+    .name = "malloctest",
+    .help = "malloctest",
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_malloctest
 };
 
 static CliCommandBinding clear_binding = {
@@ -271,6 +288,7 @@ void cli_init_command_bindings(void)
 
     embeddedCliAddBinding(cli, assert_binding);
     embeddedCliAddBinding(cli, stdintest_binding);
+    embeddedCliAddBinding(cli, malloctest_binding);
 }
 
 /**

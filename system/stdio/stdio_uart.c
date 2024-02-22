@@ -106,6 +106,9 @@ static void stdin_unlock(void);
 static void uart_write(const uint8_t *data, size_t len);
 static void error_handler(void);
 
+static void stdio_uart_init_blocking(void);
+void stdio_write_blocking(const char *buffer, size_t len);
+
 int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
 {
     assert(hqueue);
@@ -584,4 +587,34 @@ static void stdin_unlock(void)
     xSemaphoreGive(_stdin_mutex);
 }
 
+static void stdio_uart_init_blocking(void)
+{
+    HAL_NVIC_DisableIRQ(STDIO_UART_USARTx_IRQn);
+    HAL_NVIC_DisableIRQ(STDIO_UART_DMAx_STREAMx_IRQn);
+    HAL_UART_DeInit(&h_stdio_uart);
+
+    STDIO_UART_USARTx_CLK_ENABLE();
+    STDIO_UART_USARTx_FORCE_RESET();
+    STDIO_UART_USARTx_RELEASE_RESET();
+
+    h_stdio_uart.Instance = STDIO_UART_USARTx;
+    h_stdio_uart.Init.BaudRate = 115200ul;
+    h_stdio_uart.Init.WordLength = UART_WORDLENGTH_8B;
+    h_stdio_uart.Init.StopBits = UART_STOPBITS_1;
+    h_stdio_uart.Init.Parity = UART_PARITY_NONE;
+    h_stdio_uart.Init.Mode = UART_MODE_TX_RX;
+    h_stdio_uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    h_stdio_uart.Init.OverSampling = UART_OVERSAMPLING_16;
+
+    stdio_uart_tx_pin_init();
+    stdio_uart_rx_pin_init();
+
+    HAL_UART_Init(&h_stdio_uart);
+}
+
+void stdio_write_blocking(const char *buffer, size_t len)
+{
+    stdio_uart_init_blocking();
+    HAL_UART_Transmit(&h_stdio_uart, (uint8_t *)buffer, (uint16_t)len, 0xFFFFFFFFul);
+}
 
