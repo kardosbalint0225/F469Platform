@@ -98,6 +98,16 @@ void cli_command_malloctest(EmbeddedCli *cli, char *args, void *context)
     pvPortMalloc(0xFFFFFFFFul);
 }
 
+void cli_command_hardfaulttest(EmbeddedCli *cli, char *args, void *context)
+{
+    (void)cli;
+    (void)args;
+    (void)context;
+
+    uint64_t i = *(uint64_t *)(0x20CDCDCD);
+    printf("%llu", i);
+}
+
 static CliCommandBinding stdintest_binding = {
     .name = "stdintest",
     .help = "stdintest",
@@ -120,6 +130,14 @@ static CliCommandBinding malloctest_binding = {
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_malloctest
+};
+
+static CliCommandBinding hardfaulttest_binding = {
+    .name = "hardfaulttest",
+    .help = "hardfaulttest",
+    .tokenizeArgs = true,
+    .context = NULL,
+    .binding = cli_command_hardfaulttest
 };
 
 static CliCommandBinding clear_binding = {
@@ -289,6 +307,7 @@ void cli_init_command_bindings(void)
     embeddedCliAddBinding(cli, assert_binding);
     embeddedCliAddBinding(cli, stdintest_binding);
     embeddedCliAddBinding(cli, malloctest_binding);
+    embeddedCliAddBinding(cli, hardfaulttest_binding);
 }
 
 /**
