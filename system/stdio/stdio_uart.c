@@ -339,6 +339,18 @@ int stdio_uart_deinit(void)
 {
     HAL_StatusTypeDef ret;
 
+    ret = HAL_UART_AbortReceive(&h_stdio_uart);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_UART_AbortTransmit(&h_stdio_uart);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
     ret = HAL_UART_UnRegisterCallback(&h_stdio_uart, HAL_UART_TX_COMPLETE_CB_ID);
     if (HAL_OK != ret)
     {

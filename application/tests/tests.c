@@ -10,11 +10,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "stdio_base.h"
+
 static void tests_runner_task(void *params);
 static void stdin1_test_task(void *params);
 static void stdin2_test_task(void *params);
 static void stdin3_test_task(void *params);
 static void stdin4_test_task(void *params);
+static void stdio_uart_init_deinit_test_task(void *params);
 
 void start_tests(void)
 {
@@ -52,8 +55,28 @@ static void tests_runner_task(void * params)
                 NULL,
                 (tskIDLE_PRIORITY + 3),
                 NULL);
+    xTaskCreate(stdio_uart_init_deinit_test_task,
+                "stdin4test",
+                configMINIMAL_STACK_SIZE * 10,
+                NULL,
+                (tskIDLE_PRIORITY + 3),
+                NULL);
     for ( ;; )
     {
+        vTaskDelay(500);
+    }
+}
+
+static void stdio_uart_init_deinit_test_task(void *params)
+{
+    for ( ;; )
+    {
+//        stdio_deinit();
+//        vTaskDelay(1);
+//        stdio_init();
+//        printf("hello.\r\n");
+//        vTaskDelay(1);
+//
         vTaskDelay(500);
     }
 }
