@@ -91,23 +91,22 @@ static HAL_StatusTypeDef _error = HAL_OK;
 static QueueHandle_t _stdin_listeners_list[STDIO_UART_MAX_NUM_OF_STDIN_LISTENERS];
 static uint32_t _stdin_listeners = 0ul;
 
-static int stdio_uart_init(void);
-static int stdio_uart_deinit(void);
-static void stdio_uart_msp_init(UART_HandleTypeDef *huart);
-static void stdio_uart_msp_deinit(UART_HandleTypeDef *huart);
-static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart);
-static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart);
-static void stdio_uart_error_callback(UART_HandleTypeDef *huart);
+static int _uart_init(void);
+static int _uart_deinit(void);
+static void _uart_msp_init(UART_HandleTypeDef *huart);
+static void _uart_msp_deinit(UART_HandleTypeDef *huart);
+static void _tx_cplt_callback(UART_HandleTypeDef *huart);
+static void _rx_cplt_callback(UART_HandleTypeDef *huart);
+static void _uart_error_callback(UART_HandleTypeDef *huart);
 
-static void stdio_uart_write_task(void *params);
-static void stdio_uart_read_task(void *params);
-static void stdin_lock(void);
-static void stdin_unlock(void);
+static void _write_task(void *params);
+static void _read_task(void *params);
+static inline void stdin_lock(void);
+static inline void stdin_unlock(void);
 static void uart_write(const uint8_t *data, size_t len);
 static void error_handler(void);
 
-static void stdio_uart_init_blocking(void);
-void stdio_write_blocking(const char *buffer, size_t len);
+void stdio_write_blocking(const void *buffer, size_t len);
 
 int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
 {
@@ -135,7 +134,7 @@ int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
  * @retval None
  * @note   Task that performs the UART TX related jobs.
  */
-static void stdio_uart_write_task(void *params)
+static void _write_task(void *params)
 {
     (void)params;
 
@@ -171,7 +170,7 @@ static void stdio_uart_write_task(void *params)
     }
 }
 
-static void stdio_uart_read_task(void *params)
+static void _read_task(void *params)
 {
     (void)params;
 
@@ -207,7 +206,7 @@ void stdio_init(void)
 {
     int ret;
     _stdin_listeners = 0ul;
-    ret = stdio_uart_init();
+    ret = _uart_init();
     assert(0 == ret);
 
     _tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&_tx_cplt_semphr_storage);
@@ -247,7 +246,7 @@ void stdio_init(void)
         assert(retv);
     }
 
-    h_write_task = xTaskCreateStatic(stdio_uart_write_task,
+    h_write_task = xTaskCreateStatic(_write_task,
                                      "STDIO UART Write",
                                      STDIO_UART_WRITE_TASK_STACKSIZE,
                                      NULL,
@@ -256,7 +255,7 @@ void stdio_init(void)
                                      &_write_task_tcb);
     assert(h_write_task);
 
-    h_read_task = xTaskCreateStatic(stdio_uart_read_task,
+    h_read_task = xTaskCreateStatic(_read_task,
                                     "STDIO UART Read",
                                     STDIO_UART_READ_TASK_STACKSIZE,
                                     NULL,
@@ -270,7 +269,7 @@ void stdio_deinit(void)
 {
     int ret;
 
-    ret = stdio_uart_deinit();
+    ret = _uart_deinit();
     assert(0 == ret);
 
     vTaskDelete(h_write_task);
@@ -303,7 +302,7 @@ void stdio_deinit(void)
  * @note   The communication is configured 115200 Baudrate 8N1 with no
  *         flowcontrol.
  */
-static int stdio_uart_init(void)
+static int _uart_init(void)
 {
     _error = HAL_OK;
 
@@ -318,13 +317,13 @@ static int stdio_uart_init(void)
 
     HAL_StatusTypeDef ret;
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPINIT_CB_ID, stdio_uart_msp_init);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPINIT_CB_ID, _uart_msp_init);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPDEINIT_CB_ID, stdio_uart_msp_deinit);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_MSPDEINIT_CB_ID, _uart_msp_deinit);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -341,19 +340,19 @@ static int stdio_uart_init(void)
         return hal_statustypedef_to_errno(_error);
     }
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_TX_COMPLETE_CB_ID, stdio_uart_tx_cplt_callback);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_TX_COMPLETE_CB_ID, _tx_cplt_callback);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_RX_COMPLETE_CB_ID, stdio_uart_rx_cplt_callback);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_RX_COMPLETE_CB_ID, _rx_cplt_callback);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
-    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_ERROR_CB_ID, stdio_uart_error_callback);
+    ret = HAL_UART_RegisterCallback(&h_stdio_uart, HAL_UART_ERROR_CB_ID, _uart_error_callback);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
@@ -369,7 +368,7 @@ static int stdio_uart_init(void)
  * @note   This function initializes the GPIOs corresponding the UART peripheral,
  *         the DMA stream and enables the DMA and UART interrupts
  */
-static void stdio_uart_msp_init(UART_HandleTypeDef *huart)
+static void _uart_msp_init(UART_HandleTypeDef *huart)
 {
     STDIO_UART_USARTx_CLK_ENABLE();
     STDIO_UART_USARTx_FORCE_RESET();
@@ -393,7 +392,7 @@ static void stdio_uart_msp_init(UART_HandleTypeDef *huart)
  * @return < 0 an error occurred
  * @note   -
  */
-static int stdio_uart_deinit(void)
+static int _uart_deinit(void)
 {
     HAL_StatusTypeDef ret;
 
@@ -448,7 +447,7 @@ static int stdio_uart_deinit(void)
  * @note   This function de-initializes the GPIOs corresponding the UART peripheral,
  *         the DMA stream and disables the DMA and UART interrupts
  */
-static void stdio_uart_msp_deinit(UART_HandleTypeDef *huart)
+static void _uart_msp_deinit(UART_HandleTypeDef *huart)
 {
     STDIO_UART_USARTx_CLK_DISABLE();
 
@@ -467,7 +466,7 @@ static void stdio_uart_msp_deinit(UART_HandleTypeDef *huart)
  * @note   This function is called by the HAL library
  *         when the DMA is finished transferring data
  */
-static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart)
+static void _tx_cplt_callback(UART_HandleTypeDef *huart)
 {
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
     xSemaphoreGiveFromISR(_tx_cplt_semphr, &higher_priority_task_woken);
@@ -481,14 +480,14 @@ static void stdio_uart_tx_cplt_callback(UART_HandleTypeDef *huart)
  * @note   This function is called by the HAL library
  *         when a character is arrived.
  */
-static void stdio_uart_rx_cplt_callback(UART_HandleTypeDef *huart)
+static void _rx_cplt_callback(UART_HandleTypeDef *huart)
 {
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
     xQueueSendFromISR(_rx_queue, &_rx_buffer, &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
-static void stdio_uart_error_callback(UART_HandleTypeDef *huart)
+static void _uart_error_callback(UART_HandleTypeDef *huart)
 {
     error_handler();
 }
@@ -496,8 +495,8 @@ static void stdio_uart_error_callback(UART_HandleTypeDef *huart)
 static void error_handler(void)
 {
     //TODO: proper error handling
-    stdio_uart_deinit();
-    stdio_uart_init();
+    _uart_deinit();
+    _uart_init();
 }
 
 #if IS_USED(MODULE_STDIO_AVAILABLE)
@@ -574,7 +573,7 @@ static void uart_write(const uint8_t *data, size_t len)
 /**
  * @brief  Locks the stdin mutex
  */
-static void stdin_lock(void)
+static inline void stdin_lock(void)
 {
     xSemaphoreTake(_stdin_mutex, portMAX_DELAY);
 }
@@ -582,39 +581,15 @@ static void stdin_lock(void)
 /**
  * @brief  Unlocks the stdin mutex
  */
-static void stdin_unlock(void)
+static inline void stdin_unlock(void)
 {
     xSemaphoreGive(_stdin_mutex);
 }
 
-static void stdio_uart_init_blocking(void)
+void stdio_write_blocking(const void *buffer, size_t len)
 {
-    HAL_NVIC_DisableIRQ(STDIO_UART_USARTx_IRQn);
-    HAL_NVIC_DisableIRQ(STDIO_UART_DMAx_STREAMx_IRQn);
-    HAL_UART_DeInit(&h_stdio_uart);
-
-    STDIO_UART_USARTx_CLK_ENABLE();
-    STDIO_UART_USARTx_FORCE_RESET();
-    STDIO_UART_USARTx_RELEASE_RESET();
-
-    h_stdio_uart.Instance = STDIO_UART_USARTx;
-    h_stdio_uart.Init.BaudRate = 115200ul;
-    h_stdio_uart.Init.WordLength = UART_WORDLENGTH_8B;
-    h_stdio_uart.Init.StopBits = UART_STOPBITS_1;
-    h_stdio_uart.Init.Parity = UART_PARITY_NONE;
-    h_stdio_uart.Init.Mode = UART_MODE_TX_RX;
-    h_stdio_uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    h_stdio_uart.Init.OverSampling = UART_OVERSAMPLING_16;
-
-    stdio_uart_tx_pin_init();
-    stdio_uart_rx_pin_init();
-
-    HAL_UART_Init(&h_stdio_uart);
-}
-
-void stdio_write_blocking(const char *buffer, size_t len)
-{
-    stdio_uart_init_blocking();
+    HAL_UART_DMAPause(&h_stdio_uart);
     HAL_UART_Transmit(&h_stdio_uart, (uint8_t *)buffer, (uint16_t)len, 0xFFFFFFFFul);
+    HAL_UART_DMAResume(&h_stdio_uart);
 }
 
