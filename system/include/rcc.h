@@ -16,6 +16,10 @@ extern "C" {
 
 HAL_StatusTypeDef rtc_clock_source_init(void);
 HAL_StatusTypeDef rtc_clock_source_deinit(void);
+HAL_StatusTypeDef clk48_clock_init(void);
+HAL_StatusTypeDef clk48_clock_deinit(void);
+HAL_StatusTypeDef sdio_clock_source_init(void);
+HAL_StatusTypeDef sdio_clock_source_deinit(void);
 
 #ifdef __cplusplus
 }

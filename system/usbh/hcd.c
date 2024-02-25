@@ -4,6 +4,7 @@
  *  Created on: Jan 9, 2024
  *      Author: Balint
  */
+#include "rcc.h"
 #include "gpio.h"
 #include "usbh_conf.h"
 #include "usbh_core.h"
@@ -23,13 +24,21 @@ static USBH_StatusTypeDef hal_status_to_usbh_status(HAL_StatusTypeDef hal_status
 
 static void hcd_msp_init(HCD_HandleTypeDef *hhcd)
 {
-    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInitStruct;
-    RCC_PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CLK48;
-    RCC_PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
-    RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
-    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
-    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
-    _error = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
+//    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInitStruct;
+//    RCC_PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CLK48;
+//    RCC_PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
+//    RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
+//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
+//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
+    _error = clk48_clock_init();//HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
+    if (HAL_OK != _error)
+    {
+        return;
+    }
+
+    __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
+    __HAL_RCC_USB_OTG_FS_FORCE_RESET();
+    __HAL_RCC_USB_OTG_FS_RELEASE_RESET();
 
     usb_host_powerswitch_pin_init();
     usb_host_dp_pin_init();
@@ -37,14 +46,18 @@ static void hcd_msp_init(HCD_HandleTypeDef *hhcd)
     usb_host_id_pin_init();
     usb_host_vbus_pin_init();
 
-    __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
-
     HAL_NVIC_SetPriority(OTG_FS_IRQn, 7, 0);
     HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
 }
 
 static void hcd_msp_deinit(HCD_HandleTypeDef *hhcd)
 {
+    _error = clk48_clock_deinit();
+    if (HAL_OK != _error)
+    {
+        return;
+    }
+
     __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
     HAL_NVIC_DisableIRQ(OTG_FS_IRQn);
 

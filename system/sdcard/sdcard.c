@@ -9,6 +9,7 @@
 #include "stm32f4xx_hal.h"
 #include "hal_errno.h"
 
+#include "rcc.h"
 #include "dma.h"
 #include "gpio.h"
 
@@ -321,14 +322,21 @@ static int sdio_init(void)
 
 static void sdio_msp_init(SD_HandleTypeDef *h_sd)
 {
-    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInitStruct;
-    RCC_PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SDIO | RCC_PERIPHCLK_CLK48;
-    RCC_PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
-    RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
-    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
-    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
+//    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInitStruct;
+//    RCC_PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SDIO | RCC_PERIPHCLK_CLK48;
+//    RCC_PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
+//    RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
+//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
+//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
+    //HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
 
-    _error = HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
+    _error = clk48_clock_init();
+    if (HAL_OK != _error)
+    {
+        return;
+    }
+
+    _error = sdio_clock_source_init();
     if (HAL_OK != _error)
     {
         return;
@@ -412,6 +420,18 @@ static int sdio_deinit(void)
 static void sdio_msp_deinit(SD_HandleTypeDef *h_sd)
 {
     __HAL_RCC_SDIO_CLK_DISABLE();
+
+    _error = sdio_clock_source_deinit();
+    if (HAL_OK != _error)
+    {
+        return;
+    }
+
+    _error = clk48_clock_deinit();
+    if (HAL_OK != _error)
+    {
+        return;
+    }
 
     sdcard_cmd_pin_deinit();
     sdcard_clk_pin_deinit();
