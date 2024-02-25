@@ -26,7 +26,7 @@ void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
     (void)context;
 
     const char * const clear_string = "\33[2J";
-    printf("%s", clear_string);
+    printf("%s\r\n", clear_string);
 }
 
 void cli_command_assert(EmbeddedCli *cli, char *args, void *context)
