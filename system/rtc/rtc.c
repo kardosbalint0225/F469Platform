@@ -119,12 +119,7 @@ int rtc_init(void)
  */
 static void rtc_msp_init(RTC_HandleTypeDef * hrtc)
 {
-//    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {
-//        .PeriphClockSelection = RCC_PERIPHCLK_RTC,
-//        .RTCClockSelection = RCC_RTCCLKSOURCE_LSE,
-//    };
-
-    _error = rtc_clock_source_init();//HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+    _error = rtc_clock_source_init();
     __HAL_RCC_RTC_ENABLE();
 }
 
@@ -182,12 +177,7 @@ int rtc_deinit(void)
  */
 static void rtc_msp_deinit(RTC_HandleTypeDef *hrtc)
 {
-//    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {
-//        .PeriphClockSelection = RCC_PERIPHCLK_RTC,
-//        .RTCClockSelection = RCC_RTCCLKSOURCE_NO_CLK,
-//    };
-
-    _error = rtc_clock_source_deinit();//HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+    _error = rtc_clock_source_deinit();
     __HAL_RCC_RTC_DISABLE();
 }
 
