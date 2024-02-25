@@ -6,7 +6,7 @@
 
 TIM_HandleTypeDef h_runtime_stats_timer;
 static volatile uint32_t _count;
-static void runtime_stats_timer_period_elapsed_cb(TIM_HandleTypeDef *htim);
+static void _period_elapsed_cb(TIM_HandleTypeDef *htim);
 
 /**
  * @brief  Configures a dedicated Timer peripheral for
@@ -64,7 +64,7 @@ void runtime_stats_timer_init(void)
     ret = HAL_TIM_Base_Init(&h_runtime_stats_timer);
     assert(HAL_OK == ret);
 
-    ret = HAL_TIM_RegisterCallback(&h_runtime_stats_timer, HAL_TIM_PERIOD_ELAPSED_CB_ID, runtime_stats_timer_period_elapsed_cb);
+    ret = HAL_TIM_RegisterCallback(&h_runtime_stats_timer, HAL_TIM_PERIOD_ELAPSED_CB_ID, _period_elapsed_cb);
     assert(HAL_OK == ret);
 
     ret = HAL_TIM_Base_Start_IT(&h_runtime_stats_timer);
@@ -119,7 +119,7 @@ uint32_t runtime_stats_timer_get_count(void)
  *         interrupt in every 0.1 ms the run time stats can be more
  *         accurately calculated.
  */
-static void runtime_stats_timer_period_elapsed_cb(TIM_HandleTypeDef *htim)
+static void _period_elapsed_cb(TIM_HandleTypeDef *htim)
 {
     _count++;
 }

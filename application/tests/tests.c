@@ -77,7 +77,9 @@ static void stdio_uart_init_deinit_test_task(void *params)
 //        printf("hello.\r\n");
 //        vTaskDelay(1);
 //
-        vTaskDelay(500);
+//        char buffer[] = {"hello.\r\n"};
+//        stdio_write_blocking(buffer, sizeof(buffer));
+        vTaskDelay(1000);
     }
 }
 
