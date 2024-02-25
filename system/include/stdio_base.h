@@ -27,6 +27,9 @@
 
 #include "modules.h"
 
+#include "FreeRTOS.h"
+#include "queue.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,6 +43,9 @@ void stdio_init(void);
  * @brief De-initialize the module
  */
 void stdio_deinit(void);
+
+
+int stdio_add_stdin_listener(const QueueHandle_t hqueue);
 
 #if IS_USED(MODULE_STDIO_AVAILABLE) || DOXYGEN
 /**
@@ -74,6 +80,17 @@ ssize_t stdio_read(void* buffer, size_t max_len);
  * @return <0 on error
  */
 ssize_t stdio_write(const void* buffer, size_t len);
+
+/**
+ * @brief write @p len bytes from @p buffer into uart in blocking mode
+ *
+ * @param[in]   buffer  buffer to read from
+ * @param[in]   len     nr of bytes to write
+ *
+ * @return nr of bytes written
+ * @return <0 on error
+ */
+ssize_t stdio_write_blocking(const void* buffer, size_t len);
 
 #ifdef __cplusplus
 }

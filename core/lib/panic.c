@@ -12,9 +12,9 @@
 #include "stm32f4xx_hal.h"
 #include <stdarg.h>
 #include <stdio.h>
+#include "stdio_base.h"
 
 static char _tx_buffer[513];
-extern void stdio_write_blocking(const char *buffer, size_t len);
 
 __NORETURN void panic(const char *message, ...)
 {

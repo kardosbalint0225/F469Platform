@@ -91,8 +91,6 @@ static HAL_StatusTypeDef _error = HAL_OK;
 static QueueHandle_t _stdin_listeners_list[STDIO_UART_MAX_NUM_OF_STDIN_LISTENERS];
 static uint32_t _stdin_listeners = 0ul;
 
-static int _uart_init(void);
-static int _uart_deinit(void);
 static void _uart_msp_init(UART_HandleTypeDef *huart);
 static void _uart_msp_deinit(UART_HandleTypeDef *huart);
 static void _tx_cplt_callback(UART_HandleTypeDef *huart);
@@ -103,10 +101,8 @@ static void _write_task(void *params);
 static void _read_task(void *params);
 static inline void stdin_lock(void);
 static inline void stdin_unlock(void);
-static void uart_write(const uint8_t *data, size_t len);
-static void error_handler(void);
-
-void stdio_write_blocking(const void *buffer, size_t len);
+static int _uart_write(const uint8_t *data, size_t len);
+static void _error_handler(void);
 
 int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
 {
@@ -157,7 +153,7 @@ static void _write_task(void *params)
         hal_status = HAL_UART_Transmit_DMA(&h_stdio_uart, uart_tx_data.pbuf, uart_tx_data.size);
         if (HAL_OK != hal_status)
         {
-            error_handler();
+            _error_handler();
         }
         assert(HAL_OK == hal_status);
 
@@ -202,12 +198,20 @@ static void _read_task(void *params)
     }
 }
 
-void stdio_init(void)
+/**
+ * @brief  Initializes the STDIO_UART peripheral
+ *
+ * @param  None
+ *
+ * @return  0 for success
+ * @return < 0 an error occurred
+ *
+ * @note   The communication is configured 115200 Baudrate 8N1 with no
+ *         flowcontrol.
+ */
+int stdio_uart_init(void)
 {
-    int ret;
     _stdin_listeners = 0ul;
-    ret = _uart_init();
-    assert(0 == ret);
 
     _tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&_tx_cplt_semphr_storage);
     assert(_tx_cplt_semphr);
@@ -263,47 +267,7 @@ void stdio_init(void)
                                     _read_task_stack,
                                     &_read_task_tcb);
     assert(h_read_task);
-}
 
-void stdio_deinit(void)
-{
-    int ret;
-
-    ret = _uart_deinit();
-    assert(0 == ret);
-
-    vTaskDelete(h_write_task);
-    vTaskDelete(h_read_task);
-    vQueueDelete(_tx_avail_queue);
-    vQueueDelete(_tx_ready_queue);
-    vQueueDelete(_rx_queue);
-    vQueueDelete(_stdin_queue);
-    vSemaphoreDelete(_tx_cplt_semphr);
-    vSemaphoreDelete(_stdin_mutex);
-
-    h_write_task = NULL;
-    h_read_task = NULL;
-    _tx_avail_queue = NULL;
-    _tx_ready_queue = NULL;
-    _rx_queue = NULL;
-    _stdin_queue = NULL;
-    _tx_cplt_semphr = NULL;
-    _stdin_mutex = NULL;
-}
-
-/**
- * @brief  Initializes the STDIO_UART peripheral
- *
- * @param  None
- *
- * @return  0 for success
- * @return < 0 an error occurred
- *
- * @note   The communication is configured 115200 Baudrate 8N1 with no
- *         flowcontrol.
- */
-static int _uart_init(void)
-{
     _error = HAL_OK;
 
     h_stdio_uart.Instance = STDIO_UART_USARTx;
@@ -361,27 +325,6 @@ static int _uart_init(void)
     return 0;
 }
 
-/**
- * @brief  Initializes the STDIO_UART MSP (low-level)
- * @param  huart pointer to the UART_HandleTypeDef structure
- * @retval None
- * @note   This function initializes the GPIOs corresponding the UART peripheral,
- *         the DMA stream and enables the DMA and UART interrupts
- */
-static void _uart_msp_init(UART_HandleTypeDef *huart)
-{
-    STDIO_UART_USARTx_CLK_ENABLE();
-    STDIO_UART_USARTx_FORCE_RESET();
-    STDIO_UART_USARTx_RELEASE_RESET();
-
-    stdio_uart_tx_pin_init();
-    stdio_uart_rx_pin_init();
-
-    _error = stdio_uart_dma_init(huart);
-
-    HAL_NVIC_SetPriority(STDIO_UART_USARTx_IRQn, STDIO_UART_USARTx_IRQ_PRIORITY, 0);
-    HAL_NVIC_EnableIRQ(STDIO_UART_USARTx_IRQn);
-}
 
 /**
  * @brief  De-initializes the STDIO_UART peripheral
@@ -392,7 +335,7 @@ static void _uart_msp_init(UART_HandleTypeDef *huart)
  * @return < 0 an error occurred
  * @note   -
  */
-static int _uart_deinit(void)
+int stdio_uart_deinit(void)
 {
     HAL_StatusTypeDef ret;
 
@@ -437,7 +380,137 @@ static int _uart_deinit(void)
         return hal_statustypedef_to_errno(ret);
     }
 
+    vTaskDelete(h_write_task);
+    vTaskDelete(h_read_task);
+    vQueueDelete(_tx_avail_queue);
+    vQueueDelete(_tx_ready_queue);
+    vQueueDelete(_rx_queue);
+    vQueueDelete(_stdin_queue);
+    vSemaphoreDelete(_tx_cplt_semphr);
+    vSemaphoreDelete(_stdin_mutex);
+
+    h_write_task = NULL;
+    h_read_task = NULL;
+    _tx_avail_queue = NULL;
+    _tx_ready_queue = NULL;
+    _rx_queue = NULL;
+    _stdin_queue = NULL;
+    _tx_cplt_semphr = NULL;
+    _stdin_mutex = NULL;
+
     return 0;
+}
+
+ssize_t stdio_uart_read(void *buffer, size_t count)
+{
+    assert(buffer);
+    uint8_t *buf = buffer;
+
+    stdin_lock();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        BaseType_t ret = xQueueReceive(_stdin_queue, &buf[i], portMAX_DELAY);
+        assert(ret);
+    }
+
+    stdin_unlock();
+
+    return count;
+}
+
+ssize_t stdio_uart_write(const void *buffer, size_t len)
+{
+    ssize_t result = len;
+
+    if (IS_USED(MODULE_STDIO_UART_ONLCR))
+    {
+        static const uint8_t crlf[2] = { (uint8_t)'\r', (uint8_t)'\n' };
+        const uint8_t *buf = buffer;
+
+        while (len)
+        {
+            const uint8_t *pos = memchr(buf, '\n', len);
+            size_t chunk_len = (pos != NULL && len != 1)
+                             ? (uintptr_t)pos - (uintptr_t)buf
+                             : len;
+            int ret = _uart_write(buf, chunk_len);
+            if (ret < 0)
+            {
+                return ret;
+            }
+
+            buf += chunk_len;
+            len -= chunk_len;
+
+            if (len)
+            {
+                ret = _uart_write(crlf, sizeof(crlf));
+                if (ret < 0)
+                {
+                    return ret;
+                }
+
+                buf++;
+                len--;
+            }
+        }
+    }
+    else
+    {
+        int ret = _uart_write((const uint8_t *)buffer, len);
+        if (ret < 0)
+        {
+            return ret;
+        }
+    }
+    return result;
+}
+
+ssize_t stdio_uart_write_blocking(const void *buffer, size_t len)
+{
+    HAL_StatusTypeDef ret;
+    ret = HAL_UART_DMAPause(&h_stdio_uart);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_UART_Transmit(&h_stdio_uart, (uint8_t *)buffer, (uint16_t)len, 0xFFFFFFFFul);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_UART_DMAResume(&h_stdio_uart);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    return (ssize_t)len;
+}
+
+/**
+ * @brief  Initializes the STDIO_UART MSP (low-level)
+ * @param  huart pointer to the UART_HandleTypeDef structure
+ * @retval None
+ * @note   This function initializes the GPIOs corresponding the UART peripheral,
+ *         the DMA stream and enables the DMA and UART interrupts
+ */
+static void _uart_msp_init(UART_HandleTypeDef *huart)
+{
+    STDIO_UART_USARTx_CLK_ENABLE();
+    STDIO_UART_USARTx_FORCE_RESET();
+    STDIO_UART_USARTx_RELEASE_RESET();
+
+    stdio_uart_tx_pin_init();
+    stdio_uart_rx_pin_init();
+
+    _error = stdio_uart_dma_init(huart);
+
+    HAL_NVIC_SetPriority(STDIO_UART_USARTx_IRQn, STDIO_UART_USARTx_IRQ_PRIORITY, 0);
+    HAL_NVIC_EnableIRQ(STDIO_UART_USARTx_IRQn);
 }
 
 /**
@@ -489,69 +562,17 @@ static void _rx_cplt_callback(UART_HandleTypeDef *huart)
 
 static void _uart_error_callback(UART_HandleTypeDef *huart)
 {
-    error_handler();
+    _error_handler();
 }
 
-static void error_handler(void)
+static void _error_handler(void)
 {
     //TODO: proper error handling
-    _uart_deinit();
-    _uart_init();
+    stdio_uart_deinit();
+    stdio_uart_init();
 }
 
-#if IS_USED(MODULE_STDIO_AVAILABLE)
-int stdio_available(void)
-{
-    return -ENOTSUP;
-}
-#endif
-
-ssize_t stdio_read(void *buffer, size_t count)
-{
-    assert(buffer);
-    uint8_t *buf = buffer;
-
-    stdin_lock();
-
-    for (size_t i = 0; i < count; i++)
-    {
-        BaseType_t ret = xQueueReceive(_stdin_queue, &buf[i], portMAX_DELAY);
-        assert(ret);
-    }
-
-    stdin_unlock();
-
-    return count;
-}
-
-ssize_t stdio_write(const void *buffer, size_t len)
-{
-    ssize_t result = len;
-    if (IS_USED(MODULE_STDIO_UART_ONLCR)) {
-        static const uint8_t crlf[2] = { (uint8_t)'\r', (uint8_t)'\n' };
-        const uint8_t *buf = buffer;
-        while (len) {
-            const uint8_t *pos = memchr(buf, '\n', len);
-            size_t chunk_len = (pos != NULL && len != 1)
-                             ? (uintptr_t)pos - (uintptr_t)buf
-                             : len;
-            uart_write(buf, chunk_len);
-            buf += chunk_len;
-            len -= chunk_len;
-            if (len) {
-                uart_write(crlf, sizeof(crlf));
-                buf++;
-                len--;
-            }
-        }
-    }
-    else {
-        uart_write((const uint8_t *)buffer, len);
-    }
-    return result;
-}
-
-static void uart_write(const uint8_t *data, size_t len)
+static int _uart_write(const uint8_t *data, size_t len)
 {
     const TickType_t ticks_to_wait = pdMS_TO_TICKS(2ul * dma_tx_max_time_ms);
     BaseType_t ret;
@@ -561,13 +582,21 @@ static void uart_write(const uint8_t *data, size_t len)
     };
 
     ret = xQueueReceive(_tx_avail_queue, &tx_data.pbuf, ticks_to_wait);
-    assert(ret);
+    if (pdTRUE != ret)
+    {
+        return -ETIMEDOUT;
+    }
 
     memcpy(tx_data.pbuf, (uint8_t *)data, len);
     tx_data.size = len;
 
     ret = xQueueSend(_tx_ready_queue, &tx_data, ticks_to_wait);
-    assert(ret);
+    if (pdTRUE != ret)
+    {
+        return -ETIMEDOUT;
+    }
+
+    return 0;
 }
 
 /**
@@ -586,10 +615,5 @@ static inline void stdin_unlock(void)
     xSemaphoreGive(_stdin_mutex);
 }
 
-void stdio_write_blocking(const void *buffer, size_t len)
-{
-    HAL_UART_DMAPause(&h_stdio_uart);
-    HAL_UART_Transmit(&h_stdio_uart, (uint8_t *)buffer, (uint16_t)len, 0xFFFFFFFFul);
-    HAL_UART_DMAResume(&h_stdio_uart);
-}
+
 
