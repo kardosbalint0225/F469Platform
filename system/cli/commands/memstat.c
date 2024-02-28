@@ -14,7 +14,6 @@
 
 #define SRAM3_END    0x2004FFFFul
 
-static TaskStatus_t *tasks = NULL;
 extern uint32_t uxTaskGetStackSize(TaskHandle_t xTask);
 static void print_system_heap_statistics(void);
 static void print_tasks_stack_usage_statistics(void);
@@ -93,7 +92,7 @@ static void print_tasks_stack_usage_statistics(void)
 {
     // FreeRTOS tasks stack usage statistics:
     const uint32_t number_of_tasks = uxTaskGetNumberOfTasks();
-    tasks = pvPortMalloc(number_of_tasks * sizeof(TaskStatus_t));
+    TaskStatus_t *tasks = pvPortMalloc(number_of_tasks * sizeof(TaskStatus_t));
 
     if (NULL == tasks)
     {

@@ -580,6 +580,10 @@ static void _uart_error_callback(UART_HandleTypeDef *huart)
 static void _error_handler(void)
 {
     //TODO: proper error handling
+    while (1)
+    {
+
+    }
     stdio_uart_deinit();
     stdio_uart_init();
 }
