@@ -14,12 +14,18 @@ extern "C" {
 
 #include "stm32f4xx_hal.h"
 
+void rcc_init(void);
+void rcc_deinit(void);
+
 HAL_StatusTypeDef rtc_clock_source_init(void);
 HAL_StatusTypeDef rtc_clock_source_deinit(void);
 HAL_StatusTypeDef clk48_clock_init(void);
 HAL_StatusTypeDef clk48_clock_deinit(void);
 HAL_StatusTypeDef sdio_clock_source_init(void);
 HAL_StatusTypeDef sdio_clock_source_deinit(void);
+
+void rcc_gpiox_clk_enable(const GPIO_TypeDef *gpio);
+void rcc_gpiox_clk_disable(const GPIO_TypeDef *gpio);
 
 void rcc_gpioa_clk_enable(void);
 void rcc_gpiob_clk_enable(void);
@@ -111,7 +117,6 @@ void rcc_uart5_clk_disable(void);
 void rcc_usart6_clk_disable(void);
 void rcc_uart7_clk_disable(void);
 void rcc_uart8_clk_disable(void);
-
 void rcc_usart1_periph_reset(void);
 void rcc_usart2_periph_reset(void);
 void rcc_usart3_periph_reset(void);

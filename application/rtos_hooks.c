@@ -3,6 +3,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
+#include "rcc.h"
 #include "rtc.h"
 #include "stdio_base.h"
 #include "cli.h"
@@ -34,7 +35,7 @@ void vApplicationDaemonTaskStartupHook(void);
 
 void vApplicationDaemonTaskStartupHook(void)
 {
-    gpio_init();
+    rcc_init();
     rtc_init();
     vfs_init();
     stdio_init();

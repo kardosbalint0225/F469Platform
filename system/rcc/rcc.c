@@ -6,8 +6,19 @@
  */
 #include "rcc.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
 static int find_tim_index(const TIM_TypeDef *tim);
 static int find_usart_index(const USART_TypeDef *usart);
+static int find_gpio_index(const GPIO_TypeDef *gpio);
+static inline void gpio_lock(void);
+static inline void gpio_unlock(void);
+
+static SemaphoreHandle_t _gpio_mutex = NULL;
+static StaticSemaphore_t _gpio_mutex_storage;
 
 typedef struct {
     const TIM_TypeDef * const base_address;
@@ -22,6 +33,27 @@ typedef struct {
     const void (* const clk_disable_fn)(void);
     const void (* const periph_reset_fn)(void);
 } rcc_usart_t;
+
+typedef struct {
+    const GPIO_TypeDef * const base_address;
+    const void (* const clk_enable_fn)(void);
+    const void (* const clk_disable_fn)(void);
+    uint32_t reference_count;
+} gpio_t;
+
+static gpio_t _gpio[] = {
+    { GPIOA, rcc_gpioa_clk_enable, rcc_gpioa_clk_disable },
+    { GPIOB, rcc_gpiob_clk_enable, rcc_gpiob_clk_disable },
+    { GPIOC, rcc_gpioc_clk_enable, rcc_gpioc_clk_disable },
+    { GPIOD, rcc_gpiod_clk_enable, rcc_gpiod_clk_disable },
+    { GPIOE, rcc_gpioe_clk_enable, rcc_gpioe_clk_disable },
+    { GPIOF, rcc_gpiof_clk_enable, rcc_gpiof_clk_disable },
+    { GPIOG, rcc_gpiog_clk_enable, rcc_gpiog_clk_disable },
+    { GPIOH, rcc_gpioh_clk_enable, rcc_gpioh_clk_disable },
+    { GPIOI, rcc_gpioi_clk_enable, rcc_gpioi_clk_disable },
+    { GPIOJ, rcc_gpioj_clk_enable, rcc_gpioj_clk_disable },
+    { GPIOK, rcc_gpiok_clk_enable, rcc_gpiok_clk_disable },
+};
 
 static const rcc_usart_t _usart[] = {
     { USART1, rcc_usart1_clk_enable, rcc_usart1_clk_disable, rcc_usart1_periph_reset },
@@ -50,6 +82,24 @@ static const rcc_tim_t _tim[] = {
     { TIM13, rcc_tim13_clk_enable, rcc_tim13_clk_disable, rcc_tim13_periph_reset },
     { TIM14, rcc_tim14_clk_enable, rcc_tim14_clk_disable, rcc_tim14_periph_reset },
 };
+
+void rcc_init(void)
+{
+    const int size = sizeof(_gpio) / sizeof(gpio_t);
+    for (int i = 0; i < size; i++)
+    {
+        _gpio[i].reference_count = 0ul;
+    }
+
+    _gpio_mutex = xSemaphoreCreateMutexStatic(&_gpio_mutex_storage);
+    assert(_gpio_mutex);
+}
+
+void rcc_deinit(void)
+{
+    vSemaphoreDelete(_gpio_mutex);
+    _gpio_mutex = NULL;
+}
 
 void rcc_timx_clk_enable(const TIM_TypeDef *tim)
 {
@@ -128,6 +178,44 @@ HAL_StatusTypeDef sdio_clock_source_init(void)
 HAL_StatusTypeDef sdio_clock_source_deinit(void)
 {
     return HAL_OK;
+}
+
+void rcc_gpiox_clk_enable(const GPIO_TypeDef *gpio)
+{
+    assert(gpio);
+
+    const int i = find_gpio_index(gpio);
+    assert(-1 != i);
+
+    gpio_lock();
+
+    if (0ul == _gpio[i].reference_count)
+    {
+        _gpio[i].clk_enable_fn();
+    }
+
+    _gpio[i].reference_count = _gpio[i].reference_count + 1ul;
+
+    gpio_unlock();
+}
+
+void rcc_gpiox_clk_disable(const GPIO_TypeDef *gpio)
+{
+    assert(gpio);
+
+    const int i = find_gpio_index(gpio);
+    assert(-1 != i);
+
+    gpio_lock();
+
+    _gpio[i].reference_count = _gpio[i].reference_count - 1ul;
+
+    if (0ul == _gpio[i].reference_count)
+    {
+        _gpio[i].clk_disable_fn();
+    }
+
+    gpio_unlock();
 }
 
 void rcc_gpioa_clk_enable(void) { __HAL_RCC_GPIOA_CLK_ENABLE(); }
@@ -284,3 +372,32 @@ static int find_usart_index(const USART_TypeDef *usart)
 
     return index;
 }
+
+static int find_gpio_index(const GPIO_TypeDef *gpio)
+{
+    int index = -1;
+    const int size = sizeof(_gpio) / sizeof(gpio_t);
+
+    for (int i = 0; i < size; i++)
+    {
+        if (gpio == _gpio[i].base_address)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    return index;
+}
+
+static inline void gpio_lock(void)
+{
+    xSemaphoreTake(_gpio_mutex, portMAX_DELAY);
+}
+
+static inline void gpio_unlock(void)
+{
+    xSemaphoreGive(_gpio_mutex);
+}
+
+
