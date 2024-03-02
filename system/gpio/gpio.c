@@ -28,13 +28,24 @@ EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
 typedef struct {
-    GPIO_TypeDef *base_address;
+    const GPIO_TypeDef * const base_address;
+    const void (* const clk_enable_disable_fn)(const periph_clock_state_t state);
     uint32_t reference_count;
-    void (*clk_enable_disable_fn)(const clk_state_t state);
 } gpio_t;
 
-
-static gpio_t _gpio[11];
+static gpio_t _gpio[] = {
+    { GPIOA, rcc_gpioa_clk_enable_disable },
+    { GPIOB, rcc_gpiob_clk_enable_disable },
+    { GPIOC, rcc_gpioc_clk_enable_disable },
+    { GPIOD, rcc_gpiod_clk_enable_disable },
+    { GPIOE, rcc_gpioe_clk_enable_disable },
+    { GPIOF, rcc_gpiof_clk_enable_disable },
+    { GPIOG, rcc_gpiog_clk_enable_disable },
+    { GPIOH, rcc_gpioh_clk_enable_disable },
+    { GPIOI, rcc_gpioi_clk_enable_disable },
+    { GPIOJ, rcc_gpioj_clk_enable_disable },
+    { GPIOK, rcc_gpiok_clk_enable_disable },
+};
 
 static SemaphoreHandle_t _gpio_mutex = NULL;
 static StaticSemaphore_t _gpio_mutex_storage;
@@ -47,49 +58,11 @@ static void gpio_pin_deinit(const GPIO_TypeDef *port, const uint32_t pin);
 
 void gpio_init(void)
 {
-    _gpio[0].base_address = GPIOA;
-    _gpio[0].reference_count = 0ul;
-    _gpio[0].clk_enable_disable_fn = gpio_a_clk_enable_disable;
-
-    _gpio[1].base_address = GPIOB;
-    _gpio[1].reference_count = 0ul;
-    _gpio[1].clk_enable_disable_fn = gpio_b_clk_enable_disable;
-
-    _gpio[2].base_address = GPIOC;
-    _gpio[2].reference_count = 0ul;
-    _gpio[2].clk_enable_disable_fn = gpio_c_clk_enable_disable;
-
-    _gpio[3].base_address = GPIOD;
-    _gpio[3].reference_count = 0ul;
-    _gpio[3].clk_enable_disable_fn = gpio_d_clk_enable_disable;
-
-    _gpio[4].base_address = GPIOE;
-    _gpio[4].reference_count = 0ul;
-    _gpio[4].clk_enable_disable_fn = gpio_e_clk_enable_disable;
-
-    _gpio[5].base_address = GPIOF;
-    _gpio[5].reference_count = 0ul;
-    _gpio[5].clk_enable_disable_fn = gpio_f_clk_enable_disable;
-
-    _gpio[6].base_address = GPIOG;
-    _gpio[6].reference_count = 0ul;
-    _gpio[6].clk_enable_disable_fn = gpio_g_clk_enable_disable;
-
-    _gpio[7].base_address = GPIOH;
-    _gpio[7].reference_count = 0ul;
-    _gpio[7].clk_enable_disable_fn = gpio_h_clk_enable_disable;
-
-    _gpio[8].base_address = GPIOI;
-    _gpio[8].reference_count = 0ul;
-    _gpio[8].clk_enable_disable_fn = gpio_i_clk_enable_disable;
-
-    _gpio[9].base_address = GPIOJ;
-    _gpio[9].reference_count = 0ul;
-    _gpio[9].clk_enable_disable_fn = gpio_j_clk_enable_disable;
-
-    _gpio[10].base_address = GPIOK;
-    _gpio[10].reference_count = 0ul;
-    _gpio[10].clk_enable_disable_fn = gpio_k_clk_enable_disable;
+    const int size = sizeof(_gpio) / sizeof(gpio_t);
+    for (int i = 0; i < size; i++)
+    {
+        _gpio[i].reference_count = 0ul;
+    }
 
     _gpio_mutex = xSemaphoreCreateMutexStatic(&_gpio_mutex_storage);
     assert(_gpio_mutex);
@@ -602,7 +575,7 @@ static void gpio_pin_init(const GPIO_TypeDef *port, const GPIO_InitTypeDef *pin)
 
     if (0ul == _gpio[i].reference_count)
     {
-        _gpio[i].clk_enable_disable_fn(GPIO_CLK_ENABLE);
+        _gpio[i].clk_enable_disable_fn(PERIPH_CLOCK_ENABLE);
     }
 
     HAL_GPIO_Init((GPIO_TypeDef *)_gpio[i].base_address, (GPIO_InitTypeDef *)pin);
@@ -628,7 +601,7 @@ static void gpio_pin_deinit(const GPIO_TypeDef *port, const uint32_t pin)
 
     if (0ul == _gpio[i].reference_count)
     {
-        _gpio[i].clk_enable_disable_fn(GPIO_CLK_DISABLE);
+        _gpio[i].clk_enable_disable_fn(PERIPH_CLOCK_DISABLE);
     }
 
     gpio_unlock();

@@ -2,11 +2,12 @@
 #include "runtime_stats_timer.h"
 #include "stm32f4xx_hal.h"
 #include "hal_errno.h"
+#include "rcc.h"
 #include <errno.h>
 
 TIM_HandleTypeDef h_runtime_stats_timer;
 static volatile uint32_t _count;
-static void _period_elapsed_cb(TIM_HandleTypeDef *htim);
+static void period_elapsed_cb(TIM_HandleTypeDef *htim);
 
 /**
  * @brief  Configures a dedicated Timer peripheral for
@@ -26,9 +27,11 @@ void runtime_stats_timer_init(void)
 
     _count = 0ul;
 
-    RUNTIME_STATS_TIMER_CLK_ENABLE();
-    RUNTIME_STATS_TIMER_FORCE_RESET();
-    RUNTIME_STATS_TIMER_RELEASE_RESET();
+//    RUNTIME_STATS_TIMER_CLK_ENABLE();
+    rcc_timx_clk_enable(RUNTIME_STATS_TIMER_TIMx);
+    rcc_timx_periph_reset(RUNTIME_STATS_TIMER_TIMx);
+//    RUNTIME_STATS_TIMER_FORCE_RESET();
+//    RUNTIME_STATS_TIMER_RELEASE_RESET();
 
     HAL_RCC_GetClockConfig(&clock_config, &flash_latency);
 
@@ -64,7 +67,7 @@ void runtime_stats_timer_init(void)
     ret = HAL_TIM_Base_Init(&h_runtime_stats_timer);
     assert(HAL_OK == ret);
 
-    ret = HAL_TIM_RegisterCallback(&h_runtime_stats_timer, HAL_TIM_PERIOD_ELAPSED_CB_ID, _period_elapsed_cb);
+    ret = HAL_TIM_RegisterCallback(&h_runtime_stats_timer, HAL_TIM_PERIOD_ELAPSED_CB_ID, period_elapsed_cb);
     assert(HAL_OK == ret);
 
     ret = HAL_TIM_Base_Start_IT(&h_runtime_stats_timer);
@@ -95,7 +98,8 @@ void runtime_stats_timer_deinit(void)
     ret = HAL_TIM_Base_DeInit(&h_runtime_stats_timer);
     assert(HAL_OK == ret);
 
-    RUNTIME_STATS_TIMER_CLK_DISABLE();
+//    RUNTIME_STATS_TIMER_CLK_DISABLE();
+    rcc_timx_clk_disable(RUNTIME_STATS_TIMER_TIMx);
 }
 
 /**
@@ -119,7 +123,7 @@ uint32_t runtime_stats_timer_get_count(void)
  *         interrupt in every 0.1 ms the run time stats can be more
  *         accurately calculated.
  */
-static void _period_elapsed_cb(TIM_HandleTypeDef *htim)
+static void period_elapsed_cb(TIM_HandleTypeDef *htim)
 {
     _count++;
 }

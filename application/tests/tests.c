@@ -58,7 +58,7 @@ static void tests_runner_task(void * params)
                 (tskIDLE_PRIORITY + 3),
                 NULL);
     xTaskCreate(stdio_uart_init_deinit_test_task,
-                "stdin4test",
+                "uartinitdeinit",
                 configMINIMAL_STACK_SIZE * 10,
                 NULL,
                 (tskIDLE_PRIORITY + 3),

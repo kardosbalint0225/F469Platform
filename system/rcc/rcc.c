@@ -6,6 +6,61 @@
  */
 #include "rcc.h"
 
+static int find_tim_index(const TIM_TypeDef *tim);
+
+typedef struct {
+    const TIM_TypeDef * const base_address;
+    const void (* const clk_enable_disable_fn)(const periph_clock_state_t state);
+    const void (* const periph_reset_fn)(void);
+} tim_t;
+
+static const tim_t _tim[] = {
+    { TIM1, rcc_tim1_clk_enable_disable, rcc_tim1_periph_reset },
+    { TIM2, rcc_tim2_clk_enable_disable, rcc_tim2_periph_reset },
+    { TIM3, rcc_tim3_clk_enable_disable, rcc_tim3_periph_reset },
+    { TIM4, rcc_tim4_clk_enable_disable, rcc_tim4_periph_reset },
+    { TIM5, rcc_tim5_clk_enable_disable, rcc_tim5_periph_reset },
+    { TIM6, rcc_tim6_clk_enable_disable, rcc_tim6_periph_reset },
+    { TIM7, rcc_tim7_clk_enable_disable, rcc_tim7_periph_reset },
+    { TIM8, rcc_tim8_clk_enable_disable, rcc_tim8_periph_reset },
+    { TIM9, rcc_tim9_clk_enable_disable, rcc_tim9_periph_reset },
+    { TIM10, rcc_tim10_clk_enable_disable, rcc_tim10_periph_reset },
+    { TIM11, rcc_tim11_clk_enable_disable, rcc_tim11_periph_reset },
+    { TIM12, rcc_tim12_clk_enable_disable, rcc_tim12_periph_reset },
+    { TIM13, rcc_tim13_clk_enable_disable, rcc_tim13_periph_reset },
+    { TIM14, rcc_tim14_clk_enable_disable, rcc_tim14_periph_reset },
+};
+
+void rcc_timx_clk_enable(const TIM_TypeDef *tim)
+{
+    assert(tim);
+
+    const int i = find_tim_index(tim);
+    assert(-1 != i);
+
+    _tim[i].clk_enable_disable_fn(PERIPH_CLOCK_ENABLE);
+}
+
+void rcc_timx_clk_disable(const TIM_TypeDef *tim)
+{
+    assert(tim);
+
+    const int i = find_tim_index(tim);
+    assert(-1 != i);
+
+    _tim[i].clk_enable_disable_fn(PERIPH_CLOCK_DISABLE);
+}
+
+void rcc_timx_periph_reset(const TIM_TypeDef *tim)
+{
+    assert(tim);
+
+    const int i = find_tim_index(tim);
+    assert(-1 != i);
+
+    _tim[i].periph_reset_fn();
+}
+
 HAL_StatusTypeDef rtc_clock_source_init(void)
 {
     RCC_PeriphCLKInitTypeDef rtc_clock = {
@@ -55,9 +110,9 @@ HAL_StatusTypeDef sdio_clock_source_deinit(void)
     return HAL_OK;
 }
 
-void gpio_a_clk_enable_disable(const clk_state_t state)
+void rcc_gpioa_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOA_CLK_ENABLE();
     }
@@ -67,9 +122,9 @@ void gpio_a_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_b_clk_enable_disable(const clk_state_t state)
+void rcc_gpiob_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOB_CLK_ENABLE();
     }
@@ -79,9 +134,9 @@ void gpio_b_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_c_clk_enable_disable(const clk_state_t state)
+void rcc_gpioc_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOC_CLK_ENABLE();
     }
@@ -91,9 +146,9 @@ void gpio_c_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_d_clk_enable_disable(const clk_state_t state)
+void rcc_gpiod_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOD_CLK_ENABLE();
     }
@@ -103,9 +158,9 @@ void gpio_d_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_e_clk_enable_disable(const clk_state_t state)
+void rcc_gpioe_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOE_CLK_ENABLE();
     }
@@ -115,9 +170,9 @@ void gpio_e_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_f_clk_enable_disable(const clk_state_t state)
+void rcc_gpiof_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOF_CLK_ENABLE();
     }
@@ -127,9 +182,9 @@ void gpio_f_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_g_clk_enable_disable(const clk_state_t state)
+void rcc_gpiog_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOG_CLK_ENABLE();
     }
@@ -139,9 +194,9 @@ void gpio_g_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_h_clk_enable_disable(const clk_state_t state)
+void rcc_gpioh_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOH_CLK_ENABLE();
     }
@@ -151,9 +206,9 @@ void gpio_h_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_i_clk_enable_disable(const clk_state_t state)
+void rcc_gpioi_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOI_CLK_ENABLE();
     }
@@ -163,9 +218,9 @@ void gpio_i_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_j_clk_enable_disable(const clk_state_t state)
+void rcc_gpioj_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOJ_CLK_ENABLE();
     }
@@ -175,9 +230,9 @@ void gpio_j_clk_enable_disable(const clk_state_t state)
     }
 }
 
-void gpio_k_clk_enable_disable(const clk_state_t state)
+void rcc_gpiok_clk_enable_disable(const periph_clock_state_t state)
 {
-    if (GPIO_CLK_ENABLE == state)
+    if (PERIPH_CLOCK_ENABLE == state)
     {
         __HAL_RCC_GPIOK_CLK_ENABLE();
     }
@@ -186,3 +241,274 @@ void gpio_k_clk_enable_disable(const clk_state_t state)
         __HAL_RCC_GPIOK_CLK_DISABLE();
     }
 }
+
+void rcc_tim1_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM1_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM1_CLK_DISABLE();
+    }
+}
+
+void rcc_tim2_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM2_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM2_CLK_DISABLE();
+    }
+}
+
+void rcc_tim3_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM3_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM3_CLK_DISABLE();
+    }
+}
+
+void rcc_tim4_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM4_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM4_CLK_DISABLE();
+    }
+}
+
+void rcc_tim5_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM5_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM5_CLK_DISABLE();
+    }
+}
+
+void rcc_tim6_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM6_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM6_CLK_DISABLE();
+    }
+}
+
+void rcc_tim7_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM7_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM7_CLK_DISABLE();
+    }
+}
+
+void rcc_tim8_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM8_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM8_CLK_DISABLE();
+    }
+}
+
+void rcc_tim9_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM9_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM9_CLK_DISABLE();
+    }
+}
+
+void rcc_tim10_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM10_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM10_CLK_DISABLE();
+    }
+}
+
+void rcc_tim11_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM11_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM11_CLK_DISABLE();
+    }
+}
+
+void rcc_tim12_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM12_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM12_CLK_DISABLE();
+    }
+}
+
+void rcc_tim13_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM13_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM13_CLK_DISABLE();
+    }
+}
+
+void rcc_tim14_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_TIM14_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_TIM14_CLK_DISABLE();
+    }
+}
+
+void rcc_tim1_periph_reset(void)
+{
+    __HAL_RCC_TIM1_FORCE_RESET();
+    __HAL_RCC_TIM1_RELEASE_RESET();
+}
+
+void rcc_tim2_periph_reset(void)
+{
+    __HAL_RCC_TIM2_FORCE_RESET();
+    __HAL_RCC_TIM2_RELEASE_RESET();
+}
+
+void rcc_tim3_periph_reset(void)
+{
+    __HAL_RCC_TIM3_FORCE_RESET();
+    __HAL_RCC_TIM3_RELEASE_RESET();
+}
+
+void rcc_tim4_periph_reset(void)
+{
+    __HAL_RCC_TIM4_FORCE_RESET();
+    __HAL_RCC_TIM4_RELEASE_RESET();
+}
+
+void rcc_tim5_periph_reset(void)
+{
+    __HAL_RCC_TIM5_FORCE_RESET();
+    __HAL_RCC_TIM5_RELEASE_RESET();
+}
+
+void rcc_tim6_periph_reset(void)
+{
+    __HAL_RCC_TIM6_FORCE_RESET();
+    __HAL_RCC_TIM6_RELEASE_RESET();
+}
+
+void rcc_tim7_periph_reset(void)
+{
+    __HAL_RCC_TIM7_FORCE_RESET();
+    __HAL_RCC_TIM7_RELEASE_RESET();
+}
+
+void rcc_tim8_periph_reset(void)
+{
+    __HAL_RCC_TIM8_FORCE_RESET();
+    __HAL_RCC_TIM8_RELEASE_RESET();
+}
+
+void rcc_tim9_periph_reset(void)
+{
+    __HAL_RCC_TIM9_FORCE_RESET();
+    __HAL_RCC_TIM9_RELEASE_RESET();
+}
+
+void rcc_tim10_periph_reset(void)
+{
+    __HAL_RCC_TIM10_FORCE_RESET();
+    __HAL_RCC_TIM10_RELEASE_RESET();
+}
+
+void rcc_tim11_periph_reset(void)
+{
+    __HAL_RCC_TIM11_FORCE_RESET();
+    __HAL_RCC_TIM11_RELEASE_RESET();
+}
+
+void rcc_tim12_periph_reset(void)
+{
+    __HAL_RCC_TIM12_FORCE_RESET();
+    __HAL_RCC_TIM12_RELEASE_RESET();
+}
+
+void rcc_tim13_periph_reset(void)
+{
+    __HAL_RCC_TIM13_FORCE_RESET();
+    __HAL_RCC_TIM13_RELEASE_RESET();
+}
+
+void rcc_tim14_periph_reset(void)
+{
+    __HAL_RCC_TIM14_FORCE_RESET();
+    __HAL_RCC_TIM14_RELEASE_RESET();
+}
+
+static int find_tim_index(const TIM_TypeDef *tim)
+{
+    int index = -1;
+    const int size = sizeof(_tim) / sizeof(tim_t);
+
+    for (int i = 0; i < size; i++)
+    {
+        if (tim == _tim[i].base_address)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    return index;
+}
+
+
