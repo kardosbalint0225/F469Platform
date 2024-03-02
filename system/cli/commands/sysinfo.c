@@ -138,26 +138,26 @@ void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
                                           RCC_OscInitStruct.PLL.PLLP, RCC_OscInitStruct.PLL.PLLQ);
 
     uint32_t sysclk_source_idx = find(hal_sysclk_source, (uint32_t)(sizeof(hal_sysclk_source) / sizeof(uint32_t)), RCC_ClkInitStruct.SYSCLKSource);
-    assert(0xFFFFFFFFUL != sysclk_source_idx);
+    assert(0xFFFFFFFFul != sysclk_source_idx);
     assert(sysclk_source_idx < sizeof(sysclk_source) / sizeof(char *));
 
     uint32_t ahbclk_div_idx = find(hal_ahbclk_div, (uint32_t)(sizeof(hal_ahbclk_div) / sizeof(uint32_t)), RCC_ClkInitStruct.AHBCLKDivider);
-    assert(0xFFFFFFFFUL != ahbclk_div_idx);
+    assert(0xFFFFFFFFul != ahbclk_div_idx);
     assert(ahbclk_div_idx < sizeof(ahbclk_div) / sizeof(char *));
 
     uint32_t apb1clk_div_idx = find(hal_apbclk_div, (uint32_t)(sizeof(hal_apbclk_div) / sizeof(uint32_t)), RCC_ClkInitStruct.APB1CLKDivider);
-    assert(0xFFFFFFFFUL != apb1clk_div_idx);
+    assert(0xFFFFFFFFul != apb1clk_div_idx);
     assert(apb1clk_div_idx < sizeof(apbclk_div) / sizeof(char *));
 
     uint32_t apb2clk_div_idx = find(hal_apbclk_div, (uint32_t)(sizeof(hal_apbclk_div) / sizeof(uint32_t)), RCC_ClkInitStruct.APB2CLKDivider);
-    assert(0xFFFFFFFFUL != apb2clk_div_idx);
+    assert(0xFFFFFFFFul != apb2clk_div_idx);
     assert(apb2clk_div_idx < sizeof(apbclk_div) / sizeof(char *));
 
     RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit = {0};
     HAL_RCCEx_GetPeriphCLKConfig(&RCC_PeriphClkInit);
 
     uint32_t rtc_clksrc_idx = find(hal_rtc_clksrc, (uint32_t)(sizeof(hal_rtc_clksrc) / sizeof(uint32_t)), RCC_PeriphClkInit.RTCClockSelection);
-    assert(0xFFFFFFFFUL != rtc_clksrc_idx);
+    assert(0xFFFFFFFFul != rtc_clksrc_idx);
     assert(rtc_clksrc_idx < sizeof(rtc_clksrc) / sizeof(char *));
 
     printf("    SYSCLK Source           : %s\r\n", sysclk_source[sysclk_source_idx]);
@@ -174,7 +174,7 @@ void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
 
     uint32_t vos = HAL_PWREx_GetVoltageRange();
     uint32_t regulator_vos_idx = find(hal_regulator_vos, (uint32_t)(sizeof(hal_regulator_vos) / sizeof(uint32_t)), vos);
-    assert(0xFFFFFFFFUL != regulator_vos_idx);
+    assert(0xFFFFFFFFul != regulator_vos_idx);
     assert(regulator_vos_idx < sizeof(regulator_vos) / sizeof(char *));
 
     printf("    Regulator voltage scale : %s\r\n", regulator_vos[regulator_vos_idx]);

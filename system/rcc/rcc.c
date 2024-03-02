@@ -54,3 +54,135 @@ HAL_StatusTypeDef sdio_clock_source_deinit(void)
 {
     return HAL_OK;
 }
+
+void gpio_a_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOA_CLK_DISABLE();
+    }
+}
+
+void gpio_b_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOB_CLK_DISABLE();
+    }
+}
+
+void gpio_c_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOC_CLK_DISABLE();
+    }
+}
+
+void gpio_d_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOD_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOD_CLK_DISABLE();
+    }
+}
+
+void gpio_e_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOE_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOE_CLK_DISABLE();
+    }
+}
+
+void gpio_f_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOF_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOF_CLK_DISABLE();
+    }
+}
+
+void gpio_g_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOG_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOG_CLK_DISABLE();
+    }
+}
+
+void gpio_h_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOH_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOH_CLK_DISABLE();
+    }
+}
+
+void gpio_i_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOI_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOI_CLK_DISABLE();
+    }
+}
+
+void gpio_j_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOJ_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOJ_CLK_DISABLE();
+    }
+}
+
+void gpio_k_clk_enable_disable(const clk_state_t state)
+{
+    if (GPIO_CLK_ENABLE == state)
+    {
+        __HAL_RCC_GPIOK_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_GPIOK_CLK_DISABLE();
+    }
+}

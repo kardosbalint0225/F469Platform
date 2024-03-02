@@ -15,6 +15,9 @@
 extern "C" {
 #endif
 
+void gpio_init(void);
+void gpio_deinit(void);
+
 void led1_pin_init(void);
 void led2_pin_init(void);
 void led3_pin_init(void);

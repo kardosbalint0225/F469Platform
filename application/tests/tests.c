@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "stdio_base.h"
+#include "gpio.h"
 
 static void tests_runner_task(void *params);
 static void stdin1_test_task(void *params);
@@ -31,6 +32,7 @@ void start_tests(void)
 
 static void tests_runner_task(void * params)
 {
+    led1_pin_init();
     xTaskCreate(stdin1_test_task,
                 "stdin1test",
                 configMINIMAL_STACK_SIZE * 10,

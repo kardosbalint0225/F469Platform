@@ -26,22 +26,16 @@ extern "C" {
 
 #define USB_HOST_VBUS_PIN                           GPIO_PIN_9
 #define USB_HOST_VBUS_PIN_GPIO_PORT                 GPIOA
-#define USB_HOST_VBUS_PIN_GPIO_CLK_ENABLE           __HAL_RCC_GPIOA_CLK_ENABLE
 #define USB_HOST_DP_PIN                             GPIO_PIN_12
 #define USB_HOST_DP_PIN_GPIO_PORT                   GPIOA
-#define USB_HOST_DP_PIN_GPIO_CLK_ENABLE             __HAL_RCC_GPIOA_CLK_ENABLE
 #define USB_HOST_DM_PIN                             GPIO_PIN_11
 #define USB_HOST_DM_PIN_GPIO_PORT                   GPIOA
-#define USB_HOST_DM_PIN_GPIO_CLK_ENABLE             __HAL_RCC_GPIOA_CLK_ENABLE
 #define USB_HOST_ID_PIN                             GPIO_PIN_10
 #define USB_HOST_ID_PIN_GPIO_PORT                   GPIOA
-#define USB_HOST_ID_PIN_GPIO_CLK_ENABLE             __HAL_RCC_GPIOA_CLK_ENABLE
 #define USB_HOST_POWERSWITCH_PIN                    GPIO_PIN_2
 #define USB_HOST_POWERSWITCH_PIN_GPIO_PORT          GPIOB
-#define USB_HOST_POWERSWITCH_PIN_GPIO_CLK_ENABLE    __HAL_RCC_GPIOB_CLK_ENABLE
 #define USB_HOST_OVERCURRENT_PIN                    GPIO_PIN_7
 #define USB_HOST_OVERCURRENT_PIN_GPIO_PORT          GPIOB
-#define USB_HOST_OVERCURRENT_PIN_GPIO_CLK_ENABLE    __HAL_RCC_GPIOB_CLK_ENABLE
 #define USB_HOST_OVERCURRENT_PIN_EXTI_GPIO          EXTI_GPIOB
 #define USB_HOST_OVERCURRENT_PIN_EXTI_LINE          EXTI_LINE_7
 #define USB_HOST_OVERCURRENT_PIN_EXTIx_IRQn         EXTI9_5_IRQn

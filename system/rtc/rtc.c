@@ -31,8 +31,8 @@ static volatile uint32_t _tick_count_previous = 0ul;
 static void rtc_msp_init(RTC_HandleTypeDef *hrtc);
 static void rtc_msp_deinit(RTC_HandleTypeDef *hrtc);
 static void rtc_wakeuptimer_event_callback(RTC_HandleTypeDef *hrtc);
-static void rtc_lock(void);
-static void rtc_unlock(void);
+static inline void rtc_lock(void);
+static inline void rtc_unlock(void);
 
 
 int rtc_init(void)
@@ -300,7 +300,7 @@ static void rtc_wakeuptimer_event_callback(RTC_HandleTypeDef *hrtc)
 /**
  * @brief  Locks the RTC mutex
  */
-static void rtc_lock(void)
+static inline void rtc_lock(void)
 {
     xSemaphoreTake(_rtc_mutex, portMAX_DELAY);
 }
@@ -308,7 +308,7 @@ static void rtc_lock(void)
 /**
  * @brief  Unlocks the RTC mutex
  */
-static void rtc_unlock(void)
+static inline void rtc_unlock(void)
 {
     xSemaphoreGive(_rtc_mutex);
 }
