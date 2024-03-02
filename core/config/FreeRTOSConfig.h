@@ -68,10 +68,6 @@ extern uint32_t SystemCoreClock;
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()      runtime_stats_timer_init()
 #define portGET_RUN_TIME_COUNTER_VALUE()              runtime_stats_timer_get_count()
 #define RUNTIME_STATS_TIMER_TIMx                      TIM2
-//#define RUNTIME_STATS_TIMER_CLK_ENABLE                __HAL_RCC_TIM2_CLK_ENABLE
-//#define RUNTIME_STATS_TIMER_CLK_DISABLE               __HAL_RCC_TIM2_CLK_DISABLE
-//#define RUNTIME_STATS_TIMER_FORCE_RESET               __HAL_RCC_TIM2_FORCE_RESET
-//#define RUNTIME_STATS_TIMER_RELEASE_RESET             __HAL_RCC_TIM2_RELEASE_RESET
 #define RUNTIME_STATS_TIMER_IRQn                      TIM2_IRQn
 
 /* Co-routine related definitions. */
