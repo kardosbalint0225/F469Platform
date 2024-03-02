@@ -7,14 +7,32 @@
 #include "rcc.h"
 
 static int find_tim_index(const TIM_TypeDef *tim);
+static int find_usart_index(const USART_TypeDef *usart);
 
 typedef struct {
     const TIM_TypeDef * const base_address;
     const void (* const clk_enable_disable_fn)(const periph_clock_state_t state);
     const void (* const periph_reset_fn)(void);
-} tim_t;
+} rcc_tim_t;
 
-static const tim_t _tim[] = {
+typedef struct {
+    const USART_TypeDef * const base_address;
+    const void (* const clk_enable_disable_fn)(const periph_clock_state_t state);
+    const void (* const periph_reset_fn)(void);
+} rcc_usart_t;
+
+static const rcc_usart_t _usart[] = {
+    { USART1, rcc_usart1_clk_enable_disable, rcc_usart1_periph_reset },
+    { USART2, rcc_usart2_clk_enable_disable, rcc_usart2_periph_reset },
+    { USART3, rcc_usart3_clk_enable_disable, rcc_usart3_periph_reset },
+    { UART4, rcc_uart4_clk_enable_disable, rcc_uart4_periph_reset },
+    { UART5, rcc_uart5_clk_enable_disable, rcc_uart5_periph_reset},
+    { USART6, rcc_usart6_clk_enable_disable, rcc_usart6_periph_reset },
+    { UART7, rcc_uart7_clk_enable_disable, rcc_uart7_periph_reset },
+    { UART8, rcc_uart8_clk_enable_disable, rcc_uart8_periph_reset },
+};
+
+static const rcc_tim_t _tim[] = {
     { TIM1, rcc_tim1_clk_enable_disable, rcc_tim1_periph_reset },
     { TIM2, rcc_tim2_clk_enable_disable, rcc_tim2_periph_reset },
     { TIM3, rcc_tim3_clk_enable_disable, rcc_tim3_periph_reset },
@@ -494,10 +512,184 @@ void rcc_tim14_periph_reset(void)
     __HAL_RCC_TIM14_RELEASE_RESET();
 }
 
+void rcc_usartx_clk_enable(const USART_TypeDef *usart)
+{
+    assert(usart);
+
+    const int i = find_usart_index(usart);
+    assert(-1 != i);
+
+    _usart[i].clk_enable_disable_fn(PERIPH_CLOCK_ENABLE);
+}
+
+void rcc_usartx_clk_disable(const USART_TypeDef *usart)
+{
+    assert(usart);
+
+    const int i = find_usart_index(usart);
+    assert(-1 != i);
+
+    _usart[i].clk_enable_disable_fn(PERIPH_CLOCK_DISABLE);
+}
+
+void rcc_usartx_periph_reset(const USART_TypeDef *usart)
+{
+    assert(usart);
+
+    const int i = find_usart_index(usart);
+    assert(-1 != i);
+
+    _usart[i].periph_reset_fn();
+}
+
+void rcc_usart1_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_USART1_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_USART1_CLK_DISABLE();
+    }
+}
+
+void rcc_usart2_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_USART2_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_USART2_CLK_DISABLE();
+    }
+}
+
+void rcc_usart3_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_USART3_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_USART3_CLK_DISABLE();
+    }
+}
+
+void rcc_uart4_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_UART4_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_UART4_CLK_DISABLE();
+    }
+}
+
+void rcc_uart5_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_UART5_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_UART5_CLK_DISABLE();
+    }
+}
+
+void rcc_usart6_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_USART6_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_USART6_CLK_DISABLE();
+    }
+}
+
+void rcc_uart7_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_UART7_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_UART7_CLK_DISABLE();
+    }
+}
+
+void rcc_uart8_clk_enable_disable(const periph_clock_state_t state)
+{
+    if (PERIPH_CLOCK_ENABLE == state)
+    {
+        __HAL_RCC_UART8_CLK_ENABLE();
+    }
+    else
+    {
+        __HAL_RCC_UART8_CLK_DISABLE();
+    }
+}
+
+void rcc_usart1_periph_reset(void)
+{
+    __HAL_RCC_USART1_FORCE_RESET();
+    __HAL_RCC_USART1_RELEASE_RESET();
+}
+
+void rcc_usart2_periph_reset(void)
+{
+    __HAL_RCC_USART2_FORCE_RESET();
+    __HAL_RCC_USART2_RELEASE_RESET();
+}
+
+void rcc_usart3_periph_reset(void)
+{
+    __HAL_RCC_USART3_FORCE_RESET();
+    __HAL_RCC_USART3_RELEASE_RESET();
+}
+
+void rcc_uart4_periph_reset(void)
+{
+    __HAL_RCC_UART4_FORCE_RESET();
+    __HAL_RCC_UART4_RELEASE_RESET();
+}
+
+void rcc_uart5_periph_reset(void)
+{
+    __HAL_RCC_UART5_FORCE_RESET();
+    __HAL_RCC_UART5_RELEASE_RESET();
+}
+
+void rcc_usart6_periph_reset(void)
+{
+    __HAL_RCC_USART6_FORCE_RESET();
+    __HAL_RCC_USART6_RELEASE_RESET();
+}
+
+void rcc_uart7_periph_reset(void)
+{
+    __HAL_RCC_UART7_FORCE_RESET();
+    __HAL_RCC_UART7_RELEASE_RESET();
+}
+
+void rcc_uart8_periph_reset(void)
+{
+    __HAL_RCC_UART8_FORCE_RESET();
+    __HAL_RCC_UART8_RELEASE_RESET();
+}
+
 static int find_tim_index(const TIM_TypeDef *tim)
 {
     int index = -1;
-    const int size = sizeof(_tim) / sizeof(tim_t);
+    const int size = sizeof(_tim) / sizeof(rcc_tim_t);
 
     for (int i = 0; i < size; i++)
     {
@@ -511,4 +703,19 @@ static int find_tim_index(const TIM_TypeDef *tim)
     return index;
 }
 
+static int find_usart_index(const USART_TypeDef *usart)
+{
+    int index = -1;
+    const int size = sizeof(_usart) / sizeof(rcc_usart_t);
 
+    for (int i = 0; i < size; i++)
+    {
+        if (usart == _usart[i].base_address)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    return index;
+}

@@ -72,6 +72,28 @@ void rcc_tim12_periph_reset(void);
 void rcc_tim13_periph_reset(void);
 void rcc_tim14_periph_reset(void);
 
+void rcc_usartx_clk_enable(const USART_TypeDef *usart);
+void rcc_usartx_clk_disable(const USART_TypeDef *usart);
+void rcc_usartx_periph_reset(const USART_TypeDef *usart);
+
+void rcc_usart1_clk_enable_disable(const periph_clock_state_t state);
+void rcc_usart2_clk_enable_disable(const periph_clock_state_t state);
+void rcc_usart3_clk_enable_disable(const periph_clock_state_t state);
+void rcc_uart4_clk_enable_disable(const periph_clock_state_t state);
+void rcc_uart5_clk_enable_disable(const periph_clock_state_t state);
+void rcc_usart6_clk_enable_disable(const periph_clock_state_t state);
+void rcc_uart7_clk_enable_disable(const periph_clock_state_t state);
+void rcc_uart8_clk_enable_disable(const periph_clock_state_t state);
+
+void rcc_usart1_periph_reset(void);
+void rcc_usart2_periph_reset(void);
+void rcc_usart3_periph_reset(void);
+void rcc_uart4_periph_reset(void);
+void rcc_uart5_periph_reset(void);
+void rcc_usart6_periph_reset(void);
+void rcc_uart7_periph_reset(void);
+void rcc_uart8_periph_reset(void);
+
 #ifdef __cplusplus
 }
 #endif
