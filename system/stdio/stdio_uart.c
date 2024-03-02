@@ -513,9 +513,6 @@ ssize_t stdio_uart_write_blocking(const void *buffer, size_t len)
  */
 static void _uart_msp_init(UART_HandleTypeDef *huart)
 {
-//    STDIO_UART_USARTx_CLK_ENABLE();
-//    STDIO_UART_USARTx_FORCE_RESET();
-//    STDIO_UART_USARTx_RELEASE_RESET();
     rcc_usartx_clk_enable(STDIO_UART_USARTx);
     rcc_usartx_periph_reset(STDIO_UART_USARTx);
 
@@ -537,7 +534,6 @@ static void _uart_msp_init(UART_HandleTypeDef *huart)
  */
 static void _uart_msp_deinit(UART_HandleTypeDef *huart)
 {
-//    STDIO_UART_USARTx_CLK_DISABLE();
     rcc_usartx_clk_disable(STDIO_UART_USARTx);
 
     stdio_uart_tx_pin_deinit();

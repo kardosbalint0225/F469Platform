@@ -11,6 +11,97 @@
 #include "queue.h"
 #include "semphr.h"
 
+static void gpioa_clk_enable(void) { __HAL_RCC_GPIOA_CLK_ENABLE(); }
+static void gpiob_clk_enable(void) { __HAL_RCC_GPIOB_CLK_ENABLE(); }
+static void gpioc_clk_enable(void) { __HAL_RCC_GPIOC_CLK_ENABLE(); }
+static void gpiod_clk_enable(void) { __HAL_RCC_GPIOD_CLK_ENABLE(); }
+static void gpioe_clk_enable(void) { __HAL_RCC_GPIOE_CLK_ENABLE(); }
+static void gpiof_clk_enable(void) { __HAL_RCC_GPIOF_CLK_ENABLE(); }
+static void gpiog_clk_enable(void) { __HAL_RCC_GPIOG_CLK_ENABLE(); }
+static void gpioh_clk_enable(void) { __HAL_RCC_GPIOH_CLK_ENABLE(); }
+static void gpioi_clk_enable(void) { __HAL_RCC_GPIOI_CLK_ENABLE(); }
+static void gpioj_clk_enable(void) { __HAL_RCC_GPIOJ_CLK_ENABLE(); }
+static void gpiok_clk_enable(void) { __HAL_RCC_GPIOK_CLK_ENABLE(); }
+static void gpioa_clk_disable(void) { __HAL_RCC_GPIOA_CLK_DISABLE(); }
+static void gpiob_clk_disable(void) { __HAL_RCC_GPIOB_CLK_DISABLE(); }
+static void gpioc_clk_disable(void) { __HAL_RCC_GPIOC_CLK_DISABLE(); }
+static void gpiod_clk_disable(void) { __HAL_RCC_GPIOD_CLK_DISABLE(); }
+static void gpioe_clk_disable(void) { __HAL_RCC_GPIOE_CLK_DISABLE(); }
+static void gpiof_clk_disable(void) { __HAL_RCC_GPIOF_CLK_DISABLE(); }
+static void gpiog_clk_disable(void) { __HAL_RCC_GPIOG_CLK_DISABLE(); }
+static void gpioh_clk_disable(void) { __HAL_RCC_GPIOH_CLK_DISABLE(); }
+static void gpioi_clk_disable(void) { __HAL_RCC_GPIOI_CLK_DISABLE(); }
+static void gpioj_clk_disable(void) { __HAL_RCC_GPIOJ_CLK_DISABLE(); }
+static void gpiok_clk_disable(void) { __HAL_RCC_GPIOK_CLK_DISABLE(); }
+
+static void tim1_clk_enable(void) { __HAL_RCC_TIM1_CLK_ENABLE(); }
+static void tim2_clk_enable(void) { __HAL_RCC_TIM2_CLK_ENABLE(); }
+static void tim3_clk_enable(void) { __HAL_RCC_TIM3_CLK_ENABLE(); }
+static void tim4_clk_enable(void) { __HAL_RCC_TIM4_CLK_ENABLE(); }
+static void tim5_clk_enable(void) { __HAL_RCC_TIM5_CLK_ENABLE(); }
+static void tim6_clk_enable(void) { __HAL_RCC_TIM6_CLK_ENABLE(); }
+static void tim7_clk_enable(void) { __HAL_RCC_TIM7_CLK_ENABLE(); }
+static void tim8_clk_enable(void) { __HAL_RCC_TIM8_CLK_ENABLE(); }
+static void tim9_clk_enable(void) { __HAL_RCC_TIM9_CLK_ENABLE(); }
+static void tim10_clk_enable(void) { __HAL_RCC_TIM10_CLK_ENABLE(); }
+static void tim11_clk_enable(void) { __HAL_RCC_TIM11_CLK_ENABLE(); }
+static void tim12_clk_enable(void) { __HAL_RCC_TIM12_CLK_ENABLE(); }
+static void tim13_clk_enable(void) { __HAL_RCC_TIM13_CLK_ENABLE(); }
+static void tim14_clk_enable(void) { __HAL_RCC_TIM14_CLK_ENABLE(); }
+static void tim1_clk_disable(void) { __HAL_RCC_TIM1_CLK_DISABLE(); }
+static void tim2_clk_disable(void) { __HAL_RCC_TIM2_CLK_DISABLE(); }
+static void tim3_clk_disable(void) { __HAL_RCC_TIM3_CLK_DISABLE(); }
+static void tim4_clk_disable(void) { __HAL_RCC_TIM4_CLK_DISABLE(); }
+static void tim5_clk_disable(void) { __HAL_RCC_TIM5_CLK_DISABLE(); }
+static void tim6_clk_disable(void) { __HAL_RCC_TIM6_CLK_DISABLE(); }
+static void tim7_clk_disable(void) { __HAL_RCC_TIM7_CLK_DISABLE(); }
+static void tim8_clk_disable(void) { __HAL_RCC_TIM8_CLK_DISABLE(); }
+static void tim9_clk_disable(void) { __HAL_RCC_TIM9_CLK_DISABLE(); }
+static void tim10_clk_disable(void) { __HAL_RCC_TIM10_CLK_DISABLE(); }
+static void tim11_clk_disable(void) { __HAL_RCC_TIM11_CLK_DISABLE(); }
+static void tim12_clk_disable(void) { __HAL_RCC_TIM12_CLK_DISABLE(); }
+static void tim13_clk_disable(void) { __HAL_RCC_TIM13_CLK_DISABLE(); }
+static void tim14_clk_disable(void) { __HAL_RCC_TIM14_CLK_DISABLE(); }
+static void tim1_periph_reset(void) { __HAL_RCC_TIM1_FORCE_RESET(); __HAL_RCC_TIM1_RELEASE_RESET(); }
+static void tim2_periph_reset(void) { __HAL_RCC_TIM2_FORCE_RESET(); __HAL_RCC_TIM2_RELEASE_RESET(); }
+static void tim3_periph_reset(void) { __HAL_RCC_TIM3_FORCE_RESET(); __HAL_RCC_TIM3_RELEASE_RESET(); }
+static void tim4_periph_reset(void) { __HAL_RCC_TIM4_FORCE_RESET(); __HAL_RCC_TIM4_RELEASE_RESET(); }
+static void tim5_periph_reset(void) { __HAL_RCC_TIM5_FORCE_RESET(); __HAL_RCC_TIM5_RELEASE_RESET(); }
+static void tim6_periph_reset(void) { __HAL_RCC_TIM6_FORCE_RESET(); __HAL_RCC_TIM6_RELEASE_RESET(); }
+static void tim7_periph_reset(void) { __HAL_RCC_TIM7_FORCE_RESET(); __HAL_RCC_TIM7_RELEASE_RESET(); }
+static void tim8_periph_reset(void) { __HAL_RCC_TIM8_FORCE_RESET(); __HAL_RCC_TIM8_RELEASE_RESET(); }
+static void tim9_periph_reset(void) { __HAL_RCC_TIM9_FORCE_RESET(); __HAL_RCC_TIM9_RELEASE_RESET(); }
+static void tim10_periph_reset(void) { __HAL_RCC_TIM10_FORCE_RESET(); __HAL_RCC_TIM10_RELEASE_RESET(); }
+static void tim11_periph_reset(void) { __HAL_RCC_TIM11_FORCE_RESET(); __HAL_RCC_TIM11_RELEASE_RESET(); }
+static void tim12_periph_reset(void) { __HAL_RCC_TIM12_FORCE_RESET(); __HAL_RCC_TIM12_RELEASE_RESET(); }
+static void tim13_periph_reset(void) { __HAL_RCC_TIM13_FORCE_RESET(); __HAL_RCC_TIM13_RELEASE_RESET(); }
+static void tim14_periph_reset(void) { __HAL_RCC_TIM14_FORCE_RESET(); __HAL_RCC_TIM14_RELEASE_RESET(); }
+
+static void usart1_clk_enable(void) { __HAL_RCC_USART1_CLK_ENABLE(); }
+static void usart2_clk_enable(void) { __HAL_RCC_USART2_CLK_ENABLE(); }
+static void usart3_clk_enable(void) { __HAL_RCC_USART3_CLK_ENABLE(); }
+static void uart4_clk_enable(void) { __HAL_RCC_UART4_CLK_ENABLE(); }
+static void uart5_clk_enable(void) { __HAL_RCC_UART5_CLK_ENABLE(); }
+static void usart6_clk_enable(void) { __HAL_RCC_USART6_CLK_ENABLE(); }
+static void uart7_clk_enable(void) { __HAL_RCC_UART7_CLK_ENABLE(); }
+static void uart8_clk_enable(void) { __HAL_RCC_UART8_CLK_ENABLE(); }
+static void usart1_clk_disable(void) { __HAL_RCC_USART1_CLK_DISABLE(); }
+static void usart2_clk_disable(void) { __HAL_RCC_USART2_CLK_DISABLE(); }
+static void usart3_clk_disable(void) { __HAL_RCC_USART3_CLK_DISABLE(); }
+static void uart4_clk_disable(void) { __HAL_RCC_UART4_CLK_DISABLE(); }
+static void uart5_clk_disable(void) { __HAL_RCC_UART5_CLK_DISABLE(); }
+static void usart6_clk_disable(void) { __HAL_RCC_USART6_CLK_DISABLE(); }
+static void uart7_clk_disable(void) { __HAL_RCC_UART7_CLK_DISABLE(); }
+static void uart8_clk_disable(void) { __HAL_RCC_UART8_CLK_DISABLE(); }
+static void usart1_periph_reset(void) { __HAL_RCC_USART1_FORCE_RESET(); __HAL_RCC_USART1_RELEASE_RESET(); }
+static void usart2_periph_reset(void) { __HAL_RCC_USART2_FORCE_RESET(); __HAL_RCC_USART2_RELEASE_RESET(); }
+static void usart3_periph_reset(void) { __HAL_RCC_USART3_FORCE_RESET(); __HAL_RCC_USART3_RELEASE_RESET(); }
+static void uart4_periph_reset(void) { __HAL_RCC_UART4_FORCE_RESET(); __HAL_RCC_UART4_RELEASE_RESET(); }
+static void uart5_periph_reset(void) { __HAL_RCC_UART5_FORCE_RESET(); __HAL_RCC_UART5_RELEASE_RESET(); }
+static void usart6_periph_reset(void) { __HAL_RCC_USART6_FORCE_RESET(); __HAL_RCC_USART6_RELEASE_RESET(); }
+static void uart7_periph_reset(void) { __HAL_RCC_UART7_FORCE_RESET(); __HAL_RCC_UART7_RELEASE_RESET(); }
+static void uart8_periph_reset(void) { __HAL_RCC_UART8_FORCE_RESET(); __HAL_RCC_UART8_RELEASE_RESET(); }
+
 static int find_tim_index(const TIM_TypeDef *tim);
 static int find_usart_index(const USART_TypeDef *usart);
 static int find_gpio_index(const GPIO_TypeDef *gpio);
@@ -42,45 +133,45 @@ typedef struct {
 } gpio_t;
 
 static gpio_t _gpio[] = {
-    { GPIOA, rcc_gpioa_clk_enable, rcc_gpioa_clk_disable },
-    { GPIOB, rcc_gpiob_clk_enable, rcc_gpiob_clk_disable },
-    { GPIOC, rcc_gpioc_clk_enable, rcc_gpioc_clk_disable },
-    { GPIOD, rcc_gpiod_clk_enable, rcc_gpiod_clk_disable },
-    { GPIOE, rcc_gpioe_clk_enable, rcc_gpioe_clk_disable },
-    { GPIOF, rcc_gpiof_clk_enable, rcc_gpiof_clk_disable },
-    { GPIOG, rcc_gpiog_clk_enable, rcc_gpiog_clk_disable },
-    { GPIOH, rcc_gpioh_clk_enable, rcc_gpioh_clk_disable },
-    { GPIOI, rcc_gpioi_clk_enable, rcc_gpioi_clk_disable },
-    { GPIOJ, rcc_gpioj_clk_enable, rcc_gpioj_clk_disable },
-    { GPIOK, rcc_gpiok_clk_enable, rcc_gpiok_clk_disable },
+    { GPIOA, gpioa_clk_enable, gpioa_clk_disable },
+    { GPIOB, gpiob_clk_enable, gpiob_clk_disable },
+    { GPIOC, gpioc_clk_enable, gpioc_clk_disable },
+    { GPIOD, gpiod_clk_enable, gpiod_clk_disable },
+    { GPIOE, gpioe_clk_enable, gpioe_clk_disable },
+    { GPIOF, gpiof_clk_enable, gpiof_clk_disable },
+    { GPIOG, gpiog_clk_enable, gpiog_clk_disable },
+    { GPIOH, gpioh_clk_enable, gpioh_clk_disable },
+    { GPIOI, gpioi_clk_enable, gpioi_clk_disable },
+    { GPIOJ, gpioj_clk_enable, gpioj_clk_disable },
+    { GPIOK, gpiok_clk_enable, gpiok_clk_disable },
 };
 
 static const rcc_usart_t _usart[] = {
-    { USART1, rcc_usart1_clk_enable, rcc_usart1_clk_disable, rcc_usart1_periph_reset },
-    { USART2, rcc_usart2_clk_enable, rcc_usart2_clk_disable, rcc_usart2_periph_reset },
-    { USART3, rcc_usart3_clk_enable, rcc_usart3_clk_disable, rcc_usart3_periph_reset },
-    { UART4, rcc_uart4_clk_enable, rcc_uart4_clk_disable, rcc_uart4_periph_reset },
-    { UART5, rcc_uart5_clk_enable, rcc_uart5_clk_disable, rcc_uart5_periph_reset},
-    { USART6, rcc_usart6_clk_enable, rcc_usart6_clk_disable, rcc_usart6_periph_reset },
-    { UART7, rcc_uart7_clk_enable, rcc_uart7_clk_disable, rcc_uart7_periph_reset },
-    { UART8, rcc_uart8_clk_enable, rcc_uart8_clk_disable, rcc_uart8_periph_reset },
+    { USART1, usart1_clk_enable, usart1_clk_disable, usart1_periph_reset },
+    { USART2, usart2_clk_enable, usart2_clk_disable, usart2_periph_reset },
+    { USART3, usart3_clk_enable, usart3_clk_disable, usart3_periph_reset },
+    { UART4, uart4_clk_enable, uart4_clk_disable, uart4_periph_reset },
+    { UART5, uart5_clk_enable, uart5_clk_disable, uart5_periph_reset},
+    { USART6, usart6_clk_enable, usart6_clk_disable, usart6_periph_reset },
+    { UART7, uart7_clk_enable, uart7_clk_disable, uart7_periph_reset },
+    { UART8, uart8_clk_enable, uart8_clk_disable, uart8_periph_reset },
 };
 
 static const rcc_tim_t _tim[] = {
-    { TIM1, rcc_tim1_clk_enable, rcc_tim1_clk_disable, rcc_tim1_periph_reset },
-    { TIM2, rcc_tim2_clk_enable, rcc_tim2_clk_disable, rcc_tim2_periph_reset },
-    { TIM3, rcc_tim3_clk_enable, rcc_tim3_clk_disable, rcc_tim3_periph_reset },
-    { TIM4, rcc_tim4_clk_enable, rcc_tim4_clk_disable, rcc_tim4_periph_reset },
-    { TIM5, rcc_tim5_clk_enable, rcc_tim5_clk_disable, rcc_tim5_periph_reset },
-    { TIM6, rcc_tim6_clk_enable, rcc_tim6_clk_disable, rcc_tim6_periph_reset },
-    { TIM7, rcc_tim7_clk_enable, rcc_tim7_clk_disable, rcc_tim7_periph_reset },
-    { TIM8, rcc_tim8_clk_enable, rcc_tim8_clk_disable, rcc_tim8_periph_reset },
-    { TIM9, rcc_tim9_clk_enable, rcc_tim9_clk_disable, rcc_tim9_periph_reset },
-    { TIM10, rcc_tim10_clk_enable, rcc_tim10_clk_disable, rcc_tim10_periph_reset },
-    { TIM11, rcc_tim11_clk_enable, rcc_tim11_clk_disable, rcc_tim11_periph_reset },
-    { TIM12, rcc_tim12_clk_enable, rcc_tim12_clk_disable, rcc_tim12_periph_reset },
-    { TIM13, rcc_tim13_clk_enable, rcc_tim13_clk_disable, rcc_tim13_periph_reset },
-    { TIM14, rcc_tim14_clk_enable, rcc_tim14_clk_disable, rcc_tim14_periph_reset },
+    { TIM1, tim1_clk_enable, tim1_clk_disable, tim1_periph_reset },
+    { TIM2, tim2_clk_enable, tim2_clk_disable, tim2_periph_reset },
+    { TIM3, tim3_clk_enable, tim3_clk_disable, tim3_periph_reset },
+    { TIM4, tim4_clk_enable, tim4_clk_disable, tim4_periph_reset },
+    { TIM5, tim5_clk_enable, tim5_clk_disable, tim5_periph_reset },
+    { TIM6, tim6_clk_enable, tim6_clk_disable, tim6_periph_reset },
+    { TIM7, tim7_clk_enable, tim7_clk_disable, tim7_periph_reset },
+    { TIM8, tim8_clk_enable, tim8_clk_disable, tim8_periph_reset },
+    { TIM9, tim9_clk_enable, tim9_clk_disable, tim9_periph_reset },
+    { TIM10, tim10_clk_enable, tim10_clk_disable, tim10_periph_reset },
+    { TIM11, tim11_clk_enable, tim11_clk_disable, tim11_periph_reset },
+    { TIM12, tim12_clk_enable, tim12_clk_disable, tim12_periph_reset },
+    { TIM13, tim13_clk_enable, tim13_clk_disable, tim13_periph_reset },
+    { TIM14, tim14_clk_enable, tim14_clk_disable, tim14_periph_reset },
 };
 
 void rcc_init(void)
@@ -162,7 +253,7 @@ HAL_StatusTypeDef clk48_clock_init(void)
 
 HAL_StatusTypeDef clk48_clock_deinit(void)
 {
-    return HAL_OK;
+    return HAL_OK;  //TODO: how to shut it down
 }
 
 HAL_StatusTypeDef sdio_clock_source_init(void)
@@ -177,7 +268,7 @@ HAL_StatusTypeDef sdio_clock_source_init(void)
 
 HAL_StatusTypeDef sdio_clock_source_deinit(void)
 {
-    return HAL_OK;
+    return HAL_OK; //TODO: how to shut it down
 }
 
 void rcc_gpiox_clk_enable(const GPIO_TypeDef *gpio)
@@ -218,72 +309,6 @@ void rcc_gpiox_clk_disable(const GPIO_TypeDef *gpio)
     gpio_unlock();
 }
 
-void rcc_gpioa_clk_enable(void) { __HAL_RCC_GPIOA_CLK_ENABLE(); }
-void rcc_gpiob_clk_enable(void) { __HAL_RCC_GPIOB_CLK_ENABLE(); }
-void rcc_gpioc_clk_enable(void) { __HAL_RCC_GPIOC_CLK_ENABLE(); }
-void rcc_gpiod_clk_enable(void) { __HAL_RCC_GPIOD_CLK_ENABLE(); }
-void rcc_gpioe_clk_enable(void) { __HAL_RCC_GPIOE_CLK_ENABLE(); }
-void rcc_gpiof_clk_enable(void) { __HAL_RCC_GPIOF_CLK_ENABLE(); }
-void rcc_gpiog_clk_enable(void) { __HAL_RCC_GPIOG_CLK_ENABLE(); }
-void rcc_gpioh_clk_enable(void) { __HAL_RCC_GPIOH_CLK_ENABLE(); }
-void rcc_gpioi_clk_enable(void) { __HAL_RCC_GPIOI_CLK_ENABLE(); }
-void rcc_gpioj_clk_enable(void) { __HAL_RCC_GPIOJ_CLK_ENABLE(); }
-void rcc_gpiok_clk_enable(void) { __HAL_RCC_GPIOK_CLK_ENABLE(); }
-void rcc_gpioa_clk_disable(void) { __HAL_RCC_GPIOA_CLK_DISABLE(); }
-void rcc_gpiob_clk_disable(void) { __HAL_RCC_GPIOB_CLK_DISABLE(); }
-void rcc_gpioc_clk_disable(void) { __HAL_RCC_GPIOC_CLK_DISABLE(); }
-void rcc_gpiod_clk_disable(void) { __HAL_RCC_GPIOD_CLK_DISABLE(); }
-void rcc_gpioe_clk_disable(void) { __HAL_RCC_GPIOE_CLK_DISABLE(); }
-void rcc_gpiof_clk_disable(void) { __HAL_RCC_GPIOF_CLK_DISABLE(); }
-void rcc_gpiog_clk_disable(void) { __HAL_RCC_GPIOG_CLK_DISABLE(); }
-void rcc_gpioh_clk_disable(void) { __HAL_RCC_GPIOH_CLK_DISABLE(); }
-void rcc_gpioi_clk_disable(void) { __HAL_RCC_GPIOI_CLK_DISABLE(); }
-void rcc_gpioj_clk_disable(void) { __HAL_RCC_GPIOJ_CLK_DISABLE(); }
-void rcc_gpiok_clk_disable(void) { __HAL_RCC_GPIOK_CLK_DISABLE(); }
-
-void rcc_tim1_clk_enable(void) { __HAL_RCC_TIM1_CLK_ENABLE(); }
-void rcc_tim2_clk_enable(void) { __HAL_RCC_TIM2_CLK_ENABLE(); }
-void rcc_tim3_clk_enable(void) { __HAL_RCC_TIM3_CLK_ENABLE(); }
-void rcc_tim4_clk_enable(void) { __HAL_RCC_TIM4_CLK_ENABLE(); }
-void rcc_tim5_clk_enable(void) { __HAL_RCC_TIM5_CLK_ENABLE(); }
-void rcc_tim6_clk_enable(void) { __HAL_RCC_TIM6_CLK_ENABLE(); }
-void rcc_tim7_clk_enable(void) { __HAL_RCC_TIM7_CLK_ENABLE(); }
-void rcc_tim8_clk_enable(void) { __HAL_RCC_TIM8_CLK_ENABLE(); }
-void rcc_tim9_clk_enable(void) { __HAL_RCC_TIM9_CLK_ENABLE(); }
-void rcc_tim10_clk_enable(void) { __HAL_RCC_TIM10_CLK_ENABLE(); }
-void rcc_tim11_clk_enable(void) { __HAL_RCC_TIM11_CLK_ENABLE(); }
-void rcc_tim12_clk_enable(void) { __HAL_RCC_TIM12_CLK_ENABLE(); }
-void rcc_tim13_clk_enable(void) { __HAL_RCC_TIM13_CLK_ENABLE(); }
-void rcc_tim14_clk_enable(void) { __HAL_RCC_TIM14_CLK_ENABLE(); }
-void rcc_tim1_clk_disable(void) { __HAL_RCC_TIM1_CLK_DISABLE(); }
-void rcc_tim2_clk_disable(void) { __HAL_RCC_TIM2_CLK_DISABLE(); }
-void rcc_tim3_clk_disable(void) { __HAL_RCC_TIM3_CLK_DISABLE(); }
-void rcc_tim4_clk_disable(void) { __HAL_RCC_TIM4_CLK_DISABLE(); }
-void rcc_tim5_clk_disable(void) { __HAL_RCC_TIM5_CLK_DISABLE(); }
-void rcc_tim6_clk_disable(void) { __HAL_RCC_TIM6_CLK_DISABLE(); }
-void rcc_tim7_clk_disable(void) { __HAL_RCC_TIM7_CLK_DISABLE(); }
-void rcc_tim8_clk_disable(void) { __HAL_RCC_TIM8_CLK_DISABLE(); }
-void rcc_tim9_clk_disable(void) { __HAL_RCC_TIM9_CLK_DISABLE(); }
-void rcc_tim10_clk_disable(void) { __HAL_RCC_TIM10_CLK_DISABLE(); }
-void rcc_tim11_clk_disable(void) { __HAL_RCC_TIM11_CLK_DISABLE(); }
-void rcc_tim12_clk_disable(void) { __HAL_RCC_TIM12_CLK_DISABLE(); }
-void rcc_tim13_clk_disable(void) { __HAL_RCC_TIM13_CLK_DISABLE(); }
-void rcc_tim14_clk_disable(void) { __HAL_RCC_TIM14_CLK_DISABLE(); }
-void rcc_tim1_periph_reset(void) { __HAL_RCC_TIM1_FORCE_RESET(); __HAL_RCC_TIM1_RELEASE_RESET(); }
-void rcc_tim2_periph_reset(void) { __HAL_RCC_TIM2_FORCE_RESET(); __HAL_RCC_TIM2_RELEASE_RESET(); }
-void rcc_tim3_periph_reset(void) { __HAL_RCC_TIM3_FORCE_RESET(); __HAL_RCC_TIM3_RELEASE_RESET(); }
-void rcc_tim4_periph_reset(void) { __HAL_RCC_TIM4_FORCE_RESET(); __HAL_RCC_TIM4_RELEASE_RESET(); }
-void rcc_tim5_periph_reset(void) { __HAL_RCC_TIM5_FORCE_RESET(); __HAL_RCC_TIM5_RELEASE_RESET(); }
-void rcc_tim6_periph_reset(void) { __HAL_RCC_TIM6_FORCE_RESET(); __HAL_RCC_TIM6_RELEASE_RESET(); }
-void rcc_tim7_periph_reset(void) { __HAL_RCC_TIM7_FORCE_RESET(); __HAL_RCC_TIM7_RELEASE_RESET(); }
-void rcc_tim8_periph_reset(void) { __HAL_RCC_TIM8_FORCE_RESET(); __HAL_RCC_TIM8_RELEASE_RESET(); }
-void rcc_tim9_periph_reset(void) { __HAL_RCC_TIM9_FORCE_RESET(); __HAL_RCC_TIM9_RELEASE_RESET(); }
-void rcc_tim10_periph_reset(void) { __HAL_RCC_TIM10_FORCE_RESET(); __HAL_RCC_TIM10_RELEASE_RESET(); }
-void rcc_tim11_periph_reset(void) { __HAL_RCC_TIM11_FORCE_RESET(); __HAL_RCC_TIM11_RELEASE_RESET(); }
-void rcc_tim12_periph_reset(void) { __HAL_RCC_TIM12_FORCE_RESET(); __HAL_RCC_TIM12_RELEASE_RESET(); }
-void rcc_tim13_periph_reset(void) { __HAL_RCC_TIM13_FORCE_RESET(); __HAL_RCC_TIM13_RELEASE_RESET(); }
-void rcc_tim14_periph_reset(void) { __HAL_RCC_TIM14_FORCE_RESET(); __HAL_RCC_TIM14_RELEASE_RESET(); }
-
 void rcc_usartx_clk_enable(const USART_TypeDef *usart)
 {
     assert(usart);
@@ -313,31 +338,6 @@ void rcc_usartx_periph_reset(const USART_TypeDef *usart)
 
     _usart[i].periph_reset_fn();
 }
-
-void rcc_usart1_clk_enable(void) { __HAL_RCC_USART1_CLK_ENABLE(); }
-void rcc_usart2_clk_enable(void) { __HAL_RCC_USART2_CLK_ENABLE(); }
-void rcc_usart3_clk_enable(void) { __HAL_RCC_USART3_CLK_ENABLE(); }
-void rcc_uart4_clk_enable(void) { __HAL_RCC_UART4_CLK_ENABLE(); }
-void rcc_uart5_clk_enable(void) { __HAL_RCC_UART5_CLK_ENABLE(); }
-void rcc_usart6_clk_enable(void) { __HAL_RCC_USART6_CLK_ENABLE(); }
-void rcc_uart7_clk_enable(void) { __HAL_RCC_UART7_CLK_ENABLE(); }
-void rcc_uart8_clk_enable(void) { __HAL_RCC_UART8_CLK_ENABLE(); }
-void rcc_usart1_clk_disable(void) { __HAL_RCC_USART1_CLK_DISABLE(); }
-void rcc_usart2_clk_disable(void) { __HAL_RCC_USART2_CLK_DISABLE(); }
-void rcc_usart3_clk_disable(void) { __HAL_RCC_USART3_CLK_DISABLE(); }
-void rcc_uart4_clk_disable(void) { __HAL_RCC_UART4_CLK_DISABLE(); }
-void rcc_uart5_clk_disable(void) { __HAL_RCC_UART5_CLK_DISABLE(); }
-void rcc_usart6_clk_disable(void) { __HAL_RCC_USART6_CLK_DISABLE(); }
-void rcc_uart7_clk_disable(void) { __HAL_RCC_UART7_CLK_DISABLE(); }
-void rcc_uart8_clk_disable(void) { __HAL_RCC_UART8_CLK_DISABLE(); }
-void rcc_usart1_periph_reset(void) { __HAL_RCC_USART1_FORCE_RESET(); __HAL_RCC_USART1_RELEASE_RESET(); }
-void rcc_usart2_periph_reset(void) { __HAL_RCC_USART2_FORCE_RESET(); __HAL_RCC_USART2_RELEASE_RESET(); }
-void rcc_usart3_periph_reset(void) { __HAL_RCC_USART3_FORCE_RESET(); __HAL_RCC_USART3_RELEASE_RESET(); }
-void rcc_uart4_periph_reset(void) { __HAL_RCC_UART4_FORCE_RESET(); __HAL_RCC_UART4_RELEASE_RESET(); }
-void rcc_uart5_periph_reset(void) { __HAL_RCC_UART5_FORCE_RESET(); __HAL_RCC_UART5_RELEASE_RESET(); }
-void rcc_usart6_periph_reset(void) { __HAL_RCC_USART6_FORCE_RESET(); __HAL_RCC_USART6_RELEASE_RESET(); }
-void rcc_uart7_periph_reset(void) { __HAL_RCC_UART7_FORCE_RESET(); __HAL_RCC_UART7_RELEASE_RESET(); }
-void rcc_uart8_periph_reset(void) { __HAL_RCC_UART8_FORCE_RESET(); __HAL_RCC_UART8_RELEASE_RESET(); }
 
 static int find_tim_index(const TIM_TypeDef *tim)
 {

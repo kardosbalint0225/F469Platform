@@ -28,10 +28,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 
     uwTickPrio = TickPriority;
 
-//    HAL_TIMEBASE_TIM_CLK_ENABLE();
     rcc_timx_clk_enable(HAL_TIMEBASE_TIMx);
-//    HAL_TIMEBASE_TIM_FORCE_RESET();
-//    HAL_TIMEBASE_TIM_RELEASE_RESET();
     rcc_timx_periph_reset(HAL_TIMEBASE_TIMx);
 
     HAL_RCC_GetClockConfig(&clock_config, &flash_latency);
