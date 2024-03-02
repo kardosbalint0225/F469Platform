@@ -13,29 +13,8 @@ extern RTC_HandleTypeDef h_rtc;
 extern HCD_HandleTypeDef h_hcd_fs;
 extern EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
-
 void _get_registers_from_stack(uint32_t *fault_stack_address)
 {
-    /* These are volatile to try and prevent the compiler/linker optimising them
-    away as the variables never actually get used.  If the debugger won't show the
-    values of the variables, make them global my moving their declaration outside
-    of this function. */
-
-    static const uint32_t BFARVALID_MASK = (0x80 << SCB_CFSR_BUSFAULTSR_Pos);
-    static const uint32_t MMARVALID_MASK = (0x80 << SCB_CFSR_MEMFAULTSR_Pos);
-
-    /* Copy status register contents to local stack storage, this must be
-     * done before any calls to other functions to avoid corrupting the
-     * register contents. */
-    const uint32_t bfar = SCB->BFAR;
-    const uint32_t mmfar = SCB->MMFAR;
-    const uint32_t cfsr = SCB->CFSR;
-    const uint32_t hfsr = SCB->HFSR;
-    const uint32_t dfsr = SCB->DFSR;
-    const uint32_t afsr = SCB->AFSR;
-    const uint32_t bfar_valid = cfsr & BFARVALID_MASK;
-    const uint32_t mmfar_valid = cfsr & MMARVALID_MASK;
-
     const uint32_t r0 = fault_stack_address[0];
     const uint32_t r1 = fault_stack_address[1];
     const uint32_t r2 = fault_stack_address[2];
@@ -45,6 +24,17 @@ void _get_registers_from_stack(uint32_t *fault_stack_address)
     const uint32_t lr = fault_stack_address[5];  /* Link register. */
     const uint32_t pc = fault_stack_address[6];  /* Program counter. */
     const uint32_t psr = fault_stack_address[7]; /* Program status register. */
+
+    const uint32_t BFARVALID_MASK = (0x80 << SCB_CFSR_BUSFAULTSR_Pos);
+    const uint32_t MMARVALID_MASK = (0x80 << SCB_CFSR_MEMFAULTSR_Pos);
+    const uint32_t bfar = SCB->BFAR;
+    const uint32_t mmfar = SCB->MMFAR;
+    const uint32_t cfsr = SCB->CFSR;
+    const uint32_t hfsr = SCB->HFSR;
+    const uint32_t dfsr = SCB->DFSR;
+    const uint32_t afsr = SCB->AFSR;
+    const uint32_t bfar_valid = cfsr & BFARVALID_MASK;
+    const uint32_t mmfar_valid = cfsr & MMARVALID_MASK;
 
     (void)bfar;
     (void)mmfar;
