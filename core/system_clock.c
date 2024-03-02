@@ -10,18 +10,18 @@
  */
 int system_clock_oscillator_init(void)
 {
-    RCC_OscInitTypeDef osc_config = {0};
+    RCC_OscInitTypeDef osc_config = { 0 };
 
     osc_config.OscillatorType = RCC_OSCILLATORTYPE_HSE | RCC_OSCILLATORTYPE_LSE;
     osc_config.HSEState = RCC_HSE_ON;
     osc_config.LSEState = RCC_LSE_ON;
     osc_config.PLL.PLLState = RCC_PLL_ON;
     osc_config.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-    osc_config.PLL.PLLM = 8;
-    osc_config.PLL.PLLN = 360;
+    osc_config.PLL.PLLM = 8ul;
+    osc_config.PLL.PLLN = 360ul;
     osc_config.PLL.PLLP = RCC_PLLP_DIV2;
-    osc_config.PLL.PLLQ = 6;
-    osc_config.PLL.PLLR = 6;
+    osc_config.PLL.PLLQ = 6ul;
+    osc_config.PLL.PLLR = 6ul;
 
     HAL_StatusTypeDef ret;
     ret = HAL_RCC_OscConfig(&osc_config);
@@ -47,7 +47,7 @@ int system_clock_oscillator_init(void)
  */
 int system_clock_bus_clock_init(void)
 {
-    RCC_ClkInitTypeDef clk_config = {0};
+    RCC_ClkInitTypeDef clk_config = { 0 };
 
     clk_config.ClockType = RCC_CLOCKTYPE_HCLK |
                            RCC_CLOCKTYPE_SYSCLK |
