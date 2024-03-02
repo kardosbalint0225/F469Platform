@@ -7,6 +7,7 @@
 int main(void)
 {
     HAL_Init();
+
     system_clock_init();
 
     vTaskStartScheduler();
