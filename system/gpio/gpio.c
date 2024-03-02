@@ -29,22 +29,23 @@ EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
 typedef struct {
     const GPIO_TypeDef * const base_address;
-    const void (* const clk_enable_disable_fn)(const periph_clock_state_t state);
+    const void (* const clk_enable_fn)(void);
+    const void (* const clk_disable_fn)(void);
     uint32_t reference_count;
 } gpio_t;
 
 static gpio_t _gpio[] = {
-    { GPIOA, rcc_gpioa_clk_enable_disable },
-    { GPIOB, rcc_gpiob_clk_enable_disable },
-    { GPIOC, rcc_gpioc_clk_enable_disable },
-    { GPIOD, rcc_gpiod_clk_enable_disable },
-    { GPIOE, rcc_gpioe_clk_enable_disable },
-    { GPIOF, rcc_gpiof_clk_enable_disable },
-    { GPIOG, rcc_gpiog_clk_enable_disable },
-    { GPIOH, rcc_gpioh_clk_enable_disable },
-    { GPIOI, rcc_gpioi_clk_enable_disable },
-    { GPIOJ, rcc_gpioj_clk_enable_disable },
-    { GPIOK, rcc_gpiok_clk_enable_disable },
+    { GPIOA, rcc_gpioa_clk_enable, rcc_gpioa_clk_disable },
+    { GPIOB, rcc_gpiob_clk_enable, rcc_gpiob_clk_disable },
+    { GPIOC, rcc_gpioc_clk_enable, rcc_gpioc_clk_disable },
+    { GPIOD, rcc_gpiod_clk_enable, rcc_gpiod_clk_disable },
+    { GPIOE, rcc_gpioe_clk_enable, rcc_gpioe_clk_disable },
+    { GPIOF, rcc_gpiof_clk_enable, rcc_gpiof_clk_disable },
+    { GPIOG, rcc_gpiog_clk_enable, rcc_gpiog_clk_disable },
+    { GPIOH, rcc_gpioh_clk_enable, rcc_gpioh_clk_disable },
+    { GPIOI, rcc_gpioi_clk_enable, rcc_gpioi_clk_disable },
+    { GPIOJ, rcc_gpioj_clk_enable, rcc_gpioj_clk_disable },
+    { GPIOK, rcc_gpiok_clk_enable, rcc_gpiok_clk_disable },
 };
 
 static SemaphoreHandle_t _gpio_mutex = NULL;
@@ -575,7 +576,7 @@ static void gpio_pin_init(const GPIO_TypeDef *port, const GPIO_InitTypeDef *pin)
 
     if (0ul == _gpio[i].reference_count)
     {
-        _gpio[i].clk_enable_disable_fn(PERIPH_CLOCK_ENABLE);
+        _gpio[i].clk_enable_fn();
     }
 
     HAL_GPIO_Init((GPIO_TypeDef *)_gpio[i].base_address, (GPIO_InitTypeDef *)pin);
@@ -601,7 +602,7 @@ static void gpio_pin_deinit(const GPIO_TypeDef *port, const uint32_t pin)
 
     if (0ul == _gpio[i].reference_count)
     {
-        _gpio[i].clk_enable_disable_fn(PERIPH_CLOCK_DISABLE);
+        _gpio[i].clk_disable_fn();
     }
 
     gpio_unlock();
