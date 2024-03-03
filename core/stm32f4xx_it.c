@@ -15,16 +15,6 @@ extern EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
 void _get_registers_from_stack(uint32_t *fault_stack_address)
 {
-    const uint32_t r0 = fault_stack_address[0];
-    const uint32_t r1 = fault_stack_address[1];
-    const uint32_t r2 = fault_stack_address[2];
-    const uint32_t r3 = fault_stack_address[3];
-
-    const uint32_t r12 = fault_stack_address[4];
-    const uint32_t lr = fault_stack_address[5];  /* Link register. */
-    const uint32_t pc = fault_stack_address[6];  /* Program counter. */
-    const uint32_t psr = fault_stack_address[7]; /* Program status register. */
-
     const uint32_t BFARVALID_MASK = (0x80 << SCB_CFSR_BUSFAULTSR_Pos);
     const uint32_t MMARVALID_MASK = (0x80 << SCB_CFSR_MEMFAULTSR_Pos);
     const uint32_t bfar = SCB->BFAR;
@@ -35,6 +25,16 @@ void _get_registers_from_stack(uint32_t *fault_stack_address)
     const uint32_t afsr = SCB->AFSR;
     const uint32_t bfar_valid = cfsr & BFARVALID_MASK;
     const uint32_t mmfar_valid = cfsr & MMARVALID_MASK;
+
+    const uint32_t r0 = fault_stack_address[0];
+    const uint32_t r1 = fault_stack_address[1];
+    const uint32_t r2 = fault_stack_address[2];
+    const uint32_t r3 = fault_stack_address[3];
+
+    const uint32_t r12 = fault_stack_address[4];
+    const uint32_t lr = fault_stack_address[5];  /* Link register. */
+    const uint32_t pc = fault_stack_address[6];  /* Program counter. */
+    const uint32_t psr = fault_stack_address[7]; /* Program status register. */
 
     (void)bfar;
     (void)mmfar;
