@@ -15,6 +15,7 @@
 #define SDCARD_CD_PIN_EXTI_LINE                 EXTI_LINE_2
 #define SDCARD_CD_PIN_EXTIx_IRQn                EXTI2_IRQn
 #define SDCARD_CD_PIN_EXTIx_IRQ_PRIORITY        10ul
+#define SDCARD_CD_PIN_EXTIx_IRQHandler          EXTI2_IRQHandler
 #define SDCARD_MOUNT_TASK_PRIORITY              2ul
 #define SDCARD_MOUNT_TASK_STACKSIZE             (configMINIMAL_STACK_SIZE + 32 * configMINIMAL_STACK_SIZE)
 

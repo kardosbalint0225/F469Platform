@@ -34,7 +34,6 @@ static void rtc_wakeuptimer_event_callback(RTC_HandleTypeDef *hrtc);
 static inline void rtc_lock(void);
 static inline void rtc_unlock(void);
 
-
 int rtc_init(void)
 {
     HAL_StatusTypeDef ret;
@@ -313,7 +312,10 @@ static inline void rtc_unlock(void)
     xSemaphoreGive(_rtc_mutex);
 }
 
-
+void RTC_WKUP_IRQHandler(void)
+{
+    HAL_RTCEx_WakeUpTimerIRQHandler(&h_rtc);
+}
 
 
 

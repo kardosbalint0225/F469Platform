@@ -541,3 +541,9 @@ static USBH_StatusTypeDef hal_status_to_usbh_status(const HAL_StatusTypeDef hal_
     return USBH_FAIL;
 }
 
+void OTG_FS_IRQHandler(void)
+{
+    HAL_HCD_IRQHandler(&h_hcd_fs);
+}
+
+

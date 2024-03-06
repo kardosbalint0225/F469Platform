@@ -522,6 +522,12 @@ void usb_host_powerswitch_disable(void)
     HAL_GPIO_WritePin(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, USB_HOST_POWERSWITCH_PIN, GPIO_PIN_RESET);
 }
 
+void USB_HOST_OVERCURRENT_PIN_EXTIx_IRQHandler(void)
+{
+    HAL_EXTI_IRQHandler(&h_exti_usb_host_overcurrent_pin);
+}
 
-
-
+void SDCARD_CD_PIN_EXTIx_IRQHandler(void)
+{
+    HAL_EXTI_IRQHandler(&h_exti_sdcard_cd_pin);
+}

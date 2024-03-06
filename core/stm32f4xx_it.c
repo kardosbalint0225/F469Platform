@@ -1,10 +1,4 @@
-#include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
-
-extern EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
-extern RTC_HandleTypeDef h_rtc;
-extern HCD_HandleTypeDef h_hcd_fs;
-extern EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
 void _get_registers_from_stack(uint32_t *fault_stack_address)
 {
@@ -133,43 +127,4 @@ void DebugMon_Handler(void)
     }
 }
 
-/******************************************************************************/
-/* STM32F4xx Peripheral Interrupt Handlers                                    */
-/* Add here the Interrupt Handlers for the used peripherals.                  */
-/* For the available peripheral interrupt handler names,                      */
-/* please refer to the startup file (startup_stm32f4xx.s).                    */
-/******************************************************************************/
-
-
-/**
- * @brief This function handles EXTI line 2 global interrupt
- */
-void EXTI2_IRQHandler(void)
-{
-    HAL_EXTI_IRQHandler(&h_exti_sdcard_cd_pin);
-}
-
-/**
- * @brief This function handles RTC WakeUp global interrupt.
- */
-void RTC_WKUP_IRQHandler(void)
-{
-    HAL_RTCEx_WakeUpTimerIRQHandler(&h_rtc);
-}
-
-/**
- * @brief This function handles USB FS global interrupt.
- */
-void OTG_FS_IRQHandler(void)
-{
-    HAL_HCD_IRQHandler(&h_hcd_fs);
-}
-
-/**
- * @brief This function handles External Line[9:5] global interrupts .
- */
-void EXTI9_5_IRQHandler(void)
-{
-    HAL_EXTI_IRQHandler(&h_exti_usb_host_overcurrent_pin);
-}
 
