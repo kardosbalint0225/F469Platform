@@ -122,4 +122,8 @@ static void period_elapsed_cb(TIM_HandleTypeDef *htim)
     HAL_IncTick();
 }
 
+void HAL_TIMEBASE_TIM_IRQHandler(void)
+{
+    HAL_TIM_IRQHandler(&h_hal_timebase_tim);
+}
 

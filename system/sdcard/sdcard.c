@@ -531,5 +531,8 @@ static int sd_error_to_errno(const uint32_t error)
     return (int)error;
 }
 
-
+void SDIO_IRQHandler(void)
+{
+    HAL_SD_IRQHandler(&h_sdio);
+}
 

@@ -1,12 +1,7 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
-//extern TIM_HandleTypeDef h_runtime_stats_timer;
-extern TIM_HandleTypeDef h_hal_timebase_tim;
 extern EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
-extern SD_HandleTypeDef h_sdio;
-extern DMA_HandleTypeDef h_sdio_dma_tx;
-extern DMA_HandleTypeDef h_sdio_dma_rx;
 extern RTC_HandleTypeDef h_rtc;
 extern HCD_HandleTypeDef h_hcd_fs;
 extern EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
@@ -145,13 +140,6 @@ void DebugMon_Handler(void)
 /* please refer to the startup file (startup_stm32f4xx.s).                    */
 /******************************************************************************/
 
-/**
- * @brief This function handles TIM6 global interrupt, DAC1 and DAC2 underrun error interrupts.
- */
-void TIM6_DAC_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(&h_hal_timebase_tim);
-}
 
 /**
  * @brief This function handles EXTI line 2 global interrupt
@@ -159,30 +147,6 @@ void TIM6_DAC_IRQHandler(void)
 void EXTI2_IRQHandler(void)
 {
     HAL_EXTI_IRQHandler(&h_exti_sdcard_cd_pin);
-}
-
-/**
- * @brief This function handles DMA2 stream3 global interrupt.
- */
-void DMA2_Stream3_IRQHandler(void)
-{
-    HAL_DMA_IRQHandler(&h_sdio_dma_rx);
-}
-
-/**
- * @brief This function handles DMA2 stream6 global interrupt.
- */
-void DMA2_Stream6_IRQHandler(void)
-{
-    HAL_DMA_IRQHandler(&h_sdio_dma_tx);
-}
-
-/**
- * @brief This function handles SDIO global interrupt.
- */
-void SDIO_IRQHandler(void)
-{
-    HAL_SD_IRQHandler(&h_sdio);
 }
 
 /**

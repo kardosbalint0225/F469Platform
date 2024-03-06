@@ -170,4 +170,13 @@ void STDIO_UART_DMA_STREAM_IRQHandler(void)
     HAL_DMA_IRQHandler(&h_stdio_uart_dma_tx);
 }
 
+void SDCARD_DMAx_RX_STREAM_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&h_sdio_dma_rx);
+}
+
+void SDCARD_DMAx_TX_STREAM_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&h_sdio_dma_tx);
+}
 

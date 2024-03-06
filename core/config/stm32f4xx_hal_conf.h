@@ -444,8 +444,9 @@
  #include "stm32_assert.h"
 #endif /* USE_FULL_ASSERT */
 
-#define HAL_TIMEBASE_TIMx        TIM6
-#define HAL_TIMEBASE_TIM_IRQn    TIM6_DAC_IRQn
+#define HAL_TIMEBASE_TIMx              TIM6
+#define HAL_TIMEBASE_TIM_IRQn          TIM6_DAC_IRQn
+#define HAL_TIMEBASE_TIM_IRQHandler    TIM6_DAC_IRQHandler
 
 #ifdef __cplusplus
 }
