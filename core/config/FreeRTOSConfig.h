@@ -23,7 +23,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_TICKLESS_IDLE                       ( 0 )
 #define configCPU_CLOCK_HZ                            ( SystemCoreClock )
 #define configTICK_RATE_HZ                            ( (TickType_t)1000 )
-#define configMAX_PRIORITIES                          ( 7 )
+#define configMAX_PRIORITIES                          ( 10 )
 #define configMINIMAL_STACK_SIZE                      ( (uint16_t)128 )
 #define configMAX_TASK_NAME_LEN                       ( 16 )
 #define configUSE_16_BIT_TICKS                        ( 0 )
@@ -69,14 +69,19 @@ extern uint32_t SystemCoreClock;
 #define portGET_RUN_TIME_COUNTER_VALUE()              runtime_stats_timer_get_count()
 #define RUNTIME_STATS_TIMER_TIMx                      TIM2
 #define RUNTIME_STATS_TIMER_IRQn                      TIM2_IRQn
+#define RUNTIME_STATS_TIMER_IRQ_PRIORITY              15ul
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                         ( 0 )
 #define configMAX_CO_ROUTINE_PRIORITIES               ( 1 )
 
 /* Software timer related definitions. */
+/* Yet another way if you are using software timers (configUSETIMERS is
+   set to 1), and the timer daemon/service task has a priority above any
+   other tasks, would be to use the vApplicationDaemonTaskStartupHook()
+   callback. */
 #define configUSE_TIMERS                              ( 1 )
-#define configTIMER_TASK_PRIORITY                     ( 3 )
+#define configTIMER_TASK_PRIORITY                     ( 9 )
 #define configTIMER_QUEUE_LENGTH                      ( 10 )
 #define configTIMER_TASK_STACK_DEPTH                  ( configMINIMAL_STACK_SIZE * 2)
 
@@ -109,7 +114,7 @@ extern uint32_t SystemCoreClock;
 #define INCLUDE_uxTaskGetStackHighWaterMark2          ( 1 )
 #define INCLUDE_xTaskGetIdleTaskHandle                ( 1 )
 #define INCLUDE_eTaskGetState                         ( 1 )
-#define INCLUDE_xTimerPendFunctionCall                ( 1 )
+#define INCLUDE_xTimerPendFunctionCall                ( 0 )
 #define INCLUDE_xTaskAbortDelay                       ( 1 )
 #define INCLUDE_xTaskGetHandle                        ( 1 )
 #define INCLUDE_xTaskResumeFromISR                    ( 1 )

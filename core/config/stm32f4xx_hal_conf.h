@@ -444,11 +444,8 @@
  #include "stm32_assert.h"
 #endif /* USE_FULL_ASSERT */
 
-#define HAL_TIMEBASE_TIMx                 TIM6
-//#define HAL_TIMEBASE_TIM_CLK_ENABLE       __HAL_RCC_TIM6_CLK_ENABLE
-//#define HAL_TIMEBASE_TIM_FORCE_RESET      __HAL_RCC_TIM2_FORCE_RESET
-//#define HAL_TIMEBASE_TIM_RELEASE_RESET    __HAL_RCC_TIM2_RELEASE_RESET
-#define HAL_TIMEBASE_TIM_IRQn             TIM6_DAC_IRQn
+#define HAL_TIMEBASE_TIMx        TIM6
+#define HAL_TIMEBASE_TIM_IRQn    TIM6_DAC_IRQn
 
 #ifdef __cplusplus
 }

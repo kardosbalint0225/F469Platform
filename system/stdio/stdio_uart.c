@@ -579,13 +579,18 @@ static void _uart_error_callback(UART_HandleTypeDef *huart)
 
 static void _error_handler(void)
 {
-    //TODO: proper error handling
-    while (1)
+    if (HAL_UART_ERROR_ORE & HAL_UART_GetError(&h_stdio_uart))
     {
-
+        __HAL_UART_CLEAR_OREFLAG(&h_stdio_uart);
     }
-    stdio_uart_deinit();
-    stdio_uart_init();
+    else
+    {
+        //TODO: proper error handling
+        while (1)
+        {
+
+        }
+    }
 }
 
 static int _uart_write(const uint8_t *data, size_t len)

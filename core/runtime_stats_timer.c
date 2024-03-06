@@ -70,7 +70,7 @@ void runtime_stats_timer_init(void)
     ret = HAL_TIM_Base_Start_IT(&h_runtime_stats_timer);
     assert(HAL_OK == ret);
 
-    HAL_NVIC_SetPriority(RUNTIME_STATS_TIMER_IRQn, 11ul, 0ul);
+    HAL_NVIC_SetPriority(RUNTIME_STATS_TIMER_IRQn, RUNTIME_STATS_TIMER_IRQ_PRIORITY, 0ul);
     HAL_NVIC_EnableIRQ(RUNTIME_STATS_TIMER_IRQn);
 }
 
