@@ -5,6 +5,7 @@
  *      Author: Balint
  */
 #include "dma.h"
+#include "rcc.h"
 #include "stm32f4xx_hal.h"
 
 #include "stdio_uart_config.h"
@@ -18,7 +19,7 @@ HAL_StatusTypeDef stdio_uart_dma_init(UART_HandleTypeDef *huart)
 {
     HAL_StatusTypeDef ret;
 
-    STDIO_UART_DMAx_CLK_ENABLE();
+    rcc_periph_clk_enable((const void *)STDIO_UART_DMAx_STREAMx);
 
     h_stdio_uart_dma_tx.Instance = STDIO_UART_DMAx_STREAMx;
     h_stdio_uart_dma_tx.Init.Channel = STDIO_UART_DMA_CHANNELx;
@@ -56,6 +57,7 @@ HAL_StatusTypeDef stdio_uart_dma_deinit(UART_HandleTypeDef *huart)
     }
 
     HAL_NVIC_DisableIRQ(STDIO_UART_DMAx_STREAMx_IRQn);
+    rcc_periph_clk_disable((const void *)STDIO_UART_DMAx_STREAMx);
 
     return HAL_OK;
 }
@@ -64,7 +66,7 @@ HAL_StatusTypeDef sdcard_sdio_dma_rx_init(SD_HandleTypeDef *h_sd)
 {
     HAL_StatusTypeDef ret;
 
-    SDCARD_DMAx_CLK_ENABLE();
+    rcc_periph_clk_enable((const void *)SDCARD_DMAx_RX_STREAM);
 
     h_sdio_dma_rx.Instance = SDCARD_DMAx_RX_STREAM;
     h_sdio_dma_rx.Init.Channel = SDCARD_DMAx_RX_CHANNEL;
@@ -99,7 +101,7 @@ HAL_StatusTypeDef sdcard_sdio_dma_tx_init(SD_HandleTypeDef *h_sd)
 {
     HAL_StatusTypeDef ret;
 
-    SDCARD_DMAx_CLK_ENABLE();
+    rcc_periph_clk_enable((const void *)SDCARD_DMAx_TX_STREAM);
 
     h_sdio_dma_tx.Instance = SDCARD_DMAx_TX_STREAM;
     h_sdio_dma_tx.Init.Channel = SDCARD_DMAx_TX_CHANNEL;
@@ -139,6 +141,8 @@ HAL_StatusTypeDef sdcard_sdio_dma_rx_deinit(SD_HandleTypeDef *h_sd)
         return ret;
     }
 
+    rcc_periph_clk_disable((const void *)SDCARD_DMAx_RX_STREAM);
+
     HAL_NVIC_DisableIRQ(SDCARD_DMAx_RX_IRQn);
 
     return HAL_OK;
@@ -153,6 +157,8 @@ HAL_StatusTypeDef sdcard_sdio_dma_tx_deinit(SD_HandleTypeDef *h_sd)
     {
         return ret;
     }
+
+    rcc_periph_clk_disable((const void *)SDCARD_DMAx_TX_STREAM);
 
     HAL_NVIC_DisableIRQ(SDCARD_DMAx_TX_IRQn);
 

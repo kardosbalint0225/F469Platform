@@ -22,11 +22,11 @@
  */
 #define CLI_PRINT_BUFFER_SIZE          512
 
-#define CLI_IO_READ_TASK_PRIORITY      3
+#define CLI_IO_READ_TASK_PRIORITY      3ul
 #define CLI_IO_READ_TASK_STACK_SIZE    (configMINIMAL_STACK_SIZE)
-#define CLI_PROCESS_TASK_PRIORITY      3
-#define CLI_PROCESS_TASK_STACK_SIZE    (32 * configMINIMAL_STACK_SIZE)
-#define CLI_RX_QUEUE_LENGTH            1
+#define CLI_PROCESS_TASK_PRIORITY      3ul
+#define CLI_PROCESS_TASK_STACK_SIZE    (configMINIMAL_STACK_SIZE + 31 * configMINIMAL_STACK_SIZE)
+#define CLI_RX_QUEUE_LENGTH            1ul
 
 #endif /* __CLI_CONFIG_H__ */
 

@@ -102,6 +102,11 @@ static void usart6_periph_reset(void) { __HAL_RCC_USART6_FORCE_RESET(); __HAL_RC
 static void uart7_periph_reset(void) { __HAL_RCC_UART7_FORCE_RESET(); __HAL_RCC_UART7_RELEASE_RESET(); }
 static void uart8_periph_reset(void) { __HAL_RCC_UART8_FORCE_RESET(); __HAL_RCC_UART8_RELEASE_RESET(); }
 
+static void dma1_clk_enable(void) { __HAL_RCC_DMA1_CLK_ENABLE(); }
+static void dma1_clk_disable(void) { __HAL_RCC_DMA1_CLK_DISABLE(); }
+static void dma2_clk_enable(void) { __HAL_RCC_DMA2_CLK_ENABLE(); }
+static void dma2_clk_disable(void) { __HAL_RCC_DMA2_CLK_DISABLE(); }
+
 static int find_periph_index(const void *periph);
 static inline void periph_lock(void);
 static inline void periph_unlock(void);
@@ -153,6 +158,23 @@ static rcc_periph_t _periph[] = {
     { (const void *)TIM12, tim12_clk_enable, tim12_clk_disable, tim12_periph_reset },
     { (const void *)TIM13, tim13_clk_enable, tim13_clk_disable, tim13_periph_reset },
     { (const void *)TIM14, tim14_clk_enable, tim14_clk_disable, tim14_periph_reset },
+
+    { (const void *)DMA1_Stream0, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA1_Stream1, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA1_Stream2, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA1_Stream3, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA1_Stream4, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA1_Stream5, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA1_Stream6, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA1_Stream7, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA2_Stream0, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA2_Stream1, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA2_Stream2, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA2_Stream3, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA2_Stream4, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA2_Stream5, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA2_Stream6, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA2_Stream7, dma2_clk_enable, dma2_clk_disable },
 };
 
 void rcc_init(void)
