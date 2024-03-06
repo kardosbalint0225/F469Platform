@@ -114,6 +114,8 @@ static inline void periph_unlock(void);
 static SemaphoreHandle_t _periph_mutex = NULL;
 static StaticSemaphore_t _periph_mutex_storage;
 
+static uint32_t clk48_reference_count = 0ul;
+
 typedef struct {
     const void * const base_address;
     const void (* const clk_enable_fn)(void);
@@ -184,6 +186,8 @@ void rcc_init(void)
     {
         _periph[i].reference_count = 0ul;
     }
+
+    clk48_reference_count = 0ul;
 
     _periph_mutex = xSemaphoreCreateMutexStatic(&_periph_mutex_storage);
     assert(_periph_mutex);
@@ -272,16 +276,56 @@ HAL_StatusTypeDef clk48_clock_init(void)
         .PLLSAI.PLLSAIN = 384,
         .PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8,
     };
-    return HAL_RCCEx_PeriphCLKConfig(&clk48_clock);
+    HAL_StatusTypeDef ret;
+
+    periph_lock();
+
+    if (0ul == clk48_reference_count)
+    {
+        ret = HAL_RCCEx_PeriphCLKConfig(&clk48_clock);
+    }
+    else
+    {
+        ret = HAL_OK;
+    }
+
+    clk48_reference_count = clk48_reference_count + 1ul;
+
+    periph_unlock();
+
+    return ret;
 }
 
 HAL_StatusTypeDef clk48_clock_deinit(void)
 {
-    return HAL_OK;  //TODO: how to shut it down
+    HAL_StatusTypeDef ret;
+
+    periph_lock();
+
+    clk48_reference_count = clk48_reference_count - 1ul;
+
+    if (0ul == clk48_reference_count)
+    {
+        ret = HAL_OK;   //TODO: how to shut it down
+    }
+    else
+    {
+        ret = HAL_OK;
+    }
+
+    periph_unlock();
+
+    return ret;
 }
 
 HAL_StatusTypeDef sdio_clock_source_init(void)
 {
+    HAL_StatusTypeDef ret = clk48_clock_init();
+    if (HAL_OK != ret)
+    {
+        return ret;
+    }
+
     RCC_PeriphCLKInitTypeDef sdio_clock = {
         .PeriphClockSelection = RCC_PERIPHCLK_SDIO,
         .SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48,

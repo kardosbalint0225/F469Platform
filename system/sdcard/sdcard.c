@@ -330,11 +330,11 @@ static void sdio_msp_init(SD_HandleTypeDef *h_sd)
 //    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
     //HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
 
-    _error = clk48_clock_init();
-    if (HAL_OK != _error)
-    {
-        return;
-    }
+//    _error = clk48_clock_init();
+//    if (HAL_OK != _error)
+//    {
+//        return;
+//    }
 
     _error = sdio_clock_source_init();
     if (HAL_OK != _error)
