@@ -35,7 +35,6 @@ void vApplicationDaemonTaskStartupHook(void);
 
 void vApplicationDaemonTaskStartupHook(void)
 {
-    rcc_init();
     rtc_init();
     vfs_init();
     stdio_init();
