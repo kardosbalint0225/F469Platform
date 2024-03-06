@@ -102,124 +102,126 @@ static void usart6_periph_reset(void) { __HAL_RCC_USART6_FORCE_RESET(); __HAL_RC
 static void uart7_periph_reset(void) { __HAL_RCC_UART7_FORCE_RESET(); __HAL_RCC_UART7_RELEASE_RESET(); }
 static void uart8_periph_reset(void) { __HAL_RCC_UART8_FORCE_RESET(); __HAL_RCC_UART8_RELEASE_RESET(); }
 
-static int find_tim_index(const TIM_TypeDef *tim);
-static int find_usart_index(const USART_TypeDef *usart);
-static int find_gpio_index(const GPIO_TypeDef *gpio);
-static inline void gpio_lock(void);
-static inline void gpio_unlock(void);
+static int find_periph_index(const void *periph);
+static inline void periph_lock(void);
+static inline void periph_unlock(void);
 
-static SemaphoreHandle_t _gpio_mutex = NULL;
-static StaticSemaphore_t _gpio_mutex_storage;
+static SemaphoreHandle_t _periph_mutex = NULL;
+static StaticSemaphore_t _periph_mutex_storage;
 
 typedef struct {
-    const TIM_TypeDef * const base_address;
+    const void * const base_address;
     const void (* const clk_enable_fn)(void);
     const void (* const clk_disable_fn)(void);
     const void (* const periph_reset_fn)(void);
-} rcc_tim_t;
-
-typedef struct {
-    const USART_TypeDef * const base_address;
-    const void (* const clk_enable_fn)(void);
-    const void (* const clk_disable_fn)(void);
-    const void (* const periph_reset_fn)(void);
-} rcc_usart_t;
-
-typedef struct {
-    const GPIO_TypeDef * const base_address;
-    const void (* const clk_enable_fn)(void);
-    const void (* const clk_disable_fn)(void);
     uint32_t reference_count;
-} gpio_t;
+} rcc_periph_t;
 
-static gpio_t _gpio[] = {
-    { GPIOA, gpioa_clk_enable, gpioa_clk_disable },
-    { GPIOB, gpiob_clk_enable, gpiob_clk_disable },
-    { GPIOC, gpioc_clk_enable, gpioc_clk_disable },
-    { GPIOD, gpiod_clk_enable, gpiod_clk_disable },
-    { GPIOE, gpioe_clk_enable, gpioe_clk_disable },
-    { GPIOF, gpiof_clk_enable, gpiof_clk_disable },
-    { GPIOG, gpiog_clk_enable, gpiog_clk_disable },
-    { GPIOH, gpioh_clk_enable, gpioh_clk_disable },
-    { GPIOI, gpioi_clk_enable, gpioi_clk_disable },
-    { GPIOJ, gpioj_clk_enable, gpioj_clk_disable },
-    { GPIOK, gpiok_clk_enable, gpiok_clk_disable },
-};
+static rcc_periph_t _periph[] = {
+    { (const void *)GPIOA, gpioa_clk_enable, gpioa_clk_disable },
+    { (const void *)GPIOB, gpiob_clk_enable, gpiob_clk_disable },
+    { (const void *)GPIOC, gpioc_clk_enable, gpioc_clk_disable },
+    { (const void *)GPIOD, gpiod_clk_enable, gpiod_clk_disable },
+    { (const void *)GPIOE, gpioe_clk_enable, gpioe_clk_disable },
+    { (const void *)GPIOF, gpiof_clk_enable, gpiof_clk_disable },
+    { (const void *)GPIOG, gpiog_clk_enable, gpiog_clk_disable },
+    { (const void *)GPIOH, gpioh_clk_enable, gpioh_clk_disable },
+    { (const void *)GPIOI, gpioi_clk_enable, gpioi_clk_disable },
+    { (const void *)GPIOJ, gpioj_clk_enable, gpioj_clk_disable },
+    { (const void *)GPIOK, gpiok_clk_enable, gpiok_clk_disable },
 
-static const rcc_usart_t _usart[] = {
-    { USART1, usart1_clk_enable, usart1_clk_disable, usart1_periph_reset },
-    { USART2, usart2_clk_enable, usart2_clk_disable, usart2_periph_reset },
-    { USART3, usart3_clk_enable, usart3_clk_disable, usart3_periph_reset },
-    { UART4, uart4_clk_enable, uart4_clk_disable, uart4_periph_reset },
-    { UART5, uart5_clk_enable, uart5_clk_disable, uart5_periph_reset},
-    { USART6, usart6_clk_enable, usart6_clk_disable, usart6_periph_reset },
-    { UART7, uart7_clk_enable, uart7_clk_disable, uart7_periph_reset },
-    { UART8, uart8_clk_enable, uart8_clk_disable, uart8_periph_reset },
-};
+    { (const void *)USART1, usart1_clk_enable, usart1_clk_disable, usart1_periph_reset },
+    { (const void *)USART2, usart2_clk_enable, usart2_clk_disable, usart2_periph_reset },
+    { (const void *)USART3, usart3_clk_enable, usart3_clk_disable, usart3_periph_reset },
+    { (const void *)UART4, uart4_clk_enable, uart4_clk_disable, uart4_periph_reset },
+    { (const void *)UART5, uart5_clk_enable, uart5_clk_disable, uart5_periph_reset},
+    { (const void *)USART6, usart6_clk_enable, usart6_clk_disable, usart6_periph_reset },
+    { (const void *)UART7, uart7_clk_enable, uart7_clk_disable, uart7_periph_reset },
+    { (const void *)UART8, uart8_clk_enable, uart8_clk_disable, uart8_periph_reset },
 
-static const rcc_tim_t _tim[] = {
-    { TIM1, tim1_clk_enable, tim1_clk_disable, tim1_periph_reset },
-    { TIM2, tim2_clk_enable, tim2_clk_disable, tim2_periph_reset },
-    { TIM3, tim3_clk_enable, tim3_clk_disable, tim3_periph_reset },
-    { TIM4, tim4_clk_enable, tim4_clk_disable, tim4_periph_reset },
-    { TIM5, tim5_clk_enable, tim5_clk_disable, tim5_periph_reset },
-    { TIM6, tim6_clk_enable, tim6_clk_disable, tim6_periph_reset },
-    { TIM7, tim7_clk_enable, tim7_clk_disable, tim7_periph_reset },
-    { TIM8, tim8_clk_enable, tim8_clk_disable, tim8_periph_reset },
-    { TIM9, tim9_clk_enable, tim9_clk_disable, tim9_periph_reset },
-    { TIM10, tim10_clk_enable, tim10_clk_disable, tim10_periph_reset },
-    { TIM11, tim11_clk_enable, tim11_clk_disable, tim11_periph_reset },
-    { TIM12, tim12_clk_enable, tim12_clk_disable, tim12_periph_reset },
-    { TIM13, tim13_clk_enable, tim13_clk_disable, tim13_periph_reset },
-    { TIM14, tim14_clk_enable, tim14_clk_disable, tim14_periph_reset },
+    { (const void *)TIM1, tim1_clk_enable, tim1_clk_disable, tim1_periph_reset },
+    { (const void *)TIM2, tim2_clk_enable, tim2_clk_disable, tim2_periph_reset },
+    { (const void *)TIM3, tim3_clk_enable, tim3_clk_disable, tim3_periph_reset },
+    { (const void *)TIM4, tim4_clk_enable, tim4_clk_disable, tim4_periph_reset },
+    { (const void *)TIM5, tim5_clk_enable, tim5_clk_disable, tim5_periph_reset },
+    { (const void *)TIM6, tim6_clk_enable, tim6_clk_disable, tim6_periph_reset },
+    { (const void *)TIM7, tim7_clk_enable, tim7_clk_disable, tim7_periph_reset },
+    { (const void *)TIM8, tim8_clk_enable, tim8_clk_disable, tim8_periph_reset },
+    { (const void *)TIM9, tim9_clk_enable, tim9_clk_disable, tim9_periph_reset },
+    { (const void *)TIM10, tim10_clk_enable, tim10_clk_disable, tim10_periph_reset },
+    { (const void *)TIM11, tim11_clk_enable, tim11_clk_disable, tim11_periph_reset },
+    { (const void *)TIM12, tim12_clk_enable, tim12_clk_disable, tim12_periph_reset },
+    { (const void *)TIM13, tim13_clk_enable, tim13_clk_disable, tim13_periph_reset },
+    { (const void *)TIM14, tim14_clk_enable, tim14_clk_disable, tim14_periph_reset },
 };
 
 void rcc_init(void)
 {
-    const int size = sizeof(_gpio) / sizeof(gpio_t);
+    const int size = sizeof(_periph) / sizeof(rcc_periph_t);
     for (int i = 0; i < size; i++)
     {
-        _gpio[i].reference_count = 0ul;
+        _periph[i].reference_count = 0ul;
     }
 
-    _gpio_mutex = xSemaphoreCreateMutexStatic(&_gpio_mutex_storage);
-    assert(_gpio_mutex);
+    _periph_mutex = xSemaphoreCreateMutexStatic(&_periph_mutex_storage);
+    assert(_periph_mutex);
 }
 
 void rcc_deinit(void)
 {
-    vSemaphoreDelete(_gpio_mutex);
-    _gpio_mutex = NULL;
+    vSemaphoreDelete(_periph_mutex);
+    _periph_mutex = NULL;
 }
 
-void rcc_timx_clk_enable(const TIM_TypeDef *tim)
+void rcc_periph_clk_enable(const void *periph)
 {
-    assert(tim);
+    assert(periph);
 
-    const int i = find_tim_index(tim);
+    const int i = find_periph_index(periph);
     assert(-1 != i);
+    assert(_periph[i].clk_enable_fn);
 
-    _tim[i].clk_enable_fn();
+    periph_lock();
+
+    if (0ul == _periph[i].reference_count)
+    {
+        _periph[i].clk_enable_fn();
+    }
+
+    _periph[i].reference_count = _periph[i].reference_count + 1ul;
+
+    periph_unlock();
 }
 
-void rcc_timx_clk_disable(const TIM_TypeDef *tim)
+void rcc_periph_clk_disable(const void *periph)
 {
-    assert(tim);
+    assert(periph);
 
-    const int i = find_tim_index(tim);
+    const int i = find_periph_index(periph);
     assert(-1 != i);
+    assert(_periph[i].clk_disable_fn);
 
-    _tim[i].clk_disable_fn();
+    periph_lock();
+
+    _periph[i].reference_count = _periph[i].reference_count - 1ul;
+
+    if (0ul == _periph[i].reference_count)
+    {
+        _periph[i].clk_disable_fn();
+    }
+
+    periph_unlock();
 }
 
-void rcc_timx_periph_reset(const TIM_TypeDef *tim)
+void rcc_periph_reset(const void *periph)
 {
-    assert(tim);
+    assert(periph);
 
-    const int i = find_tim_index(tim);
+    const int i = find_periph_index(periph);
     assert(-1 != i);
+    assert(_periph[i].periph_reset_fn);
 
-    _tim[i].periph_reset_fn();
+    _periph[i].periph_reset_fn();
 }
 
 HAL_StatusTypeDef rtc_clock_source_init(void)
@@ -271,82 +273,14 @@ HAL_StatusTypeDef sdio_clock_source_deinit(void)
     return HAL_OK; //TODO: how to shut it down
 }
 
-void rcc_gpiox_clk_enable(const GPIO_TypeDef *gpio)
-{
-    assert(gpio);
-
-    const int i = find_gpio_index(gpio);
-    assert(-1 != i);
-
-    gpio_lock();
-
-    if (0ul == _gpio[i].reference_count)
-    {
-        _gpio[i].clk_enable_fn();
-    }
-
-    _gpio[i].reference_count = _gpio[i].reference_count + 1ul;
-
-    gpio_unlock();
-}
-
-void rcc_gpiox_clk_disable(const GPIO_TypeDef *gpio)
-{
-    assert(gpio);
-
-    const int i = find_gpio_index(gpio);
-    assert(-1 != i);
-
-    gpio_lock();
-
-    _gpio[i].reference_count = _gpio[i].reference_count - 1ul;
-
-    if (0ul == _gpio[i].reference_count)
-    {
-        _gpio[i].clk_disable_fn();
-    }
-
-    gpio_unlock();
-}
-
-void rcc_usartx_clk_enable(const USART_TypeDef *usart)
-{
-    assert(usart);
-
-    const int i = find_usart_index(usart);
-    assert(-1 != i);
-
-    _usart[i].clk_enable_fn();
-}
-
-void rcc_usartx_clk_disable(const USART_TypeDef *usart)
-{
-    assert(usart);
-
-    const int i = find_usart_index(usart);
-    assert(-1 != i);
-
-    _usart[i].clk_disable_fn();
-}
-
-void rcc_usartx_periph_reset(const USART_TypeDef *usart)
-{
-    assert(usart);
-
-    const int i = find_usart_index(usart);
-    assert(-1 != i);
-
-    _usart[i].periph_reset_fn();
-}
-
-static int find_tim_index(const TIM_TypeDef *tim)
+static int find_periph_index(const void *periph)
 {
     int index = -1;
-    const int size = sizeof(_tim) / sizeof(rcc_tim_t);
+    const int size = sizeof(_periph) / sizeof(rcc_periph_t);
 
     for (int i = 0; i < size; i++)
     {
-        if (tim == _tim[i].base_address)
+        if (periph == _periph[i].base_address)
         {
             index = i;
             break;
@@ -356,48 +290,14 @@ static int find_tim_index(const TIM_TypeDef *tim)
     return index;
 }
 
-static int find_usart_index(const USART_TypeDef *usart)
+static inline void periph_lock(void)
 {
-    int index = -1;
-    const int size = sizeof(_usart) / sizeof(rcc_usart_t);
-
-    for (int i = 0; i < size; i++)
-    {
-        if (usart == _usart[i].base_address)
-        {
-            index = i;
-            break;
-        }
-    }
-
-    return index;
+    xSemaphoreTake(_periph_mutex, portMAX_DELAY);
 }
 
-static int find_gpio_index(const GPIO_TypeDef *gpio)
+static inline void periph_unlock(void)
 {
-    int index = -1;
-    const int size = sizeof(_gpio) / sizeof(gpio_t);
-
-    for (int i = 0; i < size; i++)
-    {
-        if (gpio == _gpio[i].base_address)
-        {
-            index = i;
-            break;
-        }
-    }
-
-    return index;
-}
-
-static inline void gpio_lock(void)
-{
-    xSemaphoreTake(_gpio_mutex, portMAX_DELAY);
-}
-
-static inline void gpio_unlock(void)
-{
-    xSemaphoreGive(_gpio_mutex);
+    xSemaphoreGive(_periph_mutex);
 }
 
 

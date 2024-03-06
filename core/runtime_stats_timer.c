@@ -27,8 +27,8 @@ void runtime_stats_timer_init(void)
 
     _count = 0ul;
 
-    rcc_timx_clk_enable(RUNTIME_STATS_TIMER_TIMx);
-    rcc_timx_periph_reset(RUNTIME_STATS_TIMER_TIMx);
+    rcc_periph_clk_enable((const void *)RUNTIME_STATS_TIMER_TIMx);
+    rcc_periph_reset((const void *)RUNTIME_STATS_TIMER_TIMx);
 
     HAL_RCC_GetClockConfig(&clock_config, &flash_latency);
 
@@ -95,7 +95,7 @@ void runtime_stats_timer_deinit(void)
     ret = HAL_TIM_Base_DeInit(&h_runtime_stats_timer);
     assert(HAL_OK == ret);
 
-    rcc_timx_clk_disable(RUNTIME_STATS_TIMER_TIMx);
+    rcc_periph_clk_disable((const void *)RUNTIME_STATS_TIMER_TIMx);
 }
 
 /**

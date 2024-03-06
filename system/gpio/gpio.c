@@ -30,7 +30,7 @@ void led1_pin_init(void)
         .Pull = GPIO_NOPULL,
         .Speed = GPIO_SPEED_FREQ_LOW,
     };
-    rcc_gpiox_clk_enable(LED1_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)LED1_GPIO_PORT);
     HAL_GPIO_Init(LED1_GPIO_PORT, &led1);
 }
 
@@ -42,7 +42,7 @@ void led2_pin_init(void)
         .Pull = GPIO_NOPULL,
         .Speed = GPIO_SPEED_FREQ_LOW,
     };
-    rcc_gpiox_clk_enable(LED2_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)LED2_GPIO_PORT);
     HAL_GPIO_Init(LED2_GPIO_PORT, &led2);
 }
 
@@ -54,7 +54,7 @@ void led3_pin_init(void)
         .Pull = GPIO_NOPULL,
         .Speed = GPIO_SPEED_FREQ_LOW,
     };
-    rcc_gpiox_clk_enable(LED3_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)LED3_GPIO_PORT);
     HAL_GPIO_Init(LED3_GPIO_PORT, &led3);
 }
 
@@ -66,32 +66,32 @@ void led4_pin_init(void)
         .Pull = GPIO_NOPULL,
         .Speed = GPIO_SPEED_FREQ_LOW,
     };
-    rcc_gpiox_clk_enable(LED4_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)LED4_GPIO_PORT);
     HAL_GPIO_Init(LED4_GPIO_PORT, &led4);
 }
 
 void led1_pin_deinit(void)
 {
     HAL_GPIO_DeInit(LED1_GPIO_PORT, LED1_PIN);
-    rcc_gpiox_clk_disable(LED1_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)LED1_GPIO_PORT);
 }
 
 void led2_pin_deinit(void)
 {
     HAL_GPIO_DeInit(LED2_GPIO_PORT, LED2_PIN);
-    rcc_gpiox_clk_disable(LED2_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)LED2_GPIO_PORT);
 }
 
 void led3_pin_deinit(void)
 {
     HAL_GPIO_DeInit(LED3_GPIO_PORT, LED3_PIN);
-    rcc_gpiox_clk_disable(LED3_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)LED3_GPIO_PORT);
 }
 
 void led4_pin_deinit(void)
 {
     HAL_GPIO_DeInit(LED4_GPIO_PORT, LED4_PIN);
-    rcc_gpiox_clk_disable(LED4_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)LED4_GPIO_PORT);
 }
 
 void led1_enable(void)
@@ -163,7 +163,7 @@ void stdio_uart_tx_pin_init(void)
         .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
         .Alternate = STDIO_UART_GPIO_AFx_USARTx,
     };
-    rcc_gpiox_clk_enable(STDIO_UART_TX_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)STDIO_UART_TX_GPIO_PORT);
     HAL_GPIO_Init(STDIO_UART_TX_GPIO_PORT, &stdio_uart_tx_pin);
 }
 
@@ -176,20 +176,20 @@ void stdio_uart_rx_pin_init(void)
         .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
         .Alternate = STDIO_UART_GPIO_AFx_USARTx,
     };
-    rcc_gpiox_clk_enable(STDIO_UART_RX_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)STDIO_UART_RX_GPIO_PORT);
     HAL_GPIO_Init(STDIO_UART_RX_GPIO_PORT, &stdio_uart_rx_pin);
 }
 
 void stdio_uart_tx_pin_deinit(void)
 {
     HAL_GPIO_DeInit(STDIO_UART_TX_GPIO_PORT, STDIO_UART_TX_PIN);
-    rcc_gpiox_clk_disable(STDIO_UART_TX_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)STDIO_UART_TX_GPIO_PORT);
 }
 
 void stdio_uart_rx_pin_deinit(void)
 {
     HAL_GPIO_DeInit(STDIO_UART_RX_GPIO_PORT, STDIO_UART_RX_PIN);
-    rcc_gpiox_clk_disable(STDIO_UART_RX_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)STDIO_UART_RX_GPIO_PORT);
 }
 
 void sdcard_cmd_pin_init(void)
@@ -201,7 +201,7 @@ void sdcard_cmd_pin_init(void)
         .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
         .Alternate = SDCARD_GPIO_AFx_SDIO,
     };
-    rcc_gpiox_clk_enable(SDCARD_CMD_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)SDCARD_CMD_PIN_GPIO_PORT);
     HAL_GPIO_Init(SDCARD_CMD_PIN_GPIO_PORT, &cmd_pin);
 }
 
@@ -214,7 +214,7 @@ void sdcard_clk_pin_init(void)
         .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
         .Alternate = SDCARD_GPIO_AFx_SDIO,
     };
-    rcc_gpiox_clk_enable(SDCARD_CLK_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)SDCARD_CLK_PIN_GPIO_PORT);
     HAL_GPIO_Init(SDCARD_CLK_PIN_GPIO_PORT, &clk_pin);
 }
 
@@ -227,7 +227,7 @@ void sdcard_d3_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = SDCARD_GPIO_AFx_SDIO,
     };
-    rcc_gpiox_clk_enable(SDCARD_D3_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)SDCARD_D3_PIN_GPIO_PORT);
     HAL_GPIO_Init(SDCARD_D3_PIN_GPIO_PORT, &d3_pin);
 }
 
@@ -240,7 +240,7 @@ void sdcard_d2_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = SDCARD_GPIO_AFx_SDIO,
     };
-    rcc_gpiox_clk_enable(SDCARD_D2_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)SDCARD_D2_PIN_GPIO_PORT);
     HAL_GPIO_Init(SDCARD_D2_PIN_GPIO_PORT, &d2_pin);
 }
 
@@ -253,7 +253,7 @@ void sdcard_d1_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = SDCARD_GPIO_AFx_SDIO,
     };
-    rcc_gpiox_clk_enable(SDCARD_D1_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)SDCARD_D1_PIN_GPIO_PORT);
     HAL_GPIO_Init(SDCARD_D1_PIN_GPIO_PORT, &d1_pin);
 }
 
@@ -266,44 +266,44 @@ void sdcard_d0_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = SDCARD_GPIO_AFx_SDIO,
     };
-    rcc_gpiox_clk_enable(SDCARD_D0_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)SDCARD_D0_PIN_GPIO_PORT);
     HAL_GPIO_Init(SDCARD_D0_PIN_GPIO_PORT, &d0_pin);
 }
 
 void sdcard_cmd_pin_deinit(void)
 {
     HAL_GPIO_DeInit(SDCARD_CMD_PIN_GPIO_PORT, SDCARD_CMD_PIN);
-    rcc_gpiox_clk_disable(SDCARD_CMD_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)SDCARD_CMD_PIN_GPIO_PORT);
 }
 
 void sdcard_clk_pin_deinit(void)
 {
     HAL_GPIO_DeInit(SDCARD_CLK_PIN_GPIO_PORT, SDCARD_CLK_PIN);
-    rcc_gpiox_clk_disable(SDCARD_CLK_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)SDCARD_CLK_PIN_GPIO_PORT);
 }
 
 void sdcard_d3_pin_deinit(void)
 {
     HAL_GPIO_DeInit(SDCARD_D3_PIN_GPIO_PORT, SDCARD_D3_PIN);
-    rcc_gpiox_clk_disable(SDCARD_D3_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)SDCARD_D3_PIN_GPIO_PORT);
 }
 
 void sdcard_d2_pin_deinit(void)
 {
     HAL_GPIO_DeInit(SDCARD_D2_PIN_GPIO_PORT, SDCARD_D2_PIN);
-    rcc_gpiox_clk_disable(SDCARD_D2_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)SDCARD_D2_PIN_GPIO_PORT);
 }
 
 void sdcard_d1_pin_deinit(void)
 {
     HAL_GPIO_DeInit(SDCARD_D1_PIN_GPIO_PORT, SDCARD_D1_PIN);
-    rcc_gpiox_clk_disable(SDCARD_D1_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)SDCARD_D1_PIN_GPIO_PORT);
 }
 
 void sdcard_d0_pin_deinit(void)
 {
     HAL_GPIO_DeInit(SDCARD_D0_PIN_GPIO_PORT, SDCARD_D0_PIN);
-    rcc_gpiox_clk_disable(SDCARD_D0_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)SDCARD_D0_PIN_GPIO_PORT);
 }
 
 int sdcard_cd_pin_init(void (*exti_callback_fn)(void))
@@ -315,7 +315,7 @@ int sdcard_cd_pin_init(void (*exti_callback_fn)(void))
         .Mode = GPIO_MODE_IT_RISING_FALLING,
         .Pull = GPIO_PULLUP,
     };
-    rcc_gpiox_clk_enable(SDCARD_CD_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)SDCARD_CD_PIN_GPIO_PORT);
     HAL_GPIO_Init(SDCARD_CD_PIN_GPIO_PORT, &card_detect_pin_config);
 
     EXTI_ConfigTypeDef exti_config = {
@@ -357,7 +357,7 @@ int sdcard_cd_pin_deinit(void)
     }
 
     HAL_GPIO_DeInit(SDCARD_CD_PIN_GPIO_PORT, SDCARD_CD_PIN);
-    rcc_gpiox_clk_disable(SDCARD_CD_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)SDCARD_CD_PIN_GPIO_PORT);
 
     return 0;
 }
@@ -371,7 +371,7 @@ void usb_host_vbus_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
     };
-    rcc_gpiox_clk_enable(USB_HOST_VBUS_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)USB_HOST_VBUS_PIN_GPIO_PORT);
     HAL_GPIO_Init(USB_HOST_VBUS_PIN_GPIO_PORT, &vbus_pin);
 }
 
@@ -384,7 +384,7 @@ void usb_host_dp_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
     };
-    rcc_gpiox_clk_enable(USB_HOST_DP_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)USB_HOST_DP_PIN_GPIO_PORT);
     HAL_GPIO_Init(USB_HOST_DP_PIN_GPIO_PORT, &dp_pin);
 }
 
@@ -397,7 +397,7 @@ void usb_host_dm_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
     };
-    rcc_gpiox_clk_enable(USB_HOST_DM_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)USB_HOST_DM_PIN_GPIO_PORT);
     HAL_GPIO_Init(USB_HOST_DM_PIN_GPIO_PORT, &dm_pin);
 }
 
@@ -410,7 +410,7 @@ void usb_host_id_pin_init(void)
        .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
        .Alternate = USB_HOST_GPIO_AFx_OTG_FS,
     };
-    rcc_gpiox_clk_enable(USB_HOST_ID_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)USB_HOST_ID_PIN_GPIO_PORT);
     HAL_GPIO_Init(USB_HOST_ID_PIN_GPIO_PORT, &id_pin);
 }
 
@@ -422,7 +422,7 @@ void usb_host_powerswitch_pin_init(void)
        .Pull = GPIO_NOPULL,
        .Speed = GPIO_SPEED_FREQ_LOW,
     };
-    rcc_gpiox_clk_enable(USB_HOST_POWERSWITCH_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)USB_HOST_POWERSWITCH_PIN_GPIO_PORT);
     HAL_GPIO_Init(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, &ps_pin);
 }
 
@@ -435,7 +435,7 @@ int usb_host_overcurrent_pin_init(void (*exti_callback_fn)(void))
         .Mode = GPIO_MODE_IT_FALLING,
         .Pull = GPIO_NOPULL,
     };
-    rcc_gpiox_clk_enable(USB_HOST_OVERCURRENT_PIN_GPIO_PORT);
+    rcc_periph_clk_enable((const void *)USB_HOST_OVERCURRENT_PIN_GPIO_PORT);
     HAL_GPIO_Init(USB_HOST_OVERCURRENT_PIN_GPIO_PORT, &overcurrent_pin_config);
 
     EXTI_ConfigTypeDef exti_config = {
@@ -467,31 +467,31 @@ int usb_host_overcurrent_pin_init(void (*exti_callback_fn)(void))
 void usb_host_vbus_pin_deinit(void)
 {
     HAL_GPIO_DeInit(USB_HOST_VBUS_PIN_GPIO_PORT, USB_HOST_VBUS_PIN);
-    rcc_gpiox_clk_disable(USB_HOST_VBUS_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)USB_HOST_VBUS_PIN_GPIO_PORT);
 }
 
 void usb_host_dp_pin_deinit(void)
 {
     HAL_GPIO_DeInit(USB_HOST_DP_PIN_GPIO_PORT, USB_HOST_DP_PIN);
-    rcc_gpiox_clk_disable(USB_HOST_DP_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)USB_HOST_DP_PIN_GPIO_PORT);
 }
 
 void usb_host_dm_pin_deinit(void)
 {
     HAL_GPIO_DeInit(USB_HOST_DM_PIN_GPIO_PORT, USB_HOST_DM_PIN);
-    rcc_gpiox_clk_disable(USB_HOST_DM_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)USB_HOST_DM_PIN_GPIO_PORT);
 }
 
 void usb_host_id_pin_deinit(void)
 {
     HAL_GPIO_DeInit(USB_HOST_ID_PIN_GPIO_PORT, USB_HOST_ID_PIN);
-    rcc_gpiox_clk_disable(USB_HOST_ID_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)USB_HOST_ID_PIN_GPIO_PORT);
 }
 
 void usb_host_powerswitch_pin_deinit(void)
 {
     HAL_GPIO_DeInit(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, USB_HOST_POWERSWITCH_PIN);
-    rcc_gpiox_clk_disable(USB_HOST_POWERSWITCH_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)USB_HOST_POWERSWITCH_PIN_GPIO_PORT);
 }
 
 int usb_host_overcurrent_pin_deinit(void)
@@ -507,7 +507,7 @@ int usb_host_overcurrent_pin_deinit(void)
     }
 
     HAL_GPIO_DeInit(USB_HOST_OVERCURRENT_PIN_GPIO_PORT, USB_HOST_OVERCURRENT_PIN);
-    rcc_gpiox_clk_disable(USB_HOST_OVERCURRENT_PIN_GPIO_PORT);
+    rcc_periph_clk_disable((const void *)USB_HOST_OVERCURRENT_PIN_GPIO_PORT);
 
     return 0;
 }

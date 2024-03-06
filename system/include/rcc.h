@@ -24,16 +24,9 @@ HAL_StatusTypeDef clk48_clock_deinit(void);
 HAL_StatusTypeDef sdio_clock_source_init(void);
 HAL_StatusTypeDef sdio_clock_source_deinit(void);
 
-void rcc_gpiox_clk_enable(const GPIO_TypeDef *gpio);
-void rcc_gpiox_clk_disable(const GPIO_TypeDef *gpio);
-
-void rcc_timx_clk_enable(const TIM_TypeDef *tim);
-void rcc_timx_clk_disable(const TIM_TypeDef *tim);
-void rcc_timx_periph_reset(const TIM_TypeDef *tim);
-
-void rcc_usartx_clk_enable(const USART_TypeDef *usart);
-void rcc_usartx_clk_disable(const USART_TypeDef *usart);
-void rcc_usartx_periph_reset(const USART_TypeDef *usart);
+void rcc_periph_clk_enable(const void *periph);
+void rcc_periph_clk_disable(const void *periph);
+void rcc_periph_reset(const void *periph);
 
 #ifdef __cplusplus
 }
