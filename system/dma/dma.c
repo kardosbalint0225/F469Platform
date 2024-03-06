@@ -165,6 +165,9 @@ HAL_StatusTypeDef sdcard_sdio_dma_tx_deinit(SD_HandleTypeDef *h_sd)
     return HAL_OK;
 }
 
-
+void STDIO_UART_DMA_STREAM_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&h_stdio_uart_dma_tx);
+}
 
 

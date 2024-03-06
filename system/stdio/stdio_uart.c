@@ -636,5 +636,11 @@ static inline void stdin_unlock(void)
     xSemaphoreGive(_stdin_mutex);
 }
 
-
+/**
+ * @brief This function handles USART3 global interrupt.
+ */
+void STDIO_UART_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(&h_stdio_uart);
+}
 

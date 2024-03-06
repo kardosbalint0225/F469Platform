@@ -124,3 +124,8 @@ static void period_elapsed_cb(TIM_HandleTypeDef *htim)
     _count++;
 }
 
+void RUNTIME_STATS_TIMER_IRQHandler(void)
+{
+    HAL_TIM_IRQHandler(&h_runtime_stats_timer);
+}
+

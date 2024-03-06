@@ -33,6 +33,8 @@
 #define STDIO_UART_USARTx_IRQ_PRIORITY          8ul
 #define STDIO_UART_DMAx_STREAMx_IRQn            DMA1_Stream3_IRQn
 #define STDIO_UART_DMAx_STREAMx_IRQ_PRIORITY    8ul
+#define STDIO_UART_IRQHandler                   USART3_IRQHandler
+#define STDIO_UART_DMA_STREAM_IRQHandler        DMA1_Stream3_IRQHandler
 
 #endif /* __STDIO_UART_CONFIG_H__ */
 

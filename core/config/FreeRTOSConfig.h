@@ -70,6 +70,7 @@ extern uint32_t SystemCoreClock;
 #define RUNTIME_STATS_TIMER_TIMx                      TIM2
 #define RUNTIME_STATS_TIMER_IRQn                      TIM2_IRQn
 #define RUNTIME_STATS_TIMER_IRQ_PRIORITY              15ul
+#define RUNTIME_STATS_TIMER_IRQHandler                TIM2_IRQHandler
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES                         ( 0 )

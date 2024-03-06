@@ -1,9 +1,7 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx_hal.h"
 
-extern UART_HandleTypeDef h_stdio_uart;
-extern DMA_HandleTypeDef h_stdio_uart_dma_tx;
-extern TIM_HandleTypeDef h_runtime_stats_timer;
+//extern TIM_HandleTypeDef h_runtime_stats_timer;
 extern TIM_HandleTypeDef h_hal_timebase_tim;
 extern EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
 extern SD_HandleTypeDef h_sdio;
@@ -146,30 +144,6 @@ void DebugMon_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f4xx.s).                    */
 /******************************************************************************/
-
-/**
- * @brief This function handles DMA1 stream3 global interrupt.
- */
-void DMA1_Stream3_IRQHandler(void)
-{
-    HAL_DMA_IRQHandler(&h_stdio_uart_dma_tx);
-}
-
-/**
- * @brief This function handles USART3 global interrupt.
- */
-void USART3_IRQHandler(void)
-{
-    HAL_UART_IRQHandler(&h_stdio_uart);
-}
-
-/**
- * @brief This function handles TIM2 global interrupt
- */
-void TIM2_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(&h_runtime_stats_timer);
-}
 
 /**
  * @brief This function handles TIM6 global interrupt, DAC1 and DAC2 underrun error interrupts.
