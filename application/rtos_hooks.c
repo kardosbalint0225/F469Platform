@@ -35,9 +35,13 @@ void vApplicationDaemonTaskStartupHook(void);
 
 void vApplicationDaemonTaskStartupHook(void)
 {
+    led1_pin_init();
+    led2_pin_init();
+    led3_pin_init();
+    led4_pin_init();
+    stdio_init();
     rtc_init();
     vfs_init();
-    stdio_init();
     vfs_bind_stdio();
     setvbuf(stdin, NULL, _IONBF, 0);
     sdcard_mount_init();

@@ -26,8 +26,6 @@ __NORETURN void panic(const char *message, ...)
     va_end(va);
     stdio_write_blocking(_tx_buffer, len);
 
-    led3_pin_init();
-
 #ifdef DEBUG_ASSERT_BREAKPOINT
     DEBUG_BREAKPOINT(1);
 #endif
