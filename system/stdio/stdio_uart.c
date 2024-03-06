@@ -104,6 +104,8 @@ static inline void stdin_lock(void);
 static inline void stdin_unlock(void);
 static int _uart_write(const uint8_t *data, size_t len);
 static void _error_handler(void);
+void stdio_uart_rtos_init(void);
+int stdio_uart_periph_init(void);
 
 int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
 {
@@ -135,7 +137,6 @@ static void _write_task(void *params)
 {
     (void)params;
 
-    BaseType_t ret;
     HAL_StatusTypeDef hal_status;
     uint8_t *_tx_pending = NULL;
 
@@ -148,22 +149,18 @@ static void _write_task(void *params)
 
     for ( ;; )
     {
-        ret = xQueueReceive(_tx_ready_queue, &uart_tx_data, portMAX_DELAY);
-        assert(ret);
+        xQueueReceive(_tx_ready_queue, &uart_tx_data, portMAX_DELAY);
 
         hal_status = HAL_UART_Transmit_DMA(&h_stdio_uart, uart_tx_data.pbuf, uart_tx_data.size);
         if (HAL_OK != hal_status)
         {
             _error_handler();
         }
-        assert(HAL_OK == hal_status);
 
         _tx_pending = uart_tx_data.pbuf;
 
-        ret = xSemaphoreTake(_tx_cplt_semphr, ticks_to_wait);
-        assert(ret);
-        ret = xQueueSend(_tx_avail_queue, &_tx_pending, 0);
-        assert(ret);
+        xSemaphoreTake(_tx_cplt_semphr, ticks_to_wait);
+        xQueueSend(_tx_avail_queue, &_tx_pending, 0);
     }
 }
 
@@ -172,28 +169,31 @@ static void _read_task(void *params)
     (void)params;
 
     HAL_StatusTypeDef hal_status = HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
-    assert(HAL_OK == hal_status);
+    if (HAL_OK != hal_status)
+    {
+        _error_handler();
+    }
 
     for ( ;; )
     {
         uint8_t rx_data;
-        BaseType_t ret = xQueueReceive(_rx_queue, &rx_data, portMAX_DELAY);
-        assert(ret);
+        xQueueReceive(_rx_queue, &rx_data, portMAX_DELAY);
 
         hal_status = HAL_UART_Receive_IT(&h_stdio_uart, &_rx_buffer, 1);
-        assert(HAL_OK == hal_status);
+        if (HAL_OK != hal_status)
+        {
+            _error_handler();
+        }
 
         if (NULL != xSemaphoreGetMutexHolder(_stdin_mutex))
         {
-            ret = xQueueSend(_stdin_queue, &rx_data, portMAX_DELAY);
-            assert(ret);
+            xQueueSend(_stdin_queue, &rx_data, portMAX_DELAY);
         }
         else
         {
             for (uint32_t i = 0; i < _stdin_listeners; i++)
             {
-                ret = xQueueSend(_stdin_listeners_list[i], &rx_data, portMAX_DELAY);
-                assert(ret);
+                xQueueSend(_stdin_listeners_list[i], &rx_data, portMAX_DELAY);
             }
         }
     }
@@ -212,43 +212,49 @@ static void _read_task(void *params)
  */
 int stdio_uart_init(void)
 {
+    stdio_uart_rtos_init();
+    return stdio_uart_periph_init();
+}
+
+void stdio_uart_rtos_init(void)
+{
     _stdin_listeners = 0ul;
 
     _tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&_tx_cplt_semphr_storage);
-    assert(_tx_cplt_semphr);
+//    assert(_tx_cplt_semphr);
 
     _tx_avail_queue = xQueueCreateStatic(STDIO_UART_TX_AVAIL_QUEUE_LENGTH,
                                          sizeof(uint8_t *),
                                          _tx_avail_queue_storage,
                                          &_tx_avail_queue_struct);
-    assert(_tx_avail_queue);
+//    assert(_tx_avail_queue);
 
     _tx_ready_queue = xQueueCreateStatic(STDIO_UART_TX_READY_QUEUE_LENGTH,
                                          sizeof(uart_tx_data_t),
                                          _tx_ready_queue_storage,
                                          &_tx_ready_queue_struct);
-    assert(_tx_ready_queue);
+//    assert(_tx_ready_queue);
 
     _rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
                                    sizeof(uint8_t),
                                    _rx_queue_storage,
                                    &_rx_queue_struct);
-    assert(_rx_queue);
+//    assert(_rx_queue);
 
     _stdin_mutex = xSemaphoreCreateMutexStatic(&_stdin_mutex_storage);
-    assert(_stdin_mutex);
+//    assert(_stdin_mutex);
 
     _stdin_queue = xQueueCreateStatic(STDIO_UART_STDIN_QUEUE_LENGTH,
                                       sizeof(uint8_t),
                                       _stdin_queue_storage,
                                       &_stdin_queue_struct);
-    assert(_stdin_queue);
+//    assert(_stdin_queue);
 
     for (uint8_t i = 0; i < STDIO_UART_TX_AVAIL_QUEUE_LENGTH; i++)
     {
         uint8_t *buffer_address = &_tx_buffer[i * STDIO_UART_TX_BUFFER_DEPTH];
-        BaseType_t retv = xQueueSend(_tx_avail_queue, &buffer_address, 0);
-        assert(retv);
+        xQueueSend(_tx_avail_queue, &buffer_address, 0);
+//        assert(retv);
     }
 
     h_write_task = xTaskCreateStatic(_write_task,
@@ -258,7 +264,7 @@ int stdio_uart_init(void)
                                      STDIO_UART_WRITE_TASK_PRIORITY,
                                      _write_task_stack,
                                      &_write_task_tcb);
-    assert(h_write_task);
+//    assert(h_write_task);
 
     h_read_task = xTaskCreateStatic(_read_task,
                                     "STDIO UART Read",
@@ -267,8 +273,11 @@ int stdio_uart_init(void)
                                     STDIO_UART_READ_TASK_PRIORITY,
                                     _read_task_stack,
                                     &_read_task_tcb);
-    assert(h_read_task);
+//    assert(h_read_task);
+}
 
+int stdio_uart_periph_init(void)
+{
     _error = HAL_OK;
 
     h_stdio_uart.Instance = STDIO_UART_USARTx;
@@ -325,7 +334,6 @@ int stdio_uart_init(void)
 
     return 0;
 }
-
 
 /**
  * @brief  De-initializes the STDIO_UART peripheral
@@ -483,19 +491,19 @@ ssize_t stdio_uart_write(const void *buffer, size_t len)
 ssize_t stdio_uart_write_blocking(const void *buffer, size_t len)
 {
     HAL_StatusTypeDef ret;
-    ret = HAL_UART_DMAPause(&h_stdio_uart);
+    ret = HAL_UART_AbortReceive(&h_stdio_uart);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    ret = HAL_UART_AbortTransmit(&h_stdio_uart);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);
     }
 
     ret = HAL_UART_Transmit(&h_stdio_uart, (uint8_t *)buffer, (uint16_t)len, 0xFFFFFFFFul);
-    if (HAL_OK != ret)
-    {
-        return hal_statustypedef_to_errno(ret);
-    }
-
-    ret = HAL_UART_DMAResume(&h_stdio_uart);
     if (HAL_OK != ret)
     {
         return hal_statustypedef_to_errno(ret);

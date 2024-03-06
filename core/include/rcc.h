@@ -17,6 +17,8 @@ extern "C" {
 void rcc_init(void);
 void rcc_deinit(void);
 
+int rcc_system_clock_init(void);
+
 HAL_StatusTypeDef rtc_clock_source_init(void);
 HAL_StatusTypeDef rtc_clock_source_deinit(void);
 HAL_StatusTypeDef clk48_clock_init(void);
