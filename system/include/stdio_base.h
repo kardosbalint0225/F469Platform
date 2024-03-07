@@ -44,7 +44,19 @@ void stdio_init(void);
  */
 void stdio_deinit(void);
 
-
+/**
+ * @brief Adds the given queue handle to the listeners list
+ *
+ * @param[in] hqueue QueueHandle_t handle to be added to the listeners list
+ *
+ * @return 0 on success
+ * @return < 0 on error
+ *
+ * @note The CLI adds its input queue handle to the listeners list to
+ *       receive the characters when the stdin is not used by other tasks
+ *       If a task uses a function which relies on stdin then the received bytes
+ *       are passed to the stdin queue bypassing the CLI input queue
+ */
 int stdio_add_stdin_listener(const QueueHandle_t hqueue);
 
 #if IS_USED(MODULE_STDIO_AVAILABLE) || DOXYGEN
@@ -60,7 +72,7 @@ int stdio_available(void);
 #endif
 
 /**
- * @brief read @p len bytes from stdio uart into @p buffer
+ * @brief read @p len bytes from stdio into @p buffer
  *
  * @param[out]  buffer  buffer to read into
  * @param[in]   max_len nr of bytes to read
@@ -71,7 +83,7 @@ int stdio_available(void);
 ssize_t stdio_read(void* buffer, size_t max_len);
 
 /**
- * @brief write @p len bytes from @p buffer into uart
+ * @brief write @p len bytes from @p buffer to stdio
  *
  * @param[in]   buffer  buffer to read from
  * @param[in]   len     nr of bytes to write
@@ -82,7 +94,7 @@ ssize_t stdio_read(void* buffer, size_t max_len);
 ssize_t stdio_write(const void* buffer, size_t len);
 
 /**
- * @brief write @p len bytes from @p buffer into uart in blocking mode
+ * @brief write @p len bytes from @p buffer to stdio in blocking mode
  *
  * @param[in]   buffer  buffer to read from
  * @param[in]   len     nr of bytes to write
