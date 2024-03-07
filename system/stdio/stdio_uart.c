@@ -104,8 +104,9 @@ static inline void stdin_lock(void);
 static inline void stdin_unlock(void);
 static int _uart_write(const uint8_t *data, size_t len);
 static void _error_handler(void);
-void stdio_uart_rtos_init(void);
-int stdio_uart_periph_init(void);
+static void _uart_rtos_init(void);
+static void _uart_rtos_deinit(void);
+static int _uart_periph_init(void);
 
 int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
 {
@@ -212,11 +213,11 @@ static void _read_task(void *params)
  */
 int stdio_uart_init(void)
 {
-    stdio_uart_rtos_init();
-    return stdio_uart_periph_init();
+    _uart_rtos_init();
+    return _uart_periph_init();
 }
 
-void stdio_uart_rtos_init(void)
+static void _uart_rtos_init(void)
 {
     _stdin_listeners = 0ul;
 
@@ -267,7 +268,28 @@ void stdio_uart_rtos_init(void)
                                     &_read_task_tcb);
 }
 
-int stdio_uart_periph_init(void)
+static void _uart_rtos_deinit(void)
+{
+    vTaskDelete(h_write_task);
+    vTaskDelete(h_read_task);
+    vQueueDelete(_tx_avail_queue);
+    vQueueDelete(_tx_ready_queue);
+    vQueueDelete(_rx_queue);
+    vQueueDelete(_stdin_queue);
+    vSemaphoreDelete(_tx_cplt_semphr);
+    vSemaphoreDelete(_stdin_mutex);
+
+    h_write_task = NULL;
+    h_read_task = NULL;
+    _tx_avail_queue = NULL;
+    _tx_ready_queue = NULL;
+    _rx_queue = NULL;
+    _stdin_queue = NULL;
+    _tx_cplt_semphr = NULL;
+    _stdin_mutex = NULL;
+}
+
+static int _uart_periph_init(void)
 {
     _error = HAL_OK;
 
@@ -326,16 +348,7 @@ int stdio_uart_periph_init(void)
     return 0;
 }
 
-/**
- * @brief  De-initializes the STDIO_UART peripheral
- *
- * @param  None
- *
- * @return  0 for success
- * @return < 0 an error occurred
- * @note   -
- */
-int stdio_uart_deinit(void)
+static int _uart_periph_deinit(void)
 {
     HAL_StatusTypeDef ret;
 
@@ -392,25 +405,22 @@ int stdio_uart_deinit(void)
         return hal_statustypedef_to_errno(ret);
     }
 
-    vTaskDelete(h_write_task);
-    vTaskDelete(h_read_task);
-    vQueueDelete(_tx_avail_queue);
-    vQueueDelete(_tx_ready_queue);
-    vQueueDelete(_rx_queue);
-    vQueueDelete(_stdin_queue);
-    vSemaphoreDelete(_tx_cplt_semphr);
-    vSemaphoreDelete(_stdin_mutex);
-
-    h_write_task = NULL;
-    h_read_task = NULL;
-    _tx_avail_queue = NULL;
-    _tx_ready_queue = NULL;
-    _rx_queue = NULL;
-    _stdin_queue = NULL;
-    _tx_cplt_semphr = NULL;
-    _stdin_mutex = NULL;
-
     return 0;
+}
+
+/**
+ * @brief  De-initializes the STDIO_UART peripheral
+ *
+ * @param  None
+ *
+ * @return  0 for success
+ * @return < 0 an error occurred
+ * @note   -
+ */
+int stdio_uart_deinit(void)
+{
+    _uart_rtos_deinit();
+    return _uart_periph_deinit();
 }
 
 ssize_t stdio_uart_read(void *buffer, size_t count)
