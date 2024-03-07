@@ -162,22 +162,8 @@ static rcc_periph_t _periph[] = {
     { (const void *)TIM13, tim13_clk_enable, tim13_clk_disable, tim13_periph_reset },
     { (const void *)TIM14, tim14_clk_enable, tim14_clk_disable, tim14_periph_reset },
 
-    { (const void *)DMA1_Stream0, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA1_Stream1, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA1_Stream2, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA1_Stream3, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA1_Stream4, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA1_Stream5, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA1_Stream6, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA1_Stream7, dma1_clk_enable, dma1_clk_disable },
-    { (const void *)DMA2_Stream0, dma2_clk_enable, dma2_clk_disable },
-    { (const void *)DMA2_Stream1, dma2_clk_enable, dma2_clk_disable },
-    { (const void *)DMA2_Stream2, dma2_clk_enable, dma2_clk_disable },
-    { (const void *)DMA2_Stream3, dma2_clk_enable, dma2_clk_disable },
-    { (const void *)DMA2_Stream4, dma2_clk_enable, dma2_clk_disable },
-    { (const void *)DMA2_Stream5, dma2_clk_enable, dma2_clk_disable },
-    { (const void *)DMA2_Stream6, dma2_clk_enable, dma2_clk_disable },
-    { (const void *)DMA2_Stream7, dma2_clk_enable, dma2_clk_disable },
+    { (const void *)DMA1, dma1_clk_enable, dma1_clk_disable },
+    { (const void *)DMA2, dma2_clk_enable, dma2_clk_disable },
 };
 
 void rcc_init(void)

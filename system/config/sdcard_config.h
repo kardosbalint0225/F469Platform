@@ -36,6 +36,7 @@
 #define SDCARD_SDIO_IRQ_PRIORITY                15ul
 #define SDCARD_DMAx_TX_CHANNEL                  DMA_CHANNEL_4
 #define SDCARD_DMAx_RX_CHANNEL                  DMA_CHANNEL_4
+#define SDCARD_DMAx                             DMA2
 #define SDCARD_DMAx_TX_STREAM                   DMA2_Stream6
 #define SDCARD_DMAx_RX_STREAM                   DMA2_Stream3
 #define SDCARD_DMAx_TX_IRQn                     DMA2_Stream6_IRQn

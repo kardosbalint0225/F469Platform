@@ -27,6 +27,7 @@
 #define STDIO_UART_RX_GPIO_PORT                 GPIOB
 #define STDIO_UART_GPIO_AFx_USARTx              GPIO_AF7_USART3
 
+#define STDIO_UART_DMAx                         DMA1
 #define STDIO_UART_DMAx_STREAMx                 DMA1_Stream3
 #define STDIO_UART_DMA_CHANNELx                 DMA_CHANNEL_4
 #define STDIO_UART_USARTx_IRQn                  USART3_IRQn
