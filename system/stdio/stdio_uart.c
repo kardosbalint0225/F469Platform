@@ -221,40 +221,33 @@ void stdio_uart_rtos_init(void)
     _stdin_listeners = 0ul;
 
     _tx_cplt_semphr = xSemaphoreCreateBinaryStatic(&_tx_cplt_semphr_storage);
-//    assert(_tx_cplt_semphr);
 
     _tx_avail_queue = xQueueCreateStatic(STDIO_UART_TX_AVAIL_QUEUE_LENGTH,
                                          sizeof(uint8_t *),
                                          _tx_avail_queue_storage,
                                          &_tx_avail_queue_struct);
-//    assert(_tx_avail_queue);
 
     _tx_ready_queue = xQueueCreateStatic(STDIO_UART_TX_READY_QUEUE_LENGTH,
                                          sizeof(uart_tx_data_t),
                                          _tx_ready_queue_storage,
                                          &_tx_ready_queue_struct);
-//    assert(_tx_ready_queue);
 
     _rx_queue = xQueueCreateStatic(STDIO_UART_RX_QUEUE_LENGTH,
                                    sizeof(uint8_t),
                                    _rx_queue_storage,
                                    &_rx_queue_struct);
-//    assert(_rx_queue);
 
     _stdin_mutex = xSemaphoreCreateMutexStatic(&_stdin_mutex_storage);
-//    assert(_stdin_mutex);
 
     _stdin_queue = xQueueCreateStatic(STDIO_UART_STDIN_QUEUE_LENGTH,
                                       sizeof(uint8_t),
                                       _stdin_queue_storage,
                                       &_stdin_queue_struct);
-//    assert(_stdin_queue);
 
     for (uint8_t i = 0; i < STDIO_UART_TX_AVAIL_QUEUE_LENGTH; i++)
     {
         uint8_t *buffer_address = &_tx_buffer[i * STDIO_UART_TX_BUFFER_DEPTH];
         xQueueSend(_tx_avail_queue, &buffer_address, 0);
-//        assert(retv);
     }
 
     h_write_task = xTaskCreateStatic(_write_task,
@@ -264,7 +257,6 @@ void stdio_uart_rtos_init(void)
                                      STDIO_UART_WRITE_TASK_PRIORITY,
                                      _write_task_stack,
                                      &_write_task_tcb);
-//    assert(h_write_task);
 
     h_read_task = xTaskCreateStatic(_read_task,
                                     "STDIO UART Read",
@@ -273,7 +265,6 @@ void stdio_uart_rtos_init(void)
                                     STDIO_UART_READ_TASK_PRIORITY,
                                     _read_task_stack,
                                     &_read_task_tcb);
-//    assert(h_read_task);
 }
 
 int stdio_uart_periph_init(void)
