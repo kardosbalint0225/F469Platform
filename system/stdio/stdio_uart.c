@@ -109,19 +109,19 @@ static void _uart_rtos_deinit(void);
 static int _uart_periph_init(void);
 static int _uart_periph_deinit(void);
 
-int stdio_uart_init(void)
+void stdio_init(void)
 {
     _uart_rtos_init();
-    return _uart_periph_init();
+    _uart_periph_init();
 }
 
-int stdio_uart_deinit(void)
+void stdio_deinit(void)
 {
     _uart_rtos_deinit();
-    return _uart_periph_deinit();
+    _uart_periph_deinit();
 }
 
-int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
+int stdio_add_stdin_listener(const QueueHandle_t hqueue)
 {
     int ret;
 
@@ -139,7 +139,7 @@ int stdio_uart_add_stdin_listener(const QueueHandle_t hqueue)
     return ret;
 }
 
-ssize_t stdio_uart_read(void *buffer, size_t max_len)
+ssize_t stdio_read(void *buffer, size_t max_len)
 {
     uint8_t *buf = buffer;
 
@@ -155,7 +155,7 @@ ssize_t stdio_uart_read(void *buffer, size_t max_len)
     return max_len;
 }
 
-ssize_t stdio_uart_write(const void *buffer, size_t len)
+ssize_t stdio_write(const void *buffer, size_t len)
 {
     ssize_t result = len;
 
@@ -203,7 +203,7 @@ ssize_t stdio_uart_write(const void *buffer, size_t len)
     return result;
 }
 
-ssize_t stdio_uart_write_blocking(const void *buffer, size_t len)
+ssize_t stdio_write_blocking(const void *buffer, size_t len)
 {
     HAL_StatusTypeDef ret;
     ret = HAL_UART_AbortReceive(&h_stdio_uart);
@@ -666,7 +666,8 @@ static void _error_handler(void)
     }
     else
     {
-        stdio_uart_deinit();
+        _uart_periph_deinit();
+        _uart_periph_init();
 
         while (1)
         {
