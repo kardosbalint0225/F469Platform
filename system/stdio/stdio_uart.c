@@ -203,30 +203,6 @@ ssize_t stdio_write(const void *buffer, size_t len)
     return result;
 }
 
-ssize_t stdio_write_blocking(const void *buffer, size_t len)
-{
-    HAL_StatusTypeDef ret;
-    ret = HAL_UART_AbortReceive(&h_stdio_uart);
-    if (HAL_OK != ret)
-    {
-        return hal_statustypedef_to_errno(ret);
-    }
-
-    ret = HAL_UART_AbortTransmit(&h_stdio_uart);
-    if (HAL_OK != ret)
-    {
-        return hal_statustypedef_to_errno(ret);
-    }
-
-    ret = HAL_UART_Transmit(&h_stdio_uart, (uint8_t *)buffer, (uint16_t)len, 0xFFFFFFFFul);
-    if (HAL_OK != ret)
-    {
-        return hal_statustypedef_to_errno(ret);
-    }
-
-    return (ssize_t)len;
-}
-
 /**
  * @brief  UART writer gate-keeper task
  *

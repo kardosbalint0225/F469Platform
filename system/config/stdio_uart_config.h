@@ -21,8 +21,8 @@
 
 #define STDIO_UART_USARTx                       USART3
 
-#define STDIO_UART_TX_PIN                       GPIO_PIN_11
-#define STDIO_UART_RX_PIN                       GPIO_PIN_10
+#define STDIO_UART_TX_PIN                       GPIO_PIN_10
+#define STDIO_UART_RX_PIN                       GPIO_PIN_11
 #define STDIO_UART_TX_GPIO_PORT                 GPIOB
 #define STDIO_UART_RX_GPIO_PORT                 GPIOB
 #define STDIO_UART_GPIO_AFx_USARTx              GPIO_AF7_USART3

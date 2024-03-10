@@ -18,6 +18,9 @@ void rcc_init(void);
 void rcc_deinit(void);
 
 int rcc_system_clock_init(void);
+int rcc_system_clock_bus_clocks_init(void);
+int rcc_system_clock_external_oscillators_init(void);
+int rcc_internal_oscillators_disable(void);
 
 HAL_StatusTypeDef rtc_clock_source_init(void);
 HAL_StatusTypeDef rtc_clock_source_deinit(void);

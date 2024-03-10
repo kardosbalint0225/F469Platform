@@ -93,17 +93,6 @@ ssize_t stdio_read(void* buffer, size_t max_len);
  */
 ssize_t stdio_write(const void* buffer, size_t len);
 
-/**
- * @brief write @p len bytes from @p buffer to stdio in blocking mode
- *
- * @param[in]   buffer  buffer to read from
- * @param[in]   len     nr of bytes to write
- *
- * @return nr of bytes written
- * @return <0 on error
- */
-ssize_t stdio_write_blocking(const void* buffer, size_t len);
-
 #ifdef __cplusplus
 }
 #endif

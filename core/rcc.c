@@ -192,7 +192,7 @@ void rcc_deinit(void)
  * @return 0 on success
  * @return < 0 on error
  */
-int rcc_system_clock_oscillator_init(void)
+int rcc_system_clock_external_oscillators_init(void)
 {
     RCC_OscInitTypeDef osc_config = { 0 };
 
@@ -252,6 +252,26 @@ int rcc_system_clock_bus_clocks_init(void)
     return 0;
 }
 
+int rcc_internal_oscillators_disable(void)
+{
+    RCC_OscInitTypeDef osc_config = { 0 };
+
+    HAL_RCC_GetOscConfig(&osc_config);
+
+    osc_config.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_LSI;
+    osc_config.HSIState = RCC_HSI_OFF;
+    osc_config.LSIState = RCC_LSI_OFF;
+
+    HAL_StatusTypeDef ret;
+    ret = HAL_RCC_OscConfig(&osc_config);
+    if (HAL_OK != ret)
+    {
+        return hal_statustypedef_to_errno(ret);
+    }
+
+    return 0;
+}
+
 /**
  * @brief  System Clock Configuration
  *
@@ -265,13 +285,19 @@ int rcc_system_clock_init(void)
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
     int ret;
-    ret = rcc_system_clock_oscillator_init();
+    ret = rcc_system_clock_external_oscillators_init();
     if (ret != 0)
     {
         return ret;
     }
 
     ret = rcc_system_clock_bus_clocks_init();
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = rcc_internal_oscillators_disable();
     if (ret != 0)
     {
         return ret;
