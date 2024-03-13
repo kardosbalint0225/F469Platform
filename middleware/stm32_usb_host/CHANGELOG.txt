@@ -1,0 +1,84 @@
+
+Modifications made to the STM32 USB Host Library header and source files
+
+
+
+STM32Cube_FW_F4_V1.28.0    13-Mar-2024
+-----------------------------------------------------
+
+1.) Class/MSC/Src/usbh_msc.c 
+    1.1.) line 91: Introduced a static MSC_HandleTypeDef h_usb_msc variable
+          for static MSC_HandleTypeDef allocation 
+    1.2.) line 171: Call to USBH_malloc removed,
+          phost->pActiveClass->pData points to h_usbh_msc
+    1.3.) line 268: Call to USBH_free removed
+    1.4.) line 508-512: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    1.5.) line 522-526: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    1.6.) line 596-600: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    1.7.) line 627-631: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    1.8.) line 663-667: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+
+2.) Class/MSC/Src/usbh_msc_bot.c 
+    2.1.) line 219-223: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.2.) line 233-237: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.3.) line 248-252: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.4.) line 298-302: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.5.) line 320-324: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.6.) line 370-374: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.7.) line 385-389: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.8.) line 406-410: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.9.) line 448-452: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    2.10.) line 461-465: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+
+3.) Core/Inc/usbh_def.h 
+    3.1.) line 482-488: CMSIS-OS Message Queue and Thread types replaced by QueueHandle_t and TaskHandle_t
+          FreeRTOS types 
+
+4.) Core/Src/usbh_core.c 
+    4.1.) line 61-63: Removed USBH_Thread_Atrr and introduced static variables for static task and static queue creation
+    4.2.) line 80-82: USBH_Process_OS function prototype with void const *argument is removed
+    4.3.) line 129-161: CMSIS-OS Thread and Queue creation are replaced by static FreeRTOS Task and Queue creation 
+    4.4.) line 195-207: Freeing up of CMSIS-OS Thread and Queue are replaced by FreeRTOS Task and Queue deletion
+    4.5.) line 461-465: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.6.) line 508-512: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.7.) line 549-553: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.8.) line 586-590: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.9.) line 615-619: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.10.) line 634-638: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.11.) line 654-658: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.12.) line 690-694: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.13.) line 742-746: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.14.) line 777-781: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.15.) line 826-830: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call     
+    4.16.) line 1056-1060: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.17.) line 1070-1074: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.18.) line 1089-1093: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.19.) line 1117-1121: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.20.) line 1136-1140: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    4.21.) line 1233-1237: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSendFromISR API call
+    4.22.) line 1285-1289: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSendFromISR API call
+    4.23.) line 1317-1321: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSendFromISR API call
+    4.24.) line 1334-1349: USBH_Process_OS function definition with void const *argument is removed
+    4.25.) line 1350-1364: USBH_Process_OS function definition with void *argument is modified to use the FreeRTOS 
+           API calls instead of the CMSIS-OS ones
+    4.26.) line 1377-1381: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSendFromISR API call
+
+5.) Core/Src/usbh_ctlreq.c 
+    5.1.) line 767-771: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.2.) line 794-798: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.3.) line 871-875: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.4.) line 886-890: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.5.) line 916-920: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.6.) line 932-936: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.7.) line 948-952: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.8.) line 978-982: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.9.) line 995-999: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.10.) line 1009-1013: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.11.) line 1026-1030: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.12.) line 1057-1061: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.13.) line 1070-1074: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.14.) line 1086-1090: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.15.) line 1112-1116: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.16.) line 1125-1129: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call
+    5.17.) line 1140-1144: CMSIS-OS Message Queue API call replaced by the FreeRTOS xQueueSend API call           
+           
