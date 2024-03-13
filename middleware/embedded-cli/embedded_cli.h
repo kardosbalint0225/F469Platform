@@ -1,7 +1,7 @@
 /**
  * This header was automatically built using
  * embedded_cli.h and embedded_cli.c
- * @date 2023-07-13
+ * @date 2024-01-18
  *
  * MIT License
  *
@@ -347,6 +347,7 @@ extern "C" {
 #endif
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 
 #define CLI_TOKEN_NPOS 0xffff
@@ -384,13 +385,12 @@ extern "C" {
 
 /**
  * Indicates that CLI structure and internal structures were allocated with
- * malloc and should bre freed
+ * malloc and should be freed
  */
 #define CLI_FLAG_ALLOCATED 0x04u
 
 /**
- * Indicates that CLI structure and internal structures were allocated with
- * malloc and should bre freed
+ * Indicates that escape mode is enabled.
  */
 #define CLI_FLAG_ESCAPE_MODE 0x08u
 
@@ -404,6 +404,16 @@ extern "C" {
  * Indicates that live autocompletion is enabled
  */
 #define CLI_FLAG_AUTOCOMPLETE_ENABLED 0x20u
+
+/**
+* Indicates that cursor direction should be forward
+*/
+#define CURSOR_DIRECTION_FORWARD true
+
+/**
+* Indicates that cursor direction should be backward
+*/
+#define CURSOR_DIRECTION_BACKWARD false
 
 typedef struct EmbeddedCliImpl EmbeddedCliImpl;
 typedef struct AutocompletedCommand AutocompletedCommand;
@@ -507,6 +517,12 @@ struct EmbeddedCliImpl {
      * Flags are defined as CLI_FLAG_*
      */
     uint8_t flags;
+
+    /**
+     * Cursor position for current command from right to left 
+     * 0 = end of command
+     */
+    uint16_t cursorPos;
 };
 
 struct AutocompletedCommand {
@@ -540,6 +556,29 @@ static EmbeddedCliConfig defaultConfig;
 static const uint16_t cliInternalBindingCount = 1;
 
 static const char *lineBreak = "\r\n";
+
+/* References for VT100 escape sequences: 
+ * https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences 
+ * https://ecma-international.org/publications-and-standards/standards/ecma-48/
+ */
+
+/** Escape sequence - Cursor forward (right) */
+static const char *escSeqCursorRight = "\x1B[C";
+
+/** Escape sequence - Cursor backward (left) */
+static const char *escSeqCursorLeft = "\x1B[D";
+
+/** Escape sequence - Cursor save position */
+static const char *escSeqCursorSave = "\x1B[s";
+
+/** Escape sequence - Cursor restore position */
+static const char *escSeqCursorRestore = "\x1B[u";
+
+/** Escape sequence - Cursor insert character (ICH) */
+static const char *escSeqInsertChar = "\x1B[@";
+
+/** Escape sequence - Cursor delete character (DCH) */
+static const char *escSeqDeleteChar = "\x1B[P";
 
 /**
  * Navigate through command history back and forth. If navigateUp is true,
@@ -579,6 +618,12 @@ static void onControlInput(EmbeddedCli *cli, char c);
  * @param cli
  */
 static void parseCommand(EmbeddedCli *cli);
+
+/**
+ * Print help for given binding (if it is set)
+ * @param binding
+ */
+static void printBindingHelp(EmbeddedCli *cli, CliCommandBinding *binding);
 
 /**
  * Setup bindings for internal commands, like help
@@ -639,6 +684,14 @@ static void clearCurrentLine(EmbeddedCli *cli);
  * @param str
  */
 static void writeToOutput(EmbeddedCli *cli, const char *str);
+
+/**
+ * Move cursor forward (right) by given number of positions
+ * @param cli
+ * @param count
+ * @param direction: true = forward (right), false = backward (left)
+ */
+static void moveCursor(EmbeddedCli* cli, uint16_t count, bool direction);
 
 /**
  * Returns true if provided char is a supported control char:
@@ -800,6 +853,7 @@ EmbeddedCli *embeddedCliNew(EmbeddedCliConfig *config) {
     impl->maxBindingsCount = (uint16_t) (config->maxBindingCount + cliInternalBindingCount);
     impl->lastChar = '\0';
     impl->invitation = config->invitation;
+    impl->cursorPos = 0;
 
     initInternalBindings(cli);
 
@@ -874,9 +928,15 @@ void embeddedCliPrint(EmbeddedCli *cli, const char *string) {
 
     PREPARE_IMPL(cli);
 
+    // Save cursor position
+    uint16_t cursorPosSave = impl->cursorPos;
+
     // remove chars for autocompletion and live command
     if (!IS_FLAG_SET(impl->flags, CLI_FLAG_DIRECT_PRINT))
         clearCurrentLine(cli);
+
+    // Restore cursor position
+    impl->cursorPos = cursorPosSave;
 
     // print provided string
     writeToOutput(cli, string);
@@ -887,6 +947,7 @@ void embeddedCliPrint(EmbeddedCli *cli, const char *string) {
         writeToOutput(cli, impl->invitation);
         writeToOutput(cli, impl->cmdBuffer);
         impl->inputLineLength = impl->cmdSize;
+        moveCursor(cli, impl->cursorPos, CURSOR_DIRECTION_BACKWARD);
 
         printLiveAutocompletion(cli);
     }
@@ -1018,6 +1079,7 @@ static void navigateHistory(EmbeddedCli *cli, bool navigateUp) {
 
     writeToOutput(cli, impl->cmdBuffer);
     impl->inputLineLength = impl->cmdSize;
+    impl->cursorPos = 0;
 
     printLiveAutocompletion(cli);
 }
@@ -1034,6 +1096,16 @@ static void onEscapedInput(EmbeddedCli *cli, char c) {
             // there might be extra chars between [ and A/B, just ignore them
             navigateHistory(cli, c == 'A');
         }
+
+        if (c == 'C' && impl->cursorPos > 0) {
+            impl->cursorPos--;
+            writeToOutput(cli, escSeqCursorRight);
+        }
+
+        if (c == 'D' && impl->cursorPos < strlen(impl->cmdBuffer)) {
+            impl->cursorPos++;
+            writeToOutput(cli, escSeqCursorLeft);
+        }
     }
 }
 
@@ -1044,9 +1116,16 @@ static void onCharInput(EmbeddedCli *cli, char c) {
     if (impl->cmdSize + 2 >= impl->cmdMaxSize)
         return;
 
-    impl->cmdBuffer[impl->cmdSize] = c;
+    size_t insertPos = strlen(impl->cmdBuffer) - impl->cursorPos;
+
+    memmove(&impl->cmdBuffer[insertPos + 1], &impl->cmdBuffer[insertPos], impl->cursorPos + 1);
+
     ++impl->cmdSize;
-    impl->cmdBuffer[impl->cmdSize] = '\0';
+    ++impl->inputLineLength;
+    impl->cmdBuffer[insertPos] = c;
+
+    if (impl->cursorPos > 0)
+        writeToOutput(cli, escSeqInsertChar); // Insert Character
 
     cli->writeChar(cli, c);
 }
@@ -1071,16 +1150,17 @@ static void onControlInput(EmbeddedCli *cli, char c) {
         impl->cmdBuffer[impl->cmdSize] = '\0';
         impl->inputLineLength = 0;
         impl->history.current = 0;
+        impl->cursorPos = 0;
 
         writeToOutput(cli, impl->invitation);
-    } else if ((c == '\b' || c == 0x7F) && impl->cmdSize > 0) {
+    } else if ((c == '\b' || c == 0x7F) && ((impl->cmdSize - impl->cursorPos) > 0)) {
         // remove char from screen
-        cli->writeChar(cli, '\b');
-        cli->writeChar(cli, ' ');
-        cli->writeChar(cli, '\b');
+        writeToOutput(cli, escSeqCursorLeft); // Move cursor to left
+        writeToOutput(cli, escSeqDeleteChar); // And remove character
         // and from buffer
+        size_t insertPos = strlen(impl->cmdBuffer) - impl->cursorPos;
+        memmove(&impl->cmdBuffer[insertPos - 1], &impl->cmdBuffer[insertPos], impl->cursorPos + 1);
         --impl->cmdSize;
-        impl->cmdBuffer[impl->cmdSize] = '\0';
     } else if (c == '\t') {
         onAutocompleteRequest(cli);
     }
@@ -1144,7 +1224,12 @@ static void parseCommand(EmbeddedCli *cli) {
                 embeddedCliTokenizeArgs(cmdArgs);
             // currently, output is blank line, so we can just print directly
             SET_FLAG(impl->flags, CLI_FLAG_DIRECT_PRINT);
-            impl->bindings[i].binding(cli, cmdArgs, impl->bindings[i].context);
+            // check if help was requested (help is printed when no other options are set)
+            if (cmdArgs != NULL && (strcmp(cmdArgs, "-h") == 0 || strcmp(cmdArgs, "--help") == 0)) {
+                printBindingHelp(cli, &impl->bindings[i]);
+            } else {
+                impl->bindings[i].binding(cli, cmdArgs, impl->bindings[i].context);
+            }
             UNSET_U8FLAG(impl->flags, CLI_FLAG_DIRECT_PRINT);
             return;
         }
@@ -1163,6 +1248,14 @@ static void parseCommand(EmbeddedCli *cli) {
         UNSET_U8FLAG(impl->flags, CLI_FLAG_DIRECT_PRINT);
     } else {
         onUnknownCommand(cli, cmdName);
+    }
+}
+
+static void printBindingHelp(EmbeddedCli *cli, CliCommandBinding *binding) {
+    if (binding->help != NULL) {
+        cli->writeChar(cli, '\t');
+        writeToOutput(cli, binding->help);
+        writeToOutput(cli, lineBreak);
     }
 }
 
@@ -1193,11 +1286,7 @@ static void onHelp(EmbeddedCli *cli, char *tokens, void *context) {
             writeToOutput(cli, " * ");
             writeToOutput(cli, impl->bindings[i].name);
             writeToOutput(cli, lineBreak);
-            if (impl->bindings[i].help != NULL) {
-                cli->writeChar(cli, '\t');
-                writeToOutput(cli, impl->bindings[i].help);
-                writeToOutput(cli, lineBreak);
-            }
+            printBindingHelp(cli, &impl->bindings[i]);
         }
     } else if (tokenCount == 1) {
         // try find command
@@ -1303,6 +1392,11 @@ static void printLiveAutocompletion(EmbeddedCli *cli) {
         cmd.autocompletedLen = impl->cmdSize;
     }
 
+    // save cursor location
+    writeToOutput(cli, escSeqCursorSave);
+
+    moveCursor(cli, impl->cursorPos, CURSOR_DIRECTION_FORWARD);
+
     // print live autocompletion (or nothing, if it doesn't exist)
     for (size_t i = impl->cmdSize; i < cmd.autocompletedLen; ++i) {
         cli->writeChar(cli, cmd.firstCandidate[i]);
@@ -1312,10 +1406,9 @@ static void printLiveAutocompletion(EmbeddedCli *cli) {
         cli->writeChar(cli, ' ');
     }
     impl->inputLineLength = cmd.autocompletedLen;
-    cli->writeChar(cli, '\r');
-    // print current command again so cursor is moved to initial place
-    writeToOutput(cli, impl->invitation);
-    writeToOutput(cli, impl->cmdBuffer);
+
+    // restore cursor
+    writeToOutput(cli, escSeqCursorRestore);
 }
 
 static void onAutocompleteRequest(EmbeddedCli *cli) {
@@ -1335,9 +1428,10 @@ static void onAutocompleteRequest(EmbeddedCli *cli) {
         }
         impl->cmdBuffer[cmd.autocompletedLen] = '\0';
 
-        writeToOutput(cli, &impl->cmdBuffer[impl->cmdSize]);
+        writeToOutput(cli, &impl->cmdBuffer[impl->cmdSize - impl->cursorPos]);
         impl->cmdSize = cmd.autocompletedLen;
         impl->inputLineLength = impl->cmdSize;
+        impl->cursorPos = 0; // Cursor has been moved to the end
         return;
     }
 
@@ -1374,6 +1468,8 @@ static void clearCurrentLine(EmbeddedCli *cli) {
     }
     cli->writeChar(cli, '\r');
     impl->inputLineLength = 0;
+
+    impl->cursorPos = 0;
 }
 
 static void writeToOutput(EmbeddedCli *cli, const char *str) {
@@ -1382,6 +1478,18 @@ static void writeToOutput(EmbeddedCli *cli, const char *str) {
     for (size_t i = 0; i < len; ++i) {
         cli->writeChar(cli, str[i]);
     }
+}
+
+static void moveCursor(EmbeddedCli* cli, uint16_t count, bool direction) {
+    // Check if we need to send any command
+    if (count == 0)
+        return;
+
+    // 5 = uint16_t max, 3 = escape sequence, 1 = string termination
+    char escBuffer[5 + 3 + 1] = { 0 };
+    char dirChar = direction ? escSeqCursorRight[2] : escSeqCursorLeft[2];
+    sprintf(escBuffer, "\x1B[%u%c", count, dirChar);
+    writeToOutput(cli, escBuffer);
 }
 
 static bool isControlChar(char c) {
