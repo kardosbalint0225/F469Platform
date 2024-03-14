@@ -30,15 +30,6 @@ extern "C" {
 
 #define _likely(x)      __builtin_expect((uintptr_t)(x), 1)
 
-/**
- * @def __NORETURN
- * @brief hidden (__) NORETURN definition
- * @internal
- *
- * Duplicating the definitions of kernel_defines.h as these are unsuitable for
- * system header files like the assert.h.
- * kernel_defines.h would define symbols that are not reserved.
- */
 #ifndef __NORETURN
 #ifdef __GNUC__
 #define __NORETURN __attribute__((noreturn))
@@ -52,8 +43,6 @@ extern "C" {
 #else
 /**
  * @brief   Function to handle failed assertion
- *
- * @note    This function was introduced for memory size optimization
  *
  * @warning this function **NEVER** returns!
  *
