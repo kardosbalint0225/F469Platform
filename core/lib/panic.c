@@ -18,21 +18,29 @@ static void _panic_init(UART_HandleTypeDef *huart);
 static void _uart_periph_init(UART_HandleTypeDef *huart);
 static void _uart_msp_init(UART_HandleTypeDef *huart);
 
+/* flag preventing "recursive crash printing loop" */
+static int _crashed = 0;
 static char _tx_buffer[513];
 
 __NORETURN void panic(const char *message, ...)
 {
-    UART_HandleTypeDef h_panic_uart = { 0 };
-    _panic_init(&h_panic_uart);
+    if (0 == _crashed)
+    {
+        /* print panic message to console (if possible) */
+        _crashed = 1;
 
-    va_list va;
-    va_start(va, message);
-    size_t len = vsnprintf(_tx_buffer, sizeof(_tx_buffer), message, va);
-    va_end(va);
+        UART_HandleTypeDef h_panic_uart = { 0 };
+        _panic_init(&h_panic_uart);
 
-    HAL_StatusTypeDef ret;
-    ret = HAL_UART_Transmit(&h_panic_uart, (uint8_t *)_tx_buffer, (uint16_t)len, 0xFFFFFFFFul);
-    (void)ret;
+        va_list va;
+        va_start(va, message);
+        size_t len = vsnprintf(_tx_buffer, sizeof(_tx_buffer), message, va);
+        va_end(va);
+
+        HAL_StatusTypeDef ret;
+        ret = HAL_UART_Transmit(&h_panic_uart, (uint8_t *)_tx_buffer, (uint16_t)len, 0xFFFFFFFFul);
+        (void)ret;
+    }
 
 #ifdef DEBUG_ASSERT_BREAKPOINT
     DEBUG_BREAKPOINT(1);

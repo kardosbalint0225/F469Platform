@@ -14,7 +14,6 @@
  */
 #include "assert.h"
 #include "panic.h"
-#include <stdio.h>
 
 __NORETURN void _assert_failure(const char *file, unsigned line)
 {

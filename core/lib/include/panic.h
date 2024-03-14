@@ -1,8 +1,12 @@
-/*
- * panic.h
+/**
+ * @ingroup     core_util
+ * @{
  *
- *  Created on: Feb 22, 2024
- *      Author: Balint
+ * @file
+ * @brief       Crash handling header
+ *
+ * Define a function that allows to stop the system
+ * when an unrecoverable problem has occurred.
  */
 
 #ifndef __PANIC_H__
@@ -20,9 +24,22 @@ extern "C" {
 #endif /*__GNUC__*/
 #endif /*__NORETURN*/
 
+/**
+ * @brief Handle an unrecoverable error by halting the system
+ *
+ * Detailing the failure is possible using the *message* parameter.
+ *
+ * @warning this function NEVER returns!
+ *
+ * @param[in] message       a human readable reason for the crash
+ *
+ * @return                  this function never returns
+ * */
 __NORETURN void panic(const char *message, ...);
 
 #ifdef __cplusplus
 }
 #endif
 #endif /* __PANIC_H__ */
+/** @} */
+
