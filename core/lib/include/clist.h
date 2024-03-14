@@ -92,7 +92,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "illist.h"
+#include "ilist.h"
 
 #ifdef __cplusplus
 extern "C" {

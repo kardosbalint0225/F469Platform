@@ -20,8 +20,8 @@
  * @author      Víctor Ariño <victor.arino@zii.aero>
  */
 
-#ifndef ILLIST_H
-#define ILLIST_H
+#ifndef ILIST_H
+#define ILIST_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,5 +99,5 @@ static inline list_node_t *list_remove(list_node_t *list, list_node_t *node)
 }
 #endif
 
-#endif /* ILLIST_H */
+#endif /* ILIST_H */
 /** @} */
