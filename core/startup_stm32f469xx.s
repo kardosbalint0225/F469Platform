@@ -59,6 +59,9 @@ defined in linker script */
   .type  Reset_Handler, %function
 Reset_Handler:  
   ldr   sp, =_estack     /* set stack pointer */
+  
+/* Call the clock system initialization function.*/
+  bl  SystemInit  
 
 /* Copy the data segment initializers from flash to SRAM */  
   ldr r0, =_sdata
@@ -90,9 +93,7 @@ FillZerobss:
 LoopFillZerobss:
   cmp r2, r4
   bcc FillZerobss
-
-/* Call the clock system initialization function.*/
-  bl  SystemInit   
+ 
 /* Call static constructors */
     bl __libc_init_array
 /* Call the application's entry point.*/
@@ -109,24 +110,9 @@ LoopFillZerobss:
 */
     .section  .text.Default_Handler,"ax",%progbits
 Default_Handler:
-  /* Load the address of the interrupt control register into r3. */
-  ldr r3, NVIC_INT_CTRL_CONST
-  /* Load the value of the interrupt control register into r2 from the
-  address held in r3. */
-  ldr r2, [r3, #0]
-  /* The interrupt number is in the least significant byte - clear all
-  other bits. */
-  uxtb r2, r2
-  /* If r2 contains a value equal to or greater than 16, then a peripheral interrupt
-  is being handled - and the interrupting peripheral can be determined by subtracting 16
-  from the interrupt number. */
 Infinite_Loop:
   b  Infinite_Loop
   .size  Default_Handler, .-Default_Handler
-
-  .align 4
-  /* The address of the NVIC interrupt control register. */
-  NVIC_INT_CTRL_CONST: .word 0xe000ed04
 /******************************************************************************
 *
 * The minimal vector table for a Cortex M3. Note that the proper constructs
@@ -136,7 +122,6 @@ Infinite_Loop:
 *******************************************************************************/
    .section  .isr_vector,"a",%progbits
   .type  g_pfnVectors, %object
-  .size  g_pfnVectors, .-g_pfnVectors 
   
   g_pfnVectors:
   .word  _estack
@@ -253,6 +238,9 @@ Infinite_Loop:
   .word     DSI_IRQHandler                    /* DSI                          */  
   
  
+
+  .size  g_pfnVectors, .-g_pfnVectors
+
 /*******************************************************************************
 *
 * Provide weak aliases for each Exception handler to the Default_Handler. 
