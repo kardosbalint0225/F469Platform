@@ -38,7 +38,7 @@ Changes made to these files:
 6.)  /core/lib/include/compiler_hints.h: no changes were made   
 7.)  /core/lib/include/container.h: no changes were made  
 8.)  /core/lib/include/debug.h:
-    8.1.) line 28-29: FreeRTOS.h included
+    8.1.) line 27-29: FreeRTOS.h and core_config.h included
     8.2.) line 38: modified the comment to task
     8.3.) line 47-57: modified DEBUG_PRINT to use the FreeRTOS API calls
     8.4.) line 77-78: removed #include "architecture.h" and modified the DEBUG_BREAKPOINT definition

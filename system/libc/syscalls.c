@@ -1,12 +1,29 @@
-/**
- ******************************************************************************
- * @file      syscalls.c
+/*
+ * Copyright (C) 2015 Kaspar Schleiser <kaspar@schleiser.de>
+ *               2014 Freie Universität Berlin
  *
- ******************************************************************************
- *
- *
- ******************************************************************************
+ * This file is subject to the terms and conditions of the GNU Lesser General
+ * Public License v2.1. See the file LICENSE in the top level directory for more
+ * details.
  */
+
+/**
+ * @defgroup    sys_newlib Newlib system call
+ * @ingroup     sys
+ * @brief       Newlib system call
+ * @{
+ *
+ * @file
+ * @brief       Newlib system call implementations
+ *
+ * @author      Michael Baar <michael.baar@fu-berlin.de>
+ * @author      Stefan Pfeiffer <pfeiffer@inf.fu-berlin.de>
+ * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
+ * @author      Kaspar Schleiser <kaspar@schleiser.de>
+ *
+ * @}
+ */
+
 #include <unistd.h>
 #include <reent.h>
 #include <errno.h>

@@ -28,11 +28,11 @@
 
 #include "fs/fatfs.h"
 
-#include <time.h>
+#include "time.h"
 #include "container.h"
 
 #define ENABLE_DEBUG 0
-#include "debug.h"
+#include <debug.h>
 
 #define TEST_FATFS_MAX_VOL_STR_LEN 14 /* "-2147483648:/\0" */
 
@@ -84,6 +84,7 @@ static int _format(vfs_mount_t *mountp)
 
     /* make sure the volume has been initialized */
     if (_init(mountp)) {
+        vPortFree(work);
         return -EINVAL;
     }
 
@@ -173,7 +174,6 @@ static int _statvfs(vfs_mount_t *mountp, const char *restrict path, struct statv
 
     buf->f_bsize  = fs->csize * sector_size;
     buf->f_frsize = fs->csize * sector_size;
-    //buf->f_blocks = mtd->sector_count / fs->csize;
     buf->f_blocks = (fs->n_fatent - 2);
     buf->f_bfree  = nclst;
     buf->f_bavail = nclst;

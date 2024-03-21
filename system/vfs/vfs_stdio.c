@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <assert.h>
+#include "assert.h"
 #include "stdio_base.h"
 #include "vfs.h"
 

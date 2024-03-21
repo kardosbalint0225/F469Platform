@@ -24,8 +24,9 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include <stdio.h>
+#include "core_config.h"
 #include "FreeRTOS.h"
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +43,7 @@ extern "C" {
  * is not set, this check is not performed. (CPU exception may occur)
  */
 #ifdef DEVELHELP
-#include "cpu_conf.h"
+
 #define DEBUG_PRINT(...) \
     do { \
         extern uint32_t uxTaskGetStackSize( TaskHandle_t xTask ); \

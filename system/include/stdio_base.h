@@ -72,7 +72,7 @@ int stdio_available(void);
 #endif
 
 /**
- * @brief read @p len bytes from stdio into @p buffer
+ * @brief read @p len bytes from stdio uart into @p buffer
  *
  * @param[out]  buffer  buffer to read into
  * @param[in]   max_len nr of bytes to read
@@ -83,7 +83,7 @@ int stdio_available(void);
 ssize_t stdio_read(void* buffer, size_t max_len);
 
 /**
- * @brief write @p len bytes from @p buffer to stdio
+ * @brief write @p len bytes from @p buffer into uart
  *
  * @param[in]   buffer  buffer to read from
  * @param[in]   len     nr of bytes to write

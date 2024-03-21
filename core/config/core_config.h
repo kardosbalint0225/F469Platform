@@ -1,6 +1,26 @@
 #ifndef __CORE_CONFIG_H__
 #define __CORE_CONFIG_H__
 
+#include <inttypes.h>
+#include <limits.h>
+
+/**
+ * @brief   Architecture specific modifier used for printing sizes
+ */
+#if (UINT_MAX == SIZE_MAX)
+#define PRI_SIZE_T_MODIFIER ""
+#elif (ULONG_MAX == SIZE_MAX)
+#define PRI_SIZE_T_MODIFIER "l"
+#else
+#error Unsupported size_t length
+#endif
+
+/**
+ * @brief   Macro holding the format specifier to print an `size_t` variable
+ *          in decimal representation.
+ */
+#define PRIuSIZE PRI_SIZE_T_MODIFIER "u"
+
 #define BITARITHM_HAS_CLZ
 #define TASK_EXTRA_STACKSIZE_PRINTF    (2048)
 #define PRIxTXTPTR                     PRIxPTR

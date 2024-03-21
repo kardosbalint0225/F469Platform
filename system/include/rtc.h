@@ -1,12 +1,26 @@
+/*
+ * Copyright (C) 2014 Thomas Eichinger <thomas.eichinger@fu-berlin.de>
+ *
+ * This file is subject to the terms and conditions of the GNU Lesser General
+ * Public License v2.1. See the file LICENSE in the top level directory for more
+ * details.
+ */
+
 /**
- ******************************************************************************
- * @file    rtc.h
- * @brief   This file contains all the function prototypes for
- *          the rtc.c file
- ******************************************************************************
+ * @defgroup    drivers_periph_rtc RTC
+ * @ingroup     drivers_periph
+ * @brief       Low-level RTC (Real Time Clock) peripheral driver
  *
+ * @note
+ * The values used for setting and getting the time
+ * conform to the `struct tm` specification.
+ * Compare: http://pubs.opengroup.org/onlinepubs/7908799/xsh/time.h.html
  *
- ******************************************************************************
+ * @{
+ * @file
+ * @brief       Low-level RTC peripheral driver interface definitions
+ *
+ * @author      Thomas Eichinger <thomas.eichinger@fu-berlin.de>
  */
 #ifndef __RTC_H__
 #define __RTC_H__
@@ -75,4 +89,4 @@ int rtc_get_time_ms(struct tm *time, uint16_t *ms);
 #endif
 
 #endif /* __RTC_H__ */
-
+/** @} */
