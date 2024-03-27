@@ -1,5 +1,3 @@
-TODO: cwd uses functions from LuaRTOS
-TODO: retarget_locks.c 
 
 Files used from RIOT-OS Release-2024.01 08-Feb-2024
     Repository: https://github.com/RIOT-OS/RIOT
