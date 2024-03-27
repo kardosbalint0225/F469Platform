@@ -1173,9 +1173,11 @@ int vfs_sysop_stat_from_fstat(vfs_mount_t *mountp, const char *restrict path, st
 
     int err = f_op->open(&filedir.file, path, 0, 0);
     if (err < 0) {
-        if (false == _is_dir(mountp, &filedir.dir, path)) {
-            return err;
+        if (_is_dir(mountp, &filedir.dir, path)) {
+            buf->st_mode = S_IFDIR;
+            return 0;
         }
+        return err;
     }
     err = f_op->fstat(&filedir.file, buf);
     f_op->close(&filedir.file);
