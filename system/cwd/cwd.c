@@ -4,6 +4,12 @@
  *  Created on: 2023. dec. 22.
  *      Author: Balint
  */
+/*
+ * normalize_path, dot, dot_dot and slash_slash functions are derived from the mount.c file of the Lua-RTOS-ESP32
+ * repository:
+ * Link to Lua-RTOS-ESP32: https://github.com/whitecatboard/Lua-RTOS-ESP32/tree/master
+ * Link to mount.c:        https://github.com/whitecatboard/Lua-RTOS-ESP32/blob/master/components/sys/sys/mount.c
+ */
 #include "cwd.h"
 #include "vfs.h"
 
