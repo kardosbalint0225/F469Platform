@@ -1,9 +1,24 @@
-/*
- * retarget_locks.c
- *
- *  Created on: 2023. aug. 23.
- *      Author: Balint
+/**
+ * The implementation of retarget_locks.c is based on thomask77's work
+ * Link to retarget_locks_dynamic.c: 
+ *     https://gist.github.com/thomask77/3a2d54a482c294beec5d87730e163bdd
+ * 
  */
+// -------------------- Retarget Locks --------------------
+//
+// share/doc/gcc-arm-none-eabi/pdf/libc.pdf:
+//
+// Newlib was configured to allow the target platform to provide the locking routines and
+// static locks at link time. As such, a dummy default implementation of these routines and
+// static locks is provided for single-threaded application to link successfully out of the box on
+// bare-metal systems.
+//
+// For multi-threaded applications the target platform is required to provide an implementa-
+// tion for *all* these routines and static locks. If some routines or static locks are missing, the
+// link will fail with doubly defined symbols.
+//
+// (see also newlib/libc/misc/lock.c)
+//
 #include <sys/lock.h>
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -22,6 +37,7 @@ struct __lock __lock___env_recursive_mutex;
 struct __lock __lock___tz_mutex;
 struct __lock __lock___dd_hash_mutex;
 struct __lock __lock___arc4random_mutex;
+
 
 __attribute__((constructor))
 static void init_retarget_locks(void)
@@ -99,4 +115,3 @@ void __retarget_lock_release_recursive(_LOCK_T lock)
 {
     xSemaphoreGiveRecursive(lock->sem);
 }
-
