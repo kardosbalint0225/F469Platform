@@ -4,16 +4,22 @@
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     units.h:            https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/macros/units.h
+ *
+ * The original author of units.h is:
+ *     Benjamin Valentin <benjamin.valentin@ml-pa.com>
  */
 
 /**
  * @ingroup     core_macros
  * @{
  *
- * @file
+ * @file        units.h
  * @brief       Unit helper macros
  *
- * @author      Benjamin Valentin <benjamin.valentin@ml-pa.com>
  */
 
 #ifndef MACROS_UNITS_H

@@ -1,16 +1,24 @@
 /*
- * Copyright (C) 2016 Freie Universität Berlin
+ * Original work Copyright (C) 2016 Freie Universität Berlin
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     assert.c:           https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/assert.c
+ *
+ * The original author of assert.c is:
+ *     Martine Lenders <mlenders@inf.fu-berlin.de>
  */
 
 /**
  * @{
  *
- * @file
- * @author  Martine Lenders <mlenders@inf.fu-berlin.de>
+ * @file        assert.c
+ *
  */
 #include "assert.h"
 #include "panic.h"

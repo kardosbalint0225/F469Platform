@@ -4,16 +4,22 @@
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     utils.h:            https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/macros/utils.h
+ *
+ * The original author of utils.h is:
+ *     Marian Buschsieweke <marian.buschsieweke@ovgu.de>
  */
 
 /**
  * @ingroup     core_macros
  * @{
  *
- * @file
+ * @file        utils.h
  * @brief       Various helper macros
  *
- * @author      Marian Buschsieweke <marian.buschsieweke@ovgu.de>
  */
 
 #ifndef MACROS_UTILS_H

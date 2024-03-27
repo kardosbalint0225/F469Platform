@@ -5,17 +5,23 @@
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     compiler_hints.h:   https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/compiler_hints.h
+ *
+ * The original authors of compiler_hints.h are:
+ *     René Kijewski <rene.kijewski@fu-berlin.de>
+ *     Michel Rottleuthner <michel.rottleuthner@haw-hamburg.de>
  */
 
 /**
  * @ingroup     core_internal
  * @{
  *
- * @file
+ * @file        compiler_hints.h
  * @brief       Common macros and compiler attributes/pragmas configuration
  *
- * @author      René Kijewski <rene.kijewski@fu-berlin.de>
- * @author      Michel Rottleuthner <michel.rottleuthner@haw-hamburg.de>
  */
 
 #ifndef COMPILER_HINTS_H

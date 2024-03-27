@@ -7,6 +7,13 @@
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
  *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     clist.c:            https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/clist.c
+ *
+ * The original author of clist.c is:
+ *     Kaspar Schleiser <kaspar@schleiser.de>
+ *
  * The code of _clist_sort() has been imported from
  * https://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html.
  * Original copyright notice:
@@ -39,10 +46,8 @@
  * @ingroup     core_util
  * @{
  *
- * @file
+ * @file        clist.c
  * @brief       clist helper implementations
- *
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
  *
  * @}
  */

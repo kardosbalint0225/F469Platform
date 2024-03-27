@@ -1,21 +1,28 @@
 /*
- * Copyright (C) 2017 Kaspar Schleiser <kaspar@schleiser.de>
- *               2014 Freie Universität Berlin
+ * Original work Copyright (C) 2017 Kaspar Schleiser <kaspar@schleiser.de>
+ *                             2014 Freie Universität Berlin
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     bitarithm.h:        https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/bitarithm.h
+ *
+ * The original authors of bitarithm.h are:
+ *     Kaspar Schleiser <kaspar@schleiser.de>
+ *     Martine Lenders <mlenders@inf.fu-berlin.de>
  */
 
 /**
  * @ingroup     core_util
  * @{
  *
- * @file
+ * @file        bitarithm.h
  * @brief       Helper functions for bit arithmetic
  *
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
- * @author      Martine Lenders <mlenders@inf.fu-berlin.de>
  */
 
 #ifndef BITARITHM_H

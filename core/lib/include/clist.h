@@ -1,18 +1,26 @@
 /*
- * Copyright (C) 2016 Kaspar Schleiser <kaspar@schleiser.de>
- *               2013 Freie Universität Berlin
- *               2017 Inria
+ * Original work Copyright (C) 2016 Kaspar Schleiser <kaspar@schleiser.de>
+ *                             2013 Freie Universität Berlin
+ *                             2017 Inria
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     clist.h:            https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/clist.h
+ *
+ * The original author of clist.h is:
+ *     Kaspar Schleiser <kaspar@schleiser.de>
  */
 
 /**
  * @ingroup     core_util
  * @{
  *
- * @file
+ * @file        clist.h
  * @brief       Circular linked list
  *
  * This file contains a circularly and singly linked list implementation.
@@ -82,9 +90,7 @@
  * the first entry.
  * Actual list objects should have a @c clist_node_t as member and then use
  * the container_of() macro in list operations.
- * See @ref thread_add_to_list() as example.
  *
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
  */
 
 #ifndef CLIST_H

@@ -1,9 +1,33 @@
 /*
- * panic.c
+ * Original work Copyright (C) 2015 INRIA
+ *                             2015 Eistec AB
+ *                             2015 Kaspar Schleiser <kaspar@schleiser.de>
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
- *  Created on: Feb 22, 2024
- *      Author: Balint
+ * This file is subject to the terms and conditions of the GNU Lesser General
+ * Public License v2.1. See the file LICENSE in the top level directory for more
+ * details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     panic.c:            https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/panic.c
+ *
+ * The original authors of panic.c are:
+ *     Kévin Roussel <Kevin.Roussel@inria.fr>
+ *     Oliver Hahm <oliver.hahm@inria.fr>
+ *     Joakim Nohlgård <joakim.nohlgard@eistec.se>
+ *     Kaspar Schleiser <kaspar@schleiser.de>
  */
+
+/**
+ * @ingroup     core_util
+ * @{
+ *
+ * @file        panic.c
+ * @brief       Crash handling functions
+ *
+ */
+
 #include "FreeRTOS.h"
 #include "task.h"
 #include "panic.h"

@@ -1,23 +1,30 @@
 /*
- * Copyright (C) 2016 Kaspar Schleiser <kaspar@schleiser.de>
- *               2016 TriaGnoSys GmbH
+ * Original work Copyright (C) 2016 Kaspar Schleiser <kaspar@schleiser.de>
+ *                             2016 TriaGnoSys GmbH
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     list.h:             https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/list.h
+ *
+ * The original authors of list.h are:
+ *     Kaspar Schleiser <kaspar@schleiser.de>
+ *     Víctor Ariño <victor.arino@zii.aero>
  */
 
 /**
  * @ingroup     core_util
  * @{
  *
- * @file
+ * @file        ilist.h
  * @brief       Intrusive linked list
  *
  * Lists are represented as element pointing to the first actual list element.
  *
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
- * @author      Víctor Ariño <victor.arino@zii.aero>
  */
 
 #ifndef ILIST_H

@@ -1,32 +1,38 @@
 /*
- * Copyright (C) 2014 Freie Universität Berlin
+ * Original work Copyright (C) 2014 Freie Universität Berlin
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     debug.h:            https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/debug.h
+ *
+ * The original author of debug.h is:
+ *     Kaspar Schleiser <kaspar@schleiser.de>
  */
 
 /**
  * @ingroup     core_util
  * @{
  *
- * @file
+ * @file        debug.h
  * @brief       Debug-header
  *
  * @details     If *ENABLE_DEBUG* is defined inside an implementation file, all
  *              calls to ::DEBUG will work the same as *printf* and output the
  *              given information to stdout. If *ENABLE_DEBUG* is not defined,
  *              all calls to ::DEBUG will be ignored.
- *
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
  */
 
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include "core_config.h"
-#include "FreeRTOS.h"
 #include <stdio.h>
+#include "FreeRTOS.h"
+#include "core_config.h"
 
 #ifdef __cplusplus
 extern "C" {

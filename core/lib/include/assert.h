@@ -1,22 +1,29 @@
 /*
- * Copyright (C) 2015 INRIA
- * Copyright (C) 2016 Freie Universität Berlin
+ * Original work Copyright (C) 2015 INRIA
+ *                             2016 Freie Universität Berlin
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     assert.h:           https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/core/lib/include/assert.h
+ *
+ * The original authors of assert.h are:
+ *     Oliver Hahm <oliver.hahm@inria.fr>
+ *     René Kijewski <rene.kijewski@fu-berlin.de>
+ *     Martine Lenders <m.lenders@fu-berlin.de>
  */
 
 /**
  * @ingroup     core_util
  *
  * @{
- * @file
+ * @file        assert.h
  * @brief       POSIX.1-2008 compliant version of the assert macro
  *
- * @author      Oliver Hahm <oliver.hahm@inria.fr>
- * @author      René Kijewski <rene.kijewski@fu-berlin.de>
- * @author      Martine Lenders <m.lenders@fu-berlin.de>
  */
 
 #ifndef ASSERT_H
