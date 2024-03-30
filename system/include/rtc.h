@@ -1,9 +1,18 @@
 /*
- * Copyright (C) 2014 Thomas Eichinger <thomas.eichinger@fu-berlin.de>
+ * Original work Copyright (C) 2014 Thomas Eichinger <thomas.eichinger@fu-berlin.de>
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
- * This file is subject to the terms and conditions of the GNU Lesser General
- * Public License v2.1. See the file LICENSE in the top level directory for more
- * details.
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     rtc.h:              https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/drivers/include/periph/rtc.h
+ *
+ * The original author of rtc.h is:
+ *     Thomas Eichinger <thomas.eichinger@fu-berlin.de>
  */
 
 /**
@@ -17,10 +26,9 @@
  * Compare: http://pubs.opengroup.org/onlinepubs/7908799/xsh/time.h.html
  *
  * @{
- * @file
+ * @file        rtc.h
  * @brief       Low-level RTC peripheral driver interface definitions
  *
- * @author      Thomas Eichinger <thomas.eichinger@fu-berlin.de>
  */
 #ifndef __RTC_H__
 #define __RTC_H__

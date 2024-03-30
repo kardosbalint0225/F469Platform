@@ -1,9 +1,17 @@
 /*
  * Copyright (C) 2019 ML!PA Consulting GmbH
  *
- * This file is subject to the terms and conditions of the GNU Lesser General
- * Public License v2.1. See the file LICENSE in the top level directory for more
- * details.
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     rtc_utils.h:        https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/sys/include/rtc_utils.h
+ *
+ * The original author of rtc_utils.h is:
+ *     Thomas Eichinger <thomas.eichinger@fu-berlin.de>
  */
 
 /**
@@ -11,7 +19,7 @@
  * @ingroup     sys
  * @brief       Common RTC helper functions
  * @{
- * @file
+ * @file        rtc_utils.h
  *
  * @author      Benjamin Valentin <benjamin.valentin@ml-pa.com>
  */

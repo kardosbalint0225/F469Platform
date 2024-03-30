@@ -1,10 +1,22 @@
 /*
- * Copyright (C) 2015 Kaspar Schleiser <kaspar@schleiser.de>
- *               2014 Freie Universit‰t Berlin
+ * Original work Copyright (C) 2015 Kaspar Schleiser <kaspar@schleiser.de>
+ *                             2014 Freie Universit√§t Berlin
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
- * This file is subject to the terms and conditions of the GNU Lesser General
- * Public License v2.1. See the file LICENSE in the top level directory for more
- * details.
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     syscalls.c:         https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/sys/newlib_syscalls_default/syscalls.c
+ *
+ * The original authors of syscalls.c are:
+ *     Michael Baar <michael.baar@fu-berlin.de>
+ *     Stefan Pfeiffer <pfeiffer@inf.fu-berlin.de>
+ *     Hauke Petersen <hauke.petersen@fu-berlin.de>
+ *     Kaspar Schleiser <kaspar@schleiser.de>
  */
 
 /**
@@ -13,14 +25,8 @@
  * @brief       Newlib system call
  * @{
  *
- * @file
+ * @file        syscalls.c
  * @brief       Newlib system call implementations
- *
- * @author      Michael Baar <michael.baar@fu-berlin.de>
- * @author      Stefan Pfeiffer <pfeiffer@inf.fu-berlin.de>
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
- *
  * @}
  */
 

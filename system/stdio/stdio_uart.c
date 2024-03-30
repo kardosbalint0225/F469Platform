@@ -1,29 +1,35 @@
 /*
- * Copyright (C) 2013 INRIA
- *               2015 Kaspar Schleiser <kaspar@schleiser.de>
- *               2016 Eistec AB
- *               2018 Freie Universität Berlin
+ * Original work Copyright (C) 2013 INRIA
+ *                             2015 Kaspar Schleiser <kaspar@schleiser.de>
+ *                             2016 Eistec AB
+ *                             2018 Freie Universität Berlin
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
- * General Public License v2.1. See the file LICENSE in the top level
- * directory for more details.
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     stdio_uart.c:       https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/sys/stdio_uart/stdio_uart.c
+ *
+ * The original authors of stdio_uart.c are:
+ *     Oliver Hahm <oliver.hahm@inria.fr>
+ *     Ludwig Knüpfer <ludwig.knuepfer@fu-berlin.de>
+ *     Kaspar Schleiser <kaspar@schleiser.de>
+ *     Joakim Nohlgård <joakim.nohlgard@eistec.se>
+ *     Hauke Petersen <hauke.petersen@fu-berlin.de>
  */
 
 /**
  * @ingroup     system
  * @{
  *
- * @file
+ * @file        stdio_uart.c
  * @brief       STDIO over UART implementation
  *
  * This file implements a UART callback and the STDIO read/write functions
- *
- * @author      Oliver Hahm <oliver.hahm@inria.fr>
- * @author      Ludwig Knüpfer <ludwig.knuepfer@fu-berlin.de>
- * @author      Kaspar Schleiser <kaspar@schleiser.de>
- * @author      Joakim Nohlgård <joakim.nohlgard@eistec.se>
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
- *
  * @}
  */
 

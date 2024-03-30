@@ -1,8 +1,31 @@
-/*
- * rtc.c
+/**
+ * MIT License
  *
- *  Created on: 2023. dec. 12.
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_cli
+ *
+ * @file        rtc.c
+ * @brief       Real-Time Clock (RTC) Commands
  */
 #include "embedded_cli.h"
 #include "cli_config.h"
@@ -24,14 +47,15 @@ static void convert_string_to_time(int *hour, int *min, int *sec, const char *ti
 static void convert_string_to_date(int *day, int *month, int *year, const char *date_string);
 
 /**
- * @brief  Function that is executed when date command entered
- *         Displays the current date set to the RTC
+ * @brief Function that is executed when the date command is entered
+ *        Displays the current date set to the RTC
  *
- * @param  cli (not used)
- * @param  args (not used)
- * @param  context (not used)
+ * This function retrieves the current system time, converts it to
+ * a human-readable format representing the date, and prints it to the console.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the arguments passed to the command (unused).
+ * @param context Pointer to additional context data (unused).
  */
 void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 {
@@ -50,14 +74,16 @@ void cli_command_get_date(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when time command entered
- *         Displays the current time set to the RTC
+ * @brief Function that is executed when the time command is entered
+ *        Displays the current time set to the RTC
  *
- * @param  cli (not used)
- * @param  args (not used)
- * @param  context (not used)
+ * This function retrieves the current system time, converts it to a human-readable
+ * format representing the time, and optionally prints milliseconds if specified
+ * by the user.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the arguments passed to the command. It may contain "-ms" to specify milliseconds.
+ * @param context Pointer to additional context data (unused).
  */
 void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 {
@@ -86,14 +112,17 @@ void cli_command_get_time(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when setdate command entered
- *         Sets the current date to the RTC
+ * @brief Function that is executed when the setdate command is entered
+ *        Sets the current date to the RTC.
  *
- * @param  cli (not used)
- * @param  args command argument holding the date to be set
- * @param  context (not used)
+ * This function parses the input argument representing the date to be set,
+ * validates it, and sets the system date accordingly. The command argument
+ * should be in the format "YYYY.MM.DD". If successful, it updates the
+ * system date and prints a confirmation message.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the arguments passed to the command, containing the date to be set.
+ * @param context Pointer to additional context data (unused).
  */
 void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
 {
@@ -146,14 +175,17 @@ void cli_command_set_date(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when settime command entered
- *         Sets the current time to the RTC
+ * @brief Function that is executed when the settime command is entered
+ *        Sets the current time to the RTC.
  *
- * @param  cli (not used)
- * @param  args command argument holding the time to be set
- * @param  context (not used)
+ * This function parses the input argument representing the time to be set,
+ * validates it, and sets the system time accordingly. The command argument
+ * should be in the format "HH:MM:SS". If successful, it updates the
+ * system time and prints a confirmation message.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the arguments passed to the command, containing the time to be set.
+ * @param context Pointer to additional context data (unused).
  */
 void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
 {
@@ -200,13 +232,14 @@ void cli_command_set_time(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Checks whether the settime command string is valid or not
+ * @brief Checks if a time string is in a valid format.
  *
- * @param  time_string the string containing the argument of the settime command
- * @param  len the length of the time_string
+ * This function checks whether the given time string is in a valid format
+ * for setting the system time. The valid format should be "HH:MM:SS".
  *
- * @retval true if the time command string is valid (hh:mm:ss format)
- * @retval false otherwise
+ * @param  time_string Pointer to the time string to be validated.
+ * @param  len         Length of the time string.
+ * @return true if the time string is valid, false otherwise.
  */
 static bool is_time_command_string_valid(const char *time_string, const uint32_t len)
 {
@@ -241,13 +274,14 @@ static bool is_time_command_string_valid(const char *time_string, const uint32_t
 }
 
 /**
- * @brief  Checks whether the setdate command string is valid or not
+ * @brief Checks if a date string is in a valid format.
  *
- * @param  date_string the string containing the argument of the setdate command
- * @param  len the length of the date_string
+ * This function checks whether the given date string is in a valid format
+ * for setting the system date. The valid format should be "YYYY.MM.DD".
  *
- * @retval true if the date command string is valid (yyyy.mm.dd. format)
- * @retval false otherwise
+ * @param  date_string Pointer to the date string to be validated.
+ * @param  len         Length of the date string.
+ * @return true if the date string is valid, false otherwise.
  */
 static bool is_date_command_string_valid(const char *date_string, const uint32_t len)
 {
@@ -282,14 +316,16 @@ static bool is_date_command_string_valid(const char *date_string, const uint32_t
 }
 
 /**
- * @brief  Extracts time information from a given string
+ * @brief Converts a time string to individual hour, minute, and second components.
  *
- * @param  hour where the hour value can be stored
- * @param  min  where the min value can be stored
- * @param  sec  where the sec value can be stored
- * @param  time_string the string to be extracted
+ * This function parses the given time string in the format "HH:MM:SS" and extracts
+ * the hour, minute, and second components, storing them in the provided integer
+ * pointers.
  *
- * @retval None
+ * @param hour        Pointer to an integer variable to store the extracted hour.
+ * @param min         Pointer to an integer variable to store the extracted minute.
+ * @param sec         Pointer to an integer variable to store the extracted second.
+ * @param time_string Pointer to the time string to be parsed.
  */
 static void convert_string_to_time(int *hour, int *min, int *sec, const char *time_string)
 {
@@ -304,14 +340,15 @@ static void convert_string_to_time(int *hour, int *min, int *sec, const char *ti
 }
 
 /**
- * @brief  Extracts date information from a given string
+ * @brief Converts a date string to individual day, month, and year components.
  *
- * @param  day   where the day value can be stored
- * @param  month where the month value can be stored
- * @param  year  where the year value can be stored
- * @param  date_string the string to be extracted
+ * This function parses the given date string in the format "YYYY.MM.DD" and extracts
+ * the year, month, and day components, storing them in the provided integer pointers.
  *
- * @retval None
+ * @param day         Pointer to an integer variable to store the extracted day.
+ * @param month       Pointer to an integer variable to store the extracted month.
+ * @param year        Pointer to an integer variable to store the extracted year.
+ * @param date_string Pointer to the date string to be parsed.
  */
 static void convert_string_to_date(int *day, int *month, int *year, const char *date_string)
 {

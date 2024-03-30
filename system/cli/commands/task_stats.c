@@ -1,8 +1,31 @@
-/*
- * task.c
+/**
+ * MIT License
  *
- *  Created on: 2023. dec. 12.
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_cli
+ *
+ * @file        task_stats.c
+ * @brief       Task Statistics Commands
  */
 #include "embedded_cli.h"
 #include "cli_config.h"
@@ -19,14 +42,16 @@ static const char * const _task_states[] = {
 extern uint32_t uxTaskGetStackSize(TaskHandle_t xTask);
 
 /**
- * @brief  Function that is executed when runtimestats command entered
- *         Displays the absolute and relative times of each task
+ * @brief Function that is executed when the runtimestats command is entered.
+ *        Displays the absolute and relative times of each task.
  *
- * @param  cli (not used)
- * @param  args (not used)
- * @param  context (not used)
+ * This function retrieves runtime statistics for all FreeRTOS tasks including
+ * task ID, name, state, priority, absolute time, and CPU time percentage.
+ * It then prints these statistics to the console.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments (unused).
+ * @param context Pointer to the context (unused).
  */
 void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context)
 {
@@ -82,14 +107,16 @@ void cli_command_runtime_stats(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when taskstats command entered
- *         Displays the state, priority and stack usage of each task
+ * @brief Function that is executed when the taskstats command is entered.
+ *        Displays the state, priority and stack usage of each task.
  *
- * @param  cli (not used)
- * @param  args (not used)
- * @param  context (not used)
+ * This function retrieves statistics for all FreeRTOS tasks, including
+ * task ID, name, state, priority, stack size, and stack usage percentage.
+ * It then prints these statistics to the console.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments (unused).
+ * @param context Pointer to the context (unused).
  */
 void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context)
 {

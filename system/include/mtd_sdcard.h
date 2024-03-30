@@ -1,9 +1,18 @@
 /*
- * Copyright (C) 2017 HAW-Hamburg
+ * Original work Copyright (C) 2017 HAW-Hamburg
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
  * This file is subject to the terms and conditions of the GNU Lesser
- * General Public License v2.1. See the file LICENSE in the top level
- * directory for more details.
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     mtd_sdcard.h:       https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/drivers/include/mtd_sdcard.h
+ *
+ * The original author of mtd_sdcard.h is:
+ *     Michel Rottleuthner <michel.rottleuthner@haw-hamburg.de>
  */
 
 /**
@@ -13,10 +22,9 @@
  *
  * @{
  *
- * @file
+ * @file        mtd_sdcard.h
  * @brief       Interface definition for the mtd_sdcard driver
  *
- * @author      Michel Rottleuthner <michel.rottleuthner@haw-hamburg.de>
  */
 
 #ifndef MTD_SDCARD_H

@@ -1,3 +1,10 @@
+/**
+ * @ingroup    core_config
+ * @file       FreeRTOSConfig.h.h
+ * @brief      FreeRTOS configuration options
+ *
+ */
+
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
@@ -121,6 +128,6 @@ extern uint32_t SystemCoreClock;
 #define INCLUDE_xTaskResumeFromISR                    ( 1 )
 #define INCLUDE_xQueueGetMutexHolder                  ( 1 )
 
-
 #endif /* FREERTOS_CONFIG_H */
+
 

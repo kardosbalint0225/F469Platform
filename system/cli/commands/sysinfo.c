@@ -1,8 +1,31 @@
-/*
- * sys.c
+/**
+ * MIT License
  *
- *  Created on: 2023. dec. 12.
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_cli
+ *
+ * @file        sysinfo.c
+ * @brief       System Information Command
  */
 #include "embedded_cli.h"
 #include "stm32f4xx_hal.h"
@@ -79,14 +102,15 @@ const char * rtc_clksrc[34] = {
 static uint32_t find(const uint32_t *array, const uint32_t size, const uint32_t value);
 
 /**
- * @brief  Function that is executed when the sysinfo command is entered.
- *         Displays system related informations (versions, clock states)
+ * @brief Function that is executed when the sysinfo command is entered.
+ *        Displays system related informations
  *
- * @param  cli (not used)
- * @param  args (not used)
- * @param  context (not used)
+ * This function retrieves various system information such as MCU revision ID, device ID,
+ * UID, clock system configurations and prints them to the console.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments (unused).
+ * @param context Pointer to the context (unused).
  */
 void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
 {
@@ -181,14 +205,16 @@ void cli_command_sysinfo(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Finds the index of a value in the given array
+ * @brief Finds the index of the first occurrence of a value in an array.
  *
- * @param  array the array to be checked
- * @param  size  the size of the array
- * @param  value the value to be found
+ * This function searches for the first occurrence of the specified value in the given array
+ * and returns the index of that occurrence. If the value is not found in the array, the function
+ * returns 0xFFFFFFFFul to indicate that the value was not found.
  *
- * @retval returns the index of the value,
- *         0xFFFFFFFFul if the value can not be found
+ * @param  array Pointer to the array to be searched.
+ * @param  size  The number of elements in the array.
+ * @param  value The value to search for in the array.
+ * @return The index of the first occurrence of the value in the array, or 0xFFFFFFFFul if the value is not found.
  */
 static uint32_t find(const uint32_t *array, const uint32_t size, const uint32_t value)
 {

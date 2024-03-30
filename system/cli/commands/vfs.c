@@ -1,9 +1,30 @@
 /*
- * vfs.c
+ * Original work Copyright (C) 2016 Eistec AB
+ * Modified work Copyright (C) 2024 Balint Kardos
  *
- *  Created on: 2023. dec. 12.
- *      Author: Balint
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     vfs.c:              https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/sys/shell/cmds/vfs.c
+ *
+ * The original author of vfs.c is:
+ *     Joakim Nohlgård <joakim.nohlgard@eistec.se>
  */
+
+/**
+ * @ingroup     system_cli
+ * @{
+ *
+ * @file        vfs.c
+ * @brief       CLI commands for the VFS module
+ *
+ * @}
+ */
+
 #include "embedded_cli.h"
 #include "cli_config.h"
 

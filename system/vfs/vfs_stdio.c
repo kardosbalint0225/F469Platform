@@ -3,20 +3,25 @@
  *               2018 Freie Universität Berlin
  *
  * This file is subject to the terms and conditions of the GNU Lesser
- * General Public License v2.1. See the file LICENSE in the top level
- * directory for more details.
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     vfs_stdio.c:        https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/sys/vfs/vfs_stdio.c
+ *
+ * The original authors of vfs_stdio.c are:
+ *     Joakim Nohlgård <joakim.nohlgard@eistec.se>
+ *     Hauke Petersen <hauke.petersen@fu-berlin.de>
  */
 
 /**
  * @ingroup     sys
  * @{
  *
- * @file
+ * @file        vfs_stdio.c
  * @brief       STDIO binding for the VFS module
- *
- * @author      Joakim Nohlgård <joakim.nohlgard@eistec.se>
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
- *
  * @}
  */
 

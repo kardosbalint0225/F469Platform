@@ -2,16 +2,23 @@
  * Copyright (C) 2021 Benjamin Valentin
  *
  * This file is subject to the terms and conditions of the GNU Lesser
- * General Public License v2.1. See the file LICENSE in the top level
- * directory for more details.
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     vfs_util.c:         https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/sys/vfs_util/vfs_util.c
+ *
+ * The original author of vfs_util.c is:
+ *     Benjamin Valentin <benjamin.valentin@ml-pa.com>
  */
 
 /**
  * @ingroup     sys_vfs_util
  * @{
- * @file
+ * @file    vfs_util.c
  * @brief   VFS layer helper functions
- * @author  Benjamin Valentin <benjamin.valentin@ml-pa.com>
  * @}
  */
 

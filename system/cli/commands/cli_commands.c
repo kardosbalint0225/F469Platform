@@ -1,46 +1,37 @@
-/*
- * cli_commands.c
+/**
+ * MIT License
  *
- *  Created on: 2023. jul. 15.
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_cli
+ *
+ * @file        cli_commands.c
+ * @brief       CLI Command Bindings
  */
 #include "cli.h"
 #include "cli_commands.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdbool.h>
-
-static CliCommandBinding stdintest_binding = {
-    .name = "stdintest",
-    .help = "stdintest",
-    .tokenizeArgs = true,
-    .context = NULL,
-    .binding = cli_command_stdintest
-};
-
-static CliCommandBinding assert_binding = {
-    .name = "assert",
-    .help = "Assert",
-    .tokenizeArgs = true,
-    .context = NULL,
-    .binding = cli_command_assert
-};
-
-static CliCommandBinding malloctest_binding = {
-    .name = "malloctest",
-    .help = "malloctest",
-    .tokenizeArgs = true,
-    .context = NULL,
-    .binding = cli_command_malloctest
-};
-
-static CliCommandBinding hardfaulttest_binding = {
-    .name = "hardfaulttest",
-    .help = "hardfaulttest",
-    .tokenizeArgs = true,
-    .context = NULL,
-    .binding = cli_command_hardfaulttest
-};
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
@@ -178,13 +169,6 @@ static CliCommandBinding mkdir_binding = {
     .binding = cli_command_mkdir
 };
 
-/**
- * @brief  Adds the command bindings to the cli instance
- *
- * @param  None
- *
- * @retval None
- */
 void cli_init_command_bindings(EmbeddedCli *cli)
 {
     assert(cli);
@@ -223,15 +207,6 @@ void cli_init_command_bindings(EmbeddedCli *cli)
     ret = embeddedCliAddBinding(cli, mv_binding);
     assert(ret);
     ret = embeddedCliAddBinding(cli, mkdir_binding);
-    assert(ret);
-
-    ret = embeddedCliAddBinding(cli, assert_binding);
-    assert(ret);
-    ret = embeddedCliAddBinding(cli, stdintest_binding);
-    assert(ret);
-    ret = embeddedCliAddBinding(cli, malloctest_binding);
-    assert(ret);
-    ret = embeddedCliAddBinding(cli, hardfaulttest_binding);
     assert(ret);
 }
 

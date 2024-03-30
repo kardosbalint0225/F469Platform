@@ -1,8 +1,31 @@
-/*
- * rcc.c
+/**
+ * MIT License
  *
- *  Created on: Feb 25, 2024
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     core
+ *
+ * @file        rcc.h
+ * @brief       System and Peripheral Clock Management
  */
 #include "rcc.h"
 #include "hal_errno.h"
@@ -115,7 +138,7 @@ static inline void periph_unlock(void);
 static SemaphoreHandle_t _periph_mutex = NULL;
 static StaticSemaphore_t _periph_mutex_storage;
 
-static uint32_t clk48_reference_count = 0ul;
+static uint32_t _clk48_reference_count = 0ul;
 
 typedef struct {
     const void * const base_address;
@@ -174,7 +197,7 @@ void rcc_init(void)
         _periph[i].reference_count = 0ul;
     }
 
-    clk48_reference_count = 0ul;
+    _clk48_reference_count = 0ul;
 
     _periph_mutex = xSemaphoreCreateMutexStatic(&_periph_mutex_storage);
     assert(_periph_mutex);
@@ -186,13 +209,35 @@ void rcc_deinit(void)
     _periph_mutex = NULL;
 }
 
-/**
- * @brief  Initializes the HSE and LSE oscillators
- *
- * @return 0 on success
- * @return < 0 on error
- */
-int rcc_system_clock_external_oscillators_init(void)
+int rcc_clock_system_init(void)
+{
+    /** Configure the main internal regulator output voltage */
+    __HAL_RCC_PWR_CLK_ENABLE();
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+    int ret;
+    ret = rcc_external_oscillators_init();
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = rcc_bus_clocks_config();
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    ret = rcc_internal_oscillators_disable();
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    return 0;
+}
+
+int rcc_external_oscillators_init(void)
 {
     RCC_OscInitTypeDef osc_config = { 0 };
 
@@ -223,13 +268,7 @@ int rcc_system_clock_external_oscillators_init(void)
     return 0;
 }
 
-/**
- * @brief  Initializes the CPU, AHB and APB buses clocks
- *
- * @return 0 on success
- * @return < 0 on error
- */
-int rcc_system_clock_bus_clocks_init(void)
+int rcc_bus_clocks_config(void)
 {
     RCC_ClkInitTypeDef clk_config = { 0 };
 
@@ -271,41 +310,6 @@ int rcc_internal_oscillators_disable(void)
 
     return 0;
 }
-
-/**
- * @brief  System Clock Configuration
- *
- * @return 0 on success
- * @return < 0 on error
- */
-int rcc_system_clock_init(void)
-{
-    /** Configure the main internal regulator output voltage */
-    __HAL_RCC_PWR_CLK_ENABLE();
-    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
-    int ret;
-    ret = rcc_system_clock_external_oscillators_init();
-    if (ret != 0)
-    {
-        return ret;
-    }
-
-    ret = rcc_system_clock_bus_clocks_init();
-    if (ret != 0)
-    {
-        return ret;
-    }
-
-    ret = rcc_internal_oscillators_disable();
-    if (ret != 0)
-    {
-        return ret;
-    }
-
-    return 0;
-}
-
 
 void rcc_periph_clk_enable(const void *periph)
 {
@@ -381,14 +385,14 @@ HAL_StatusTypeDef clk48_clock_init(void)
     RCC_PeriphCLKInitTypeDef clk48_clock = {
         .PeriphClockSelection = RCC_PERIPHCLK_CLK48,
         .Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP,
-        .PLLSAI.PLLSAIN = 384,
+        .PLLSAI.PLLSAIN = 384ul,
         .PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8,
     };
     HAL_StatusTypeDef ret;
 
     periph_lock();
 
-    if (0ul == clk48_reference_count)
+    if (0ul == _clk48_reference_count)
     {
         ret = HAL_RCCEx_PeriphCLKConfig(&clk48_clock);
     }
@@ -397,7 +401,7 @@ HAL_StatusTypeDef clk48_clock_init(void)
         ret = HAL_OK;
     }
 
-    clk48_reference_count = clk48_reference_count + 1ul;
+    _clk48_reference_count = _clk48_reference_count + 1ul;
 
     periph_unlock();
 
@@ -410,9 +414,9 @@ HAL_StatusTypeDef clk48_clock_deinit(void)
 
     periph_lock();
 
-    clk48_reference_count = clk48_reference_count - 1ul;
+    _clk48_reference_count = _clk48_reference_count - 1ul;
 
-    if (0ul == clk48_reference_count)
+    if (0ul == _clk48_reference_count)
     {
         ret = HAL_OK;   //TODO: how to shut it down
     }
@@ -447,6 +451,16 @@ HAL_StatusTypeDef sdio_clock_source_deinit(void)
     return HAL_OK; //TODO: how to shut it down
 }
 
+/**
+ * @brief     Finds the index of a peripheral in the peripheral array.
+ *
+ * This function searches for the specified peripheral in the peripheral array
+ * and returns its index if found. It compares the base addresses of peripherals
+ * to determine a match.
+ *
+ * @param[in] periph Pointer to the peripheral to find the index for.
+ * @return    The index of the peripheral in the array if found; otherwise, -1.
+ */
 static int find_periph_index(const void *periph)
 {
     int index = -1;
@@ -464,11 +478,17 @@ static int find_periph_index(const void *periph)
     return index;
 }
 
+/**
+ * @brief Locks the periph_mutex
+ */
 static inline void periph_lock(void)
 {
     xSemaphoreTake(_periph_mutex, portMAX_DELAY);
 }
 
+/**
+ * @brief Unlocks the periph_mutex
+ */
 static inline void periph_unlock(void)
 {
     xSemaphoreGive(_periph_mutex);

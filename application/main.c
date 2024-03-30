@@ -8,7 +8,7 @@ int main(void)
 {
     rcc_init();
     HAL_Init();
-    rcc_system_clock_init();
+    rcc_clock_system_init();
 
     vTaskStartScheduler();
 

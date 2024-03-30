@@ -1,0 +1,18 @@
+/**
+ * @defgroup core Core
+ * @brief Platform Core containing the core functionalities
+ *
+ * The Platform Core contains the RTOS (FreeRTOS) and the STM32F4 HAL Driver.
+ */
+
+/**
+ * @defgroup    core_config Core Configuration
+ * @ingroup     core
+ * @brief       RTOS, STM32F4 HAL driver and core configurations
+ */
+
+/**
+ * @defgroup    core_util Core Utilities
+ * @ingroup     core
+ * @brief       Utilities, data structures and commonly used macros
+ */

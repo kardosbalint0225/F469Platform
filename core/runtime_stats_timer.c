@@ -1,21 +1,42 @@
-#include "FreeRTOS.h"
-#include "runtime_stats_timer.h"
-#include "stm32f4xx_hal.h"
-#include "hal_errno.h"
-#include "rcc.h"
-#include <errno.h>
+/**
+ * MIT License
+ *
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     core
+ *
+ * @file        runtime_stats_timer.c
+ * @brief       Timer for Runtime Statistics
+ */
 
-TIM_HandleTypeDef h_runtime_stats_timer;
+#include "runtime_stats_timer.h"
+#include "FreeRTOS.h"
+#include "stm32f4xx_hal.h"
+#include "rcc.h"
+
+static TIM_HandleTypeDef h_runtime_stats_timer;
 static volatile uint32_t _count;
 static void period_elapsed_cb(TIM_HandleTypeDef *htim);
 
-/**
- * @brief  Configures a dedicated Timer peripheral for
- *         generating the Run-Time Stats
- * @param  None
- * @retval None
- * @note   This function is called by the FreeRTOS kernel
- */
 void runtime_stats_timer_init(void)
 {
     RCC_ClkInitTypeDef clock_config;
@@ -74,12 +95,6 @@ void runtime_stats_timer_init(void)
     HAL_NVIC_EnableIRQ(RUNTIME_STATS_TIMER_IRQn);
 }
 
-/**
- * @brief  Deinitializes the Runtime Stats Timer
- * @param  None
- * @retval None
- * @note   -
- */
 void runtime_stats_timer_deinit(void)
 {
     HAL_StatusTypeDef ret;
@@ -98,32 +113,27 @@ void runtime_stats_timer_deinit(void)
     rcc_periph_clk_disable((const void *)RUNTIME_STATS_TIMER_TIMx);
 }
 
-/**
- * @brief  Returns the current timer value of the Runtime Stats Timer
- * @param  None
- * @retval 32-bit unsigned timer count ( count * 0.1 ms elapsed)
- * @note   -
- */
 uint32_t runtime_stats_timer_get_count(void)
 {
     return _count;
 }
 
 /**
- * @brief  TIMx Period elapsed callback
- * @param  None
- * @retval None
- * @note   This function is called from the HAL library
- * @note   This function is called when the timer
- *         reaches its predefined period (10 kHz). By generating
- *         interrupt in every 0.1 ms the run time stats can be more
+ * @brief  Runtime Statistics Timer Period elapsed Callback
+ * @note   This function is called by the HAL library when the timer
+ *         reaches its period (10 kHz). By generating
+ *         interrupt in every 0.1 ms the run time statistics can be more
  *         accurately calculated.
  */
 static void period_elapsed_cb(TIM_HandleTypeDef *htim)
 {
+    (void)htim;
     _count++;
 }
 
+/**
+ * @brief Runtime Statistics Timer Interrupt Handler
+ */
 void RUNTIME_STATS_TIMER_IRQHandler(void)
 {
     HAL_TIM_IRQHandler(&h_runtime_stats_timer);

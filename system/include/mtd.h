@@ -2,8 +2,17 @@
  * Copyright (C) 2016  OTA keys S.A.
  *
  * This file is subject to the terms and conditions of the GNU Lesser
- * General Public License v2.1. See the file LICENSE in the top level
- * directory for more details.
+ * General Public License v2.1. See the file LICENSE in the root
+ * directory of this software component or visit
+ * https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html for more details
+ *
+ * The original work can be found in the RIOT-OS 2024.01 branch:
+ *     RIOT-OS repository: https://github.com/RIOT-OS/RIOT/tree/2024.01-branch
+ *     mtd.h:              https://github.com/RIOT-OS/RIOT/blob/2024.01-branch/drivers/include/mtd.h
+ *
+ * The original authors of mtd.h are:
+ *     Aurelien Gonce <aurelien.gonce@altran.com>
+ *     Vincent Dupont <vincent@otakeys.com>
  */
 
 /**
@@ -64,10 +73,8 @@
  * This MTD API currently does not specify which value will be read from an
  * erased sector.
  *
- * @file
+ * @file        mtd.h
  *
- * @author      Aurelien Gonce <aurelien.gonce@altran.com>
- * @author      Vincent Dupont <vincent@otakeys.com>
  */
 
 #ifndef MTD_H
