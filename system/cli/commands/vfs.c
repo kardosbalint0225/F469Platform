@@ -17,12 +17,8 @@
 
 /**
  * @ingroup     system_cli
- * @{
- *
  * @file        vfs.c
  * @brief       CLI commands for the VFS module
- *
- * @}
  */
 
 #include "embedded_cli.h"
@@ -59,14 +55,18 @@ static void list_mountpoints(void);
 static void list_items_in_path(const char *path);
 
 /**
- * @brief  Function that is executed when the r command is entered.
- *         TODO
+ * @brief Function that is executed when the r command is entered.
+ *        Reads content from a file and displays it on the console.
  *
- * @param  cli (not used)
- * @param  args string containing TODO
- * @param  context (not used)
+ * This function reads the specified number of bytes from the specified file
+ * starting from the specified offset and displays the content in hexadecimal
+ * and ASCII format. It supports displaying multiple lines of data from the
+ * file.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments containing the file path, number
+ *                of bytes to read (optional), and offset (optional).
+ * @param context Pointer to the context (unused).
  */
 void cli_command_r(EmbeddedCli *cli, char *args, void *context)
 {
@@ -165,14 +165,17 @@ void cli_command_r(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when the cp command is entered.
- *         TODO
+ * @brief Function that is executed when the cp command is entered.
+ *        Copy a file from source to destination.
  *
- * @param  cli (not used)
- * @param  args string containing TODO
- * @param  context (not used)
+ * This function copies a file from the specified source to the specified
+ * destination. It reads the source file in chunks and writes them to the
+ * destination file, providing progress information during the copy operation.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments containing the absolute path
+ *                of the source and destination files.
+ * @param context Pointer to the context (unused).
  */
 void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
 {
@@ -285,33 +288,16 @@ void cli_command_cp(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when the mv command is entered.
- *         TODO
+ * @brief Function that is executed when the rm command is entered.
+ *        Remove a file or directory.
  *
- * @param  cli (not used)
- * @param  args string containing TODO
- * @param  context (not used)
+ * This function removes the specified file or directory. If the "-r" option
+ * is provided, it removes directories recursively.
  *
- * @retval None
- */
-void cli_command_mv(EmbeddedCli *cli, char *args, void *context)
-{
-    (void)cli;
-    (void)args;
-    (void)context;
-
-    assert(0);
-}
-
-/**
- * @brief  Function that is executed when the rm command is entered.
- *         TODO
- *
- * @param  cli (not used)
- * @param  args string containing TODO
- * @param  context (not used)
- *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments containing the file or directory
+ *                path and optionally the "-r" flag for recursive removal.
+ * @param context Pointer to the context (unused).
  */
 void cli_command_rm(EmbeddedCli *cli, char *args, void *context)
 {
@@ -343,14 +329,14 @@ void cli_command_rm(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when the mkdir command is entered.
- *         TODO
+ * @brief Function that is executed when the mkdir command is entered.
+ *        Create a directory.
  *
- * @param  cli (not used)
- * @param  args string containing TODO
- * @param  context (not used)
+ * This function creates a directory with the specified name.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments containing the directory name.
+ * @param context Pointer to the context (unused).
  */
 void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context)
 {
@@ -370,14 +356,14 @@ void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when the cd command is entered.
- *         Changes the current working directory to the given <path>
+ * @brief Function that is executed when the cd command is entered.
+ *        Change the current directory.
  *
- * @param  cli (not used)
- * @param  args string containing the absolute or relative path
- * @param  context (not used)
+ * This function changes the current working directory to the specified path.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments containing the path to change to.
+ * @param context Pointer to the context (unused).
  */
 void cli_command_cd(EmbeddedCli *cli, char *args, void *context)
 {
@@ -400,15 +386,16 @@ void cli_command_cd(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Function that is executed when the ls command is entered.
- *         Lists the files and folders in the given directory. If the argument
- *         is NULL then the CWD is used
+ * @brief Function that is executed when the ls command is entered.
+ *        List directory contents or mount points.
  *
- * @param  cli (not used)
- * @param  args string containing the absolute or relative path or NULL
- * @param  context (not used)
+ * This function lists the contents of the specified directory or the current
+ * working directory if no path is provided. It can also list mount points if
+ * the "-mp" option is provided as an argument.
  *
- * @retval None
+ * @param cli     Pointer to the EmbeddedCli instance (unused).
+ * @param args    Pointer to the command arguments containing the path or options.
+ * @param context Pointer to the context (unused).
  */
 void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
 {
@@ -449,11 +436,10 @@ void cli_command_ls(EmbeddedCli *cli, char *args, void *context)
 }
 
 /**
- * @brief  Prints every Mount-point
+ * @brief List information about mounted filesystems.
  *
- * @param  None
- *
- * @retval None
+ * This function lists information about all mounted filesystems, including
+ * total space, used space, available space, and usage percentage.
  */
 static void list_mountpoints(void)
 {
@@ -494,11 +480,11 @@ static void list_mountpoints(void)
  * @brief  Converts the given size to the nearest byte unit
  *         and returns the unit in string format
  *
- * @param  size the size to be converted
+ * @param  size      the size to be converted
  * @param  converted pointer where the result of the conversion can be stored
  *
- * @retval "B", "KB", "MB", "GB" or "TB" according to the conversion
- * @retvan NULL if size is 0
+ * @return "B", "KB", "MB", "GB" or "TB" according to the conversion
+ * @return NULL if size is 0
  */
 static const char *get_unit(const uint64_t size, uint64_t *converted)
 {
@@ -532,16 +518,15 @@ static const char *get_unit(const uint64_t size, uint64_t *converted)
 }
 
 /**
- * @brief  Lists every file and folder in the given path
+ * @brief Lists the items (directories and files) present in the specified directory path.
  *
- * @param  path pointer where the path to be listed is stored
+ * This function opens the directory specified by the given path and iterates through its contents,
+ * printing details such as modification date, size (for files), and name of each item.
  *
- * @retval None
+ * @param path The path of the directory to list items from.
  */
 static void list_items_in_path(const char *path)
 {
-    //char npath[CLI_CMD_BUFFER_SIZE + 1];
-
     int res = vfs_normalize_path(_path, path, strnlen(path, CLI_CMD_BUFFER_SIZE) + 1);
     if (res < 0) {
         printf("\r\n  Invalid path \"%s\": %s\r\n", path, strerror(-res));

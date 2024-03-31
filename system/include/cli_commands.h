@@ -61,13 +61,8 @@ extern void cli_command_cd(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_cp(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_r(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_rm(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_mv(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_mkdir(EmbeddedCli *cli, char *args, void *context);
 extern void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_assert(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_stdintest(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_malloctest(EmbeddedCli *cli, char *args, void *context);
-extern void cli_command_hardfaulttest(EmbeddedCli *cli, char *args, void *context);
 
 #ifdef __cplusplus
 }

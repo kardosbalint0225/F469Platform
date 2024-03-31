@@ -153,14 +153,6 @@ static CliCommandBinding rm_binding = {
     .binding = cli_command_rm
 };
 
-static CliCommandBinding mv_binding = {
-    .name = "mv",
-    .help = "todo",//TODO
-    .tokenizeArgs = true,
-    .context = NULL,
-    .binding = cli_command_mv
-};
-
 static CliCommandBinding mkdir_binding = {
     .name = "mkdir",
     .help = "todo",//TODO
@@ -203,8 +195,6 @@ void cli_init_command_bindings(EmbeddedCli *cli)
     ret = embeddedCliAddBinding(cli, r_binding);
     assert(ret);
     ret = embeddedCliAddBinding(cli, rm_binding);
-    assert(ret);
-    ret = embeddedCliAddBinding(cli, mv_binding);
     assert(ret);
     ret = embeddedCliAddBinding(cli, mkdir_binding);
     assert(ret);
