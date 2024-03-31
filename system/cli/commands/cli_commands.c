@@ -35,7 +35,7 @@
 
 static CliCommandBinding clear_binding = {
     .name = "clear",
-    .help = "Clears the console",
+    .help = "Clears the console.\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_clear_terminal
@@ -43,7 +43,9 @@ static CliCommandBinding clear_binding = {
 
 static CliCommandBinding runtime_stats_binding = {
     .name = "runtimestats",
-    .help = "Displays how much processing time each FreeRTOS task has used",
+    .help = "Displays the run-time statistics for all FreeRTOS task\r\n        "
+            "including task state, priority, absolute and relative\r\n        "
+            "times used by each task.\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_runtime_stats
@@ -51,7 +53,8 @@ static CliCommandBinding runtime_stats_binding = {
 
 static CliCommandBinding task_stats_binding = {
     .name = "taskstats",
-    .help = "Displays a table showing the state of each FreeRTOS task",
+    .help = "Displays a table showing the state and stack usage\r\n        "
+            "of each FreeRTOS task.\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_task_stats
@@ -59,7 +62,7 @@ static CliCommandBinding task_stats_binding = {
 
 static CliCommandBinding get_date_binding = {
     .name = "date",
-    .help = "Displays the date in yyyy.mm.dd. format",
+    .help = "Displays the date in yyyy.mm.dd. format.\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_get_date
@@ -67,7 +70,9 @@ static CliCommandBinding get_date_binding = {
 
 static CliCommandBinding get_time_binding = {
     .name = "time",
-    .help = "Displays the time in hh:mm:ss format. Optional -ms argument can be used to display the millisecond component",
+    .help = "Displays the time in hh:mm:ss format.\r\n        "
+            "Optional -ms argument can be used to display the\r\n        "
+            "millisecond component.\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_get_time
@@ -75,7 +80,8 @@ static CliCommandBinding get_time_binding = {
 
 static CliCommandBinding set_date_binding = {
     .name = "setdate",
-    .help = "setdate <yyyy.mm.dd.>: Sets the current date",
+    .help = "Sets the current date.\r\n        "
+            "Usage: setdate <yyyy.mm.dd.>\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_set_date
@@ -83,7 +89,8 @@ static CliCommandBinding set_date_binding = {
 
 static CliCommandBinding set_time_binding = {
     .name = "settime",
-    .help = "settime <hh:mm:ss>: Sets the current time",
+    .help = "Sets the current time.\r\n        "
+            "Usage: settime <hh:mm:ss>\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_set_time
@@ -91,7 +98,9 @@ static CliCommandBinding set_time_binding = {
 
 static CliCommandBinding sysinfo_binding = {
     .name = "sysinfo",
-    .help = "Displays system related informations",
+    .help = "Displays various system information such as\r\n        "
+            "MCU revision ID, device ID, UID and clock system\r\n        "
+            "configurations.\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_sysinfo
@@ -99,7 +108,7 @@ static CliCommandBinding sysinfo_binding = {
 
 static CliCommandBinding version_binding = {
     .name = "version",
-    .help = "Displays the application version and the used library versions",
+    .help = "Displays the application version and the used library versions\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_version
@@ -107,7 +116,11 @@ static CliCommandBinding version_binding = {
 
 static CliCommandBinding memstat_binding = {
     .name = "memstat",
-    .help = "Displays the detailed state of the application and system memory",
+    .help = "Displays the detailed state of the application and system memory.\r\n        "
+            "Displays information about the internal memory layout\r\n        "
+            "including RAM regions, their base addresses, end addresses,\r\n        "
+            "and sizes in kilobytes (KB). Additionally, it prints statistics\r\n        "
+            "about system heap usage, task stack usage, and application heap usage.\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_memstat
@@ -115,7 +128,11 @@ static CliCommandBinding memstat_binding = {
 
 static CliCommandBinding ls_binding = {
     .name = "ls",
-    .help = "Lists all files and folders in the current working directory",
+    .help = "List directory contents or mount points.\r\n        "
+            "Lists the contents of the specified directory or the current\r\n        "
+            "working directory if no path is provided. It can also list mount\r\n        "
+            "points if the -mp option is provided as an argument.\r\n        "
+            "Usage: ls [path] [-mp]\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_ls
@@ -123,7 +140,12 @@ static CliCommandBinding ls_binding = {
 
 static CliCommandBinding cd_binding = {
     .name = "cd",
-    .help = "todo",//TODO
+    .help = "Change the current working directory to the specified path.\r\n        "
+            "Usage: cd <relative-path>\r\n        "
+            "       cd <absolute-path>\r\n        "
+            "       cd .\r\n        "
+            "       cd ../\r\n        "
+            "       cd ../../../folder/\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_cd
@@ -131,7 +153,9 @@ static CliCommandBinding cd_binding = {
 
 static CliCommandBinding cp_binding = {
     .name = "cp",
-    .help = "todo",//TODO
+    .help = "Copy a file from an absolute source path to an absolute\r\n        "
+            "destination path.\r\n        "
+            "Usage: cp <source> <destination>\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_cp
@@ -139,7 +163,10 @@ static CliCommandBinding cp_binding = {
 
 static CliCommandBinding r_binding = {
     .name = "r",
-    .help = "todo",//TODO
+    .help = "Reads the specified number of bytes from the specified file\r\n        "
+            "starting from the specified offset and displays the content\r\n        "
+            "in hexadecimal and ASCII format.\r\n        "
+            "Usage: r <absolute-path> [bytes] [offset]\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_r
@@ -147,7 +174,10 @@ static CliCommandBinding r_binding = {
 
 static CliCommandBinding rm_binding = {
     .name = "rm",
-    .help = "todo",//TODO
+    .help = "Remove a file or directory.\r\n        "
+            "Removes the specified file or directory. If the -r option\r\n        "
+            "is provided, it removes directories recursively.\r\n        "
+            "Usage: rm <absolute-path> [-r]\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_rm
@@ -155,7 +185,8 @@ static CliCommandBinding rm_binding = {
 
 static CliCommandBinding mkdir_binding = {
     .name = "mkdir",
-    .help = "todo",//TODO
+    .help = "Create a directory with the specified name.\r\n        "
+            "Usage: mkdir <absolute-path>\r\n",
     .tokenizeArgs = true,
     .context = NULL,
     .binding = cli_command_mkdir

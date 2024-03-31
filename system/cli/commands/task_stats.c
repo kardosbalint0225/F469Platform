@@ -43,10 +43,10 @@ extern uint32_t uxTaskGetStackSize(TaskHandle_t xTask);
 
 /**
  * @brief Function that is executed when the runtimestats command is entered.
- *        Displays the absolute and relative times of each task.
+ *        Displays the absolute and relative times used by each task.
  *
  * This function retrieves runtime statistics for all FreeRTOS tasks including
- * task ID, name, state, priority, absolute time, and CPU time percentage.
+ * task ID, name, state, priority, absolute time used, and CPU time percentage.
  * It then prints these statistics to the console.
  *
  * @param cli     Pointer to the EmbeddedCli instance (unused).
