@@ -1,10 +1,11 @@
-/*
- * usb_host_config.h
+/**
+ * @ingroup    system_config
  *
- *  Created on: Jan 9, 2024
- *      Author: Balint
+ * @{
+ * @file       usbh_conf.h
+ * @brief      Full-Speed USB Host configuration options
+ *
  */
-
 #ifndef __USBH_CONF__H__
 #define __USBH_CONF__H__
 
@@ -24,6 +25,9 @@ extern "C" {
 #include "queue.h"
 #include "semphr.h"
 
+/**
+ * @brief Definitions for the ports and pins used by the FS USB Host peripheral
+ */
 #define USB_HOST_VBUS_PIN                           GPIO_PIN_9
 #define USB_HOST_VBUS_PIN_GPIO_PORT                 GPIOA
 #define USB_HOST_DP_PIN                             GPIO_PIN_12
@@ -32,6 +36,12 @@ extern "C" {
 #define USB_HOST_DM_PIN_GPIO_PORT                   GPIOA
 #define USB_HOST_ID_PIN                             GPIO_PIN_10
 #define USB_HOST_ID_PIN_GPIO_PORT                   GPIOA
+#define USB_HOST_GPIO_AFx_OTG_FS                    GPIO_AF10_OTG_FS
+
+/**
+ * @brief Definitions for the ports and pins used by the overcurrent and powerswitch
+ *        circuitry
+ */
 #define USB_HOST_POWERSWITCH_PIN                    GPIO_PIN_2
 #define USB_HOST_POWERSWITCH_PIN_GPIO_PORT          GPIOB
 #define USB_HOST_OVERCURRENT_PIN                    GPIO_PIN_7
@@ -39,13 +49,18 @@ extern "C" {
 #define USB_HOST_OVERCURRENT_PIN_EXTI_GPIO          EXTI_GPIOB
 #define USB_HOST_OVERCURRENT_PIN_EXTI_LINE          EXTI_LINE_7
 #define USB_HOST_OVERCURRENT_PIN_EXTIx_IRQn         EXTI9_5_IRQn
-#define USB_HOST_OVERCURRENT_PIN_EXTIx_IRQ_PRIORITY 6
+#define USB_HOST_OVERCURRENT_PIN_EXTIx_IRQ_PRIORITY 6ul
 #define USB_HOST_OVERCURRENT_PIN_EXTIx_IRQHandler   EXTI9_5_IRQHandler
-#define USB_HOST_GPIO_AFx_OTG_FS                    GPIO_AF10_OTG_FS
 
+/**
+ * @brief Definitions for the USB Host monitor task (stack size, priority)
+ */
 #define USB_HOST_TASK_STACK_SIZE          (31 * configMINIMAL_STACK_SIZE + configMINIMAL_STACK_SIZE)
-#define USB_HOST_TASK_PRIORITY            2
+#define USB_HOST_TASK_PRIORITY            2ul
 
+/**
+ * @brief Definitions for the STM32 USB Host Library
+ */
 #define USBH_MAX_NUM_ENDPOINTS            2U
 #define USBH_MAX_NUM_INTERFACES           2U
 #define USBH_MAX_NUM_CONFIGURATION        1U
@@ -99,4 +114,5 @@ extern "C" {
 #endif
 
 #endif /* __USBH_CONF__H__ */
+/** @} */
 

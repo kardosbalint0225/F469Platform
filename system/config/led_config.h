@@ -1,8 +1,10 @@
-/*
- * led_config.h
+/**
+ * @ingroup    system_config
  *
- *  Created on: Jan 30, 2024
- *      Author: Balint
+ * @{
+ * @file       led_config.h
+ * @brief      LED port and pin definitions
+ *
  */
 
 #ifndef __LED_CONFIG_H__
@@ -18,3 +20,5 @@
 #define LED4_GPIO_PORT    GPIOK
 
 #endif /* __LED_CONFIG_H__ */
+/** @} */
+

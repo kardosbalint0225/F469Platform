@@ -1,13 +1,17 @@
-/*
- * sdmmc_config.h
+/**
+ * @ingroup    system_config
  *
- *  Created on: 2023. okt. 28.
- *      Author: Balint
+ * @{
+ * @file       sdcard_config.h
+ * @brief      SD Card configuration options
+ *
  */
-
 #ifndef __SDCARD_CONFIG_H__
 #define __SDCARD_CONFIG_H__
 
+/**
+ * @brief Definitions for the Card Detect Pin and the Monitor Task
+ */
 #define SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS       5000ul
 #define SDCARD_CD_PIN_GPIO_PORT                 GPIOG
 #define SDCARD_CD_PIN                           GPIO_PIN_2
@@ -19,6 +23,9 @@
 #define SDCARD_MOUNT_TASK_PRIORITY              2ul
 #define SDCARD_MOUNT_TASK_STACKSIZE             (configMINIMAL_STACK_SIZE + 32 * configMINIMAL_STACK_SIZE)
 
+/**
+ * @brief Definitions for the SDIO CMD, CLK and Data ports / pins
+ */
 #define SDCARD_CMD_PIN_GPIO_PORT                GPIOD
 #define SDCARD_CMD_PIN                          GPIO_PIN_2
 #define SDCARD_CLK_PIN_GPIO_PORT                GPIOC
@@ -33,6 +40,9 @@
 #define SDCARD_D0_PIN                           GPIO_PIN_8
 #define SDCARD_GPIO_AFx_SDIO                    GPIO_AF12_SDIO
 
+/**
+ * @brief Definitions for the Tx / Rx DMA Channels and interrupts
+ */
 #define SDCARD_SDIO_IRQ_PRIORITY                15ul
 #define SDCARD_DMAx_TX_CHANNEL                  DMA_CHANNEL_4
 #define SDCARD_DMAx_RX_CHANNEL                  DMA_CHANNEL_4
@@ -48,3 +58,5 @@
 #define SDCARD_DMAx_TX_STREAM_IRQHandler        DMA2_Stream6_IRQHandler
 
 #endif /* __SDCARD_CONFIG_H__ */
+/** @} */
+
