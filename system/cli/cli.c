@@ -1,8 +1,31 @@
-/*
- * cli.c
+/**
+ * MIT License
  *
- *  Created on: 2023. jul. 15.
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_cli
+ *
+ * @file        cli.c
+ * @brief       Command Line Interface (CLI) Module
  */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -39,13 +62,6 @@ static void cli_io_read_task(void *params);
 static void cli_process_task(void *params);
 static void cli_write_char(EmbeddedCli *cli, char c);
 
-/**
- * @brief  Initializes the CLI
- * @param  None
- * @retval None
- * @note   This function creates two tasks one for IO read and one for
- *         the processing of received characters.
- */
 void cli_init(void)
 {
     _cli = NULL;
@@ -93,12 +109,6 @@ void cli_init(void)
     cli_command_clear_terminal(_cli, NULL, NULL);
 }
 
-/**
- * @brief  Deinitializes the Command-Line Interface
- * @param  None
- * @retval None
- * @note   This function deletes the CLI related IO read and process tasks.
- */
 void cli_deinit(void)
 {
     vTaskDelete(h_cli_io_read_task);
@@ -107,14 +117,13 @@ void cli_deinit(void)
     h_cli_io_read_task = NULL;
     h_cli_process_task = NULL;
     cli_rx_queue = NULL;
-    // TODO: deinit command bindings
 }
 
 /**
- * @brief  Task responsible for receiving characters and passing them to the Embedded CLI library
- * @param  params (not used)
- * @retval None
- * @note   -
+ * @brief  Task function responsible for receiving characters and passing them
+ *         to the Embedded CLI library
+ *
+ * @param  params Task parameters (not used).
  */
 static void cli_io_read_task(void *params)
 {
@@ -131,10 +140,9 @@ static void cli_io_read_task(void *params)
 }
 
 /**
- * @brief  Task responsible for processing the received characters
- * @param  params (not used)
- * @retval None
- * @note   -
+ * @brief  Task function responsible for processing the received characters
+ *
+ * @param  params Task parameters (not used).
  */
 static void cli_process_task(void *params)
 {
@@ -149,25 +157,14 @@ static void cli_process_task(void *params)
 
 /**
  * @brief  Writes single character to the console
+ *
  * @param  cli Pointer to the CLI instance
- * @param  c   character to write to the console
- * @retval None
- * @note   -
+ * @param  c   Character to write to the console
  */
 static void cli_write_char(EmbeddedCli *cli, char c)
 {
+    (void)cli;
     stdio_write((char *)&c, 1);
-}
-
-/**
- * @brief  Returns the pointer to the CLI instance
- * @param  None
- * @retval pointer to the cli instance
- * @note   -
- */
-EmbeddedCli *cli_get_pointer(void)
-{
-    return _cli;
 }
 
 
