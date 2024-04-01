@@ -16,10 +16,8 @@
  */
 
 /**
- * @defgroup    drivers_sdcard SD Card driver
- * @ingroup     drivers_storage
+ * @ingroup     system_sdcard_driver
  * @brief       Driver for reading and writing SD Cards using the SDIO.
- * @anchor      drivers_sdcard
  * @{
  *
  * @file        sdcard.h
@@ -41,7 +39,8 @@ extern "C" {
 /**
  * @brief Initialize the SDIO peripheral and the SD card
  *
- * Initializes the GPIO, DMA and the SDIO
+ * Initializes the GPIO, DMA and the SDIO and creates binary semaphores
+ * for the transmission and reception
  *
  * @return 0 on success
  * @return < 0 on error
@@ -51,7 +50,8 @@ int sdcard_init(void);
 /**
  * @brief De-initialize the SDIO peripheral
  *
- * De-initializes the GPIO, DMA and the SDIO
+ * De-initializes the GPIO, DMA and the SDIO and deletes the binary
+ * semaphores
  *
  * @return 0 on success
  * @return < 0 on error
@@ -61,10 +61,10 @@ int sdcard_deinit(void);
 /**
  * @brief   Read a number of blocks
  *
- * Read @p block_num blocks with size @p block_size from the sd card starting at
+ * Read @p block_num blocks with size @p block_size from the SD Card starting at
  * block address @p block_addr to buffer @p data.
  *
- * @pre @p data must not be `NULL`. @p block_num has to be greater than 0.
+ * @pre @p data must not be NULL. @p block_num has to be greater than 0.
  *
  * @param[in]   block_addr  Start address to read from given as block address
  * @param[in]   block_num   Number of blocks
@@ -85,11 +85,10 @@ int sdcard_read_blocks(uint32_t block_addr, uint16_t block_num, void *data);
 /**
  * @brief   Write a number of blocks
  *
- * Write @p block_num blocks with size @p block_size to @p dev starting at
+ * Write @p block_num blocks with size @p block_size to the SD Card starting at
  * block address @p block_addr from buffer @p data.
  *
- *
- * @pre @p data must not be `NULL`. @p block_num has to be greater than 0.
+ * @pre @p data must not be NULL. @p block_num has to be greater than 0.
  *
  * @param[in]   block_addr  Start address to write to given as block address
  * @param[in]   block_num   Number of blocks
@@ -110,8 +109,8 @@ int sdcard_write_blocks(uint32_t block_addr, uint16_t block_num, const void *dat
 /**
  * @brief   Erase a number of blocks
  *
- * Erase @p block_num blocks starting at block address @p block_addr on
- * SD Card device.
+ * Erase @p block_num blocks starting at block address @p block_addr on the
+ * SD Card.
  *
  * @pre @p block_num has to be greater than 0.
  *
@@ -133,6 +132,16 @@ int sdcard_erase_blocks(uint32_t block_addr, uint16_t block_num);
  * @brief   Get Capacity of SD Card
  *
  * @return  the capacity in in byte or 0 on error
+ */
+/**
+ * @brief Retrieves the total capacity of the SD card.
+ *
+ * This function retrieves the total capacity of the SD card in bytes. It queries the SD card
+ * information and calculates the total capacity based on the number of blocks and the
+ * block size reported by the SD card.
+ *
+ * @return The total capacity of the SD card in bytes,
+ * @return 0 on error.
  */
 uint64_t sdcard_get_capacity(void);
 

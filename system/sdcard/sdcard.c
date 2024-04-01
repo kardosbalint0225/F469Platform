@@ -1,8 +1,31 @@
-/*
- * sdcard.c
+/**
+ * MIT License
  *
- *  Created on: 2023. okt. 25.
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_sdcard_driver
+ *
+ * @file        sdcard.c
+ * @brief       Driver for reading and writing SD Cards using the SDIO.
  */
 #include "sdcard.h"
 #include "sdcard_config.h"
@@ -24,7 +47,7 @@
 #include "queue.h"
 #include "semphr.h"
 
-SD_HandleTypeDef h_sdio;
+static SD_HandleTypeDef h_sdio;
 
 static SemaphoreHandle_t _tx_cplt_semphr = NULL;
 static StaticSemaphore_t _tx_cplt_semphr_storage;
@@ -250,12 +273,25 @@ uint64_t sdcard_get_capacity(void)
     return capacity;
 }
 
+/**
+ * @brief Checks if a pointer is word-aligned.
+ *
+ * @param  pbuf Pointer to the memory buffer to be checked for alignment.
+ *
+ * @return True if the pointer is word-aligned, false otherwise.
+ */
 static bool is_word_aligned(const void *pbuf)
 {
     assert(pbuf);
     return (0 == (((size_t)pbuf) & (sizeof(size_t) - 1))) ? true : false;
 }
 
+/**
+ * @brief Initializes the SDIO interface.
+ *
+ * @return 0 on success,
+ * @return < 0 on error.
+ */
 static int sdio_init(void)
 {
     _error = HAL_OK;
@@ -320,22 +356,13 @@ static int sdio_init(void)
     return 0;
 }
 
+/**
+ * @brief Initializes the SDIO MSP (low-level).
+ *
+ * @param h_sd Pointer to the SD handle structure.
+ */
 static void sdio_msp_init(SD_HandleTypeDef *h_sd)
 {
-//    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInitStruct;
-//    RCC_PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SDIO | RCC_PERIPHCLK_CLK48;
-//    RCC_PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
-//    RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
-//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
-//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
-    //HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
-
-//    _error = clk48_clock_init();
-//    if (HAL_OK != _error)
-//    {
-//        return;
-//    }
-
     _error = sdio_clock_source_init();
     if (HAL_OK != _error)
     {
@@ -369,6 +396,12 @@ static void sdio_msp_init(SD_HandleTypeDef *h_sd)
     HAL_NVIC_EnableIRQ(SDIO_IRQn);
 }
 
+/**
+ * @brief De-initializes the SDIO interface.
+ *
+ * @return 0 on success,
+ * @return < 0 on error.
+ */
 static int sdio_deinit(void)
 {
     HAL_StatusTypeDef ret;
@@ -417,6 +450,11 @@ static int sdio_deinit(void)
     return 0;
 }
 
+/**
+ * @brief De-initializes the SDIO MSP (low-level).
+ *
+ * @param h_sd Pointer to the SD handle structure.
+ */
 static void sdio_msp_deinit(SD_HandleTypeDef *h_sd)
 {
     __HAL_RCC_SDIO_CLK_DISABLE();
@@ -455,32 +493,62 @@ static void sdio_msp_deinit(SD_HandleTypeDef *h_sd)
     HAL_NVIC_DisableIRQ(SDIO_IRQn);
 }
 
+/**
+ * @brief SDIO Transmit Complete Callback
+ *
+ * @param h_sd Pointer to the SD handle structure (unused).
+ */
 static void sdio_tx_cplt_callback(SD_HandleTypeDef *h_sd)
 {
+    (void)h_sd;
     BaseType_t higher_priority_task_woken = pdFALSE;
     xSemaphoreGiveFromISR(_tx_cplt_semphr, &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
+/**
+ * @brief SDIO Receive Complete Callback
+ *
+ * @param h_sd Pointer to the SD handle structure (unused).
+ */
 static void sdio_rx_cplt_callback(SD_HandleTypeDef *h_sd)
 {
+    (void)h_sd;
     BaseType_t higher_priority_task_woken = pdFALSE;
     xSemaphoreGiveFromISR(_rx_cplt_semphr, &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
+/**
+ * @brief SDIO Error Callback
+ *
+ * @param h_sd Pointer to the SD handle structure (unused).
+ */
 static void sdio_error_callback(SD_HandleTypeDef *h_sd)
 {
+    (void)h_sd;
     error_handler();
 }
 
+/**
+ * @brief SDIO Error Handler
+ */
 static void error_handler(void)
 {
     //TODO: proper error handling
-//    sdio_deinit();
-//    sdio_init();
+    //sdio_deinit();
+    //sdio_init();
 }
 
+/**
+ * @brief Converts an SD error code to a POSIC errno value.
+ *
+ * This function maps the given SD error code to a POSIX errno value
+ * according to the POSIX error code definitions.
+ *
+ * @param  error The SD error code to be converted.
+ * @return The corresponding standard errno value.
+ */
 static int sd_error_to_errno(const uint32_t error)
 {
     switch (error)
@@ -531,6 +599,9 @@ static int sd_error_to_errno(const uint32_t error)
     return (int)error;
 }
 
+/**
+ * @brief SDIO Interrupt Handler
+ */
 void SDIO_IRQHandler(void)
 {
     HAL_SD_IRQHandler(&h_sdio);
