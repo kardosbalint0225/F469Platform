@@ -77,8 +77,10 @@ enum _SDCARD_CARD_PRESENCE_STATE
 };
 
 static void sdcard_cd_pin_exti_callback(void);
-static void wait_for_stable_cd_pin_signal(const uint32_t timeout_ms, uint32_t *state);
+static uint32_t wait_for_stable_cd_pin_signal(const uint32_t timeout_ms);
 static void sdcard_monitor_task(void *params);
+static void sdcard_inserted_event_handler(bool *is_mounted);
+static void sdcard_removed_event_handler(bool *is_mounted);
 static int sdcard_mount(void);
 static int sdcard_unmount(void);
 
@@ -104,21 +106,73 @@ int sdcard_monitor_deinit(void)
     return sdcard_cd_pin_deinit();
 }
 
+/**
+ * @brief Handles the event when the SD card is inserted.
+ *
+ * This function is called when the SD card insertion event is detected.
+ * It attempts to mount the SD card if it is not already mounted.
+ *
+ * @param is_mounted Pointer to a boolean indicating whether the SD card is mounted.
+ */
+static void sdcard_inserted_event_handler(bool *is_mounted)
+{
+    if (false == *is_mounted)
+    {
+        if (0 == sdcard_mount())
+        {
+            *is_mounted = true;
+            printf("    SD Card is mounted successfully.\r\n");
+        }
+    }
+    else
+    {
+        printf("    The SD Card is not inserted properly.\r\n");
+    }
+}
+
+/**
+ * @brief Handles the event when the SD card is removed.
+ *
+ * This function is called when the SD card removal event is detected.
+ * It attempts to unmount the SD card if it is currently mounted.
+ *
+ * @param is_mounted Pointer to a boolean indicating whether the SD card is mounted.
+ */
+static void sdcard_removed_event_handler(bool *is_mounted)
+{
+    if (true == *is_mounted)
+    {
+        if (0 == sdcard_unmount())
+        {
+            *is_mounted = false;
+            printf("    SD Card is unmounted successfully.\r\n");
+        }
+    }
+    else
+    {
+        printf("    The SD Card is not inserted properly.\r\n");
+    }
+}
+
+/**
+ * @brief Task responsible for monitoring the SD card presence.
+ *
+ * This task continuously monitors the state of the SD card using a notification mechanism.
+ * Upon receiving the notification, it checks the current state of the card and invokes
+ * the appropriate event handler function based on the detected state.
+ *
+ * @param params Pointer to task parameters (not used).
+ */
 static void sdcard_monitor_task(void *params)
 {
     (void)params;
 
     bool is_mounted = false;
-    uint32_t card_presence_state;
-
-    wait_for_stable_cd_pin_signal(SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS, &card_presence_state);
+    uint32_t card_presence_state = wait_for_stable_cd_pin_signal(SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS);
 
     if ((uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED == card_presence_state)
     {
-        if (0 == sdcard_mount())
-        {
-            is_mounted = true;
-        }
+        sdcard_inserted_event_handler(&is_mounted);
     }
 
     for ( ;; )
@@ -128,47 +182,25 @@ static void sdcard_monitor_task(void *params)
 
         if ((uint32_t)SDCARD_MONITOR_TASK_NOTIFICATION_CARD_DETECT_CHANGED == notification)
         {
-            wait_for_stable_cd_pin_signal(SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS, &card_presence_state);
+            card_presence_state = wait_for_stable_cd_pin_signal(SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS);
 
             switch (card_presence_state)
             {
                 case (uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED :
                 {
-                    if (false == is_mounted)
-                    {
-                        if (0 == sdcard_mount())
-                        {
-                            is_mounted = true;
-                            printf("sdcard card is mounted\r\n");
-                        }
-                    }
-                    else
-                    {
-                        printf("The memory card is not inserted properly.\r\n");
-                    }
+                    sdcard_inserted_event_handler(&is_mounted);
                 }
                 break;
 
                 case (uint32_t)SDCARD_CARD_PRESENCE_STATE_REMOVED :
                 {
-                    if (true == is_mounted)
-                    {
-                        if (0 == sdcard_unmount())
-                        {
-                            is_mounted = false;
-                            printf("sdcard card is unmounted\r\n");
-                        }
-                    }
-                    else
-                    {
-                        printf("The memory card is not inserted properly.\r\n");
-                    }
+                    sdcard_removed_event_handler(&is_mounted);
                 }
                 break;
 
                 case (uint32_t)SDCARD_CARD_PRESENCE_STATE_UNSTABLE :
                 {
-                    printf("The memory card is not inserted properly.\r\n");
+                    printf("    The memory card is not inserted properly.\r\n");
                 }
                 break;
             }
@@ -178,6 +210,12 @@ static void sdcard_monitor_task(void *params)
     }
 }
 
+/**
+ * @brief Mounts the SD Card to the filesystem.
+ *
+ * @return 0 on success,
+ * @return < 0 on failure.
+ */
 static int sdcard_mount(void)
 {
     int err;
@@ -191,6 +229,12 @@ static int sdcard_mount(void)
     return err;
 }
 
+/**
+ * @brief Unmounts the SD Card from the filesystem.
+ *
+ * @return 0 on success,
+ * @return < 0 on failure.
+ */
 static int sdcard_unmount(void)
 {
     int err;
@@ -216,6 +260,9 @@ static int sdcard_unmount(void)
     return 0;
 }
 
+/**
+ * @brief Card-Detect pin EXTI Callback
+ */
 static void sdcard_cd_pin_exti_callback(void)
 {
     BaseType_t higher_priority_task_woken = pdFALSE;
@@ -226,8 +273,22 @@ static void sdcard_cd_pin_exti_callback(void)
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
 
-static void wait_for_stable_cd_pin_signal(const uint32_t timeout_ms, uint32_t *state)
+/**
+ * @brief  Waits for a stable signal on the SD card detect pin.
+ *
+ * This function monitors the SD card detect pin until a stable signal is detected or a timeout occurs.
+ * A stable signal indicates whether the SD card is inserted or removed.
+ *
+ * @param  timeout_ms The timeout value in milliseconds.
+ *
+ * @return The state of the SD card presence:
+ *         - SDCARD_CARD_PRESENCE_STATE_INSERTED if the SD card is inserted.
+ *         - SDCARD_CARD_PRESENCE_STATE_REMOVED if the SD card is removed.
+ *         - SDCARD_CARD_PRESENCE_STATE_UNSTABLE if the SD card presence signal is unstable or a timeout occurs.
+ */
+static uint32_t wait_for_stable_cd_pin_signal(const uint32_t timeout_ms)
 {
+    uint32_t state = (uint32_t)SDCARD_CARD_PRESENCE_STATE_UNSTABLE;
     TimeOut_t timeout;
     TickType_t ticks_to_wait = pdMS_TO_TICKS(timeout_ms);
     vTaskSetTimeOutState(&timeout);
@@ -248,12 +309,14 @@ static void wait_for_stable_cd_pin_signal(const uint32_t timeout_ms, uint32_t *s
 
     if (pdTRUE == timedout)
     {
-        *state = (uint32_t)SDCARD_CARD_PRESENCE_STATE_UNSTABLE;
+        state = (uint32_t)SDCARD_CARD_PRESENCE_STATE_UNSTABLE;
     }
     else if (true == is_stable)
     {
-        *state = 0 == signal ? (uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED : (uint32_t)SDCARD_CARD_PRESENCE_STATE_REMOVED;
+        state = 0 == signal ? (uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED : (uint32_t)SDCARD_CARD_PRESENCE_STATE_REMOVED;
     }
+
+    return state;
 }
 
 
