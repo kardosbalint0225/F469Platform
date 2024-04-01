@@ -1,10 +1,33 @@
-/*
- * sdcard_mount.c
+/**
+ * MIT License
  *
- *  Created on: 2023. nov. 13.
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-#include "sdcard_mount.h"
+/**
+ * @ingroup     system_sdcard_monitor
+ *
+ * @file        sdcard_monitor.c
+ * @brief       SD Card Monitor
+ */
+#include "sdcard_monitor.h"
 #include "sdcard_config.h"
 #include "stm32f4xx_hal.h"
 #include "gpio.h"
@@ -35,14 +58,14 @@ static vfs_mount_t _fatfs_sdcard_vfs_mount = {
 };
 static mtd_sdcard_t mtd_sdcard;
 
-static StackType_t _sdcard_mount_task_stack[SDCARD_MOUNT_TASK_STACKSIZE];
-static StaticTask_t _sdcard_mount_task_tcb;
-static TaskHandle_t h_sdcard_mount_task = NULL;
+static StackType_t _sdcard_monitor_task_stack[SDCARD_MONITOR_TASK_STACKSIZE];
+static StaticTask_t _sdcard_monitor_task_tcb;
+static TaskHandle_t h_sdcard_monitor_task = NULL;
 
-enum _SDCARD_MOUNT_TASK_NOTIFICATION
+enum _SDCARD_MONITOR_TASK_NOTIFICATION
 {
-    SDCARD_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED = 0x00000001ul,
-    SDCARD_MOUNT_TASK_NOTIFICATION_INT_MAX             = 0x7FFFFFFFul,
+    SDCARD_MONITOR_TASK_NOTIFICATION_CARD_DETECT_CHANGED = 0x00000001ul,
+    SDCARD_MONITOR_TASK_NOTIFICATION_INT_MAX             = 0x7FFFFFFFul,
 };
 
 enum _SDCARD_CARD_PRESENCE_STATE
@@ -53,35 +76,35 @@ enum _SDCARD_CARD_PRESENCE_STATE
     SDCARD_CARD_PRESENCE_STATE_INT_MAX  = 0x7FFFFFFFul,
 };
 
-static void exti_sdcard_cd_pin_callback(void);
+static void sdcard_cd_pin_exti_callback(void);
 static void wait_for_stable_cd_pin_signal(const uint32_t timeout_ms, uint32_t *state);
-static void sdcard_mount_task(void *params);
+static void sdcard_monitor_task(void *params);
 static int sdcard_mount(void);
 static int sdcard_unmount(void);
 
-int sdcard_mount_init(void)
+int sdcard_monitor_init(void)
 {
-    h_sdcard_mount_task = xTaskCreateStatic(sdcard_mount_task,
-                                            "SDCARD Mount",
-                                            SDCARD_MOUNT_TASK_STACKSIZE,
-                                            NULL,
-                                            SDCARD_MOUNT_TASK_PRIORITY,
-                                            _sdcard_mount_task_stack,
-                                            &_sdcard_mount_task_tcb);
-    assert(h_sdcard_mount_task);
+    h_sdcard_monitor_task = xTaskCreateStatic(sdcard_monitor_task,
+                                              "SDCARD Monitor",
+                                              SDCARD_MONITOR_TASK_STACKSIZE,
+                                              NULL,
+                                              SDCARD_MONITOR_TASK_PRIORITY,
+                                              _sdcard_monitor_task_stack,
+                                              &_sdcard_monitor_task_tcb);
+    assert(h_sdcard_monitor_task);
 
-    return sdcard_cd_pin_init(exti_sdcard_cd_pin_callback);
+    return sdcard_cd_pin_init(sdcard_cd_pin_exti_callback);
 }
 
-int sdcard_mount_deinit(void)
+int sdcard_monitor_deinit(void)
 {
-    vTaskDelete(h_sdcard_mount_task);
-    h_sdcard_mount_task = NULL;
+    vTaskDelete(h_sdcard_monitor_task);
+    h_sdcard_monitor_task = NULL;
 
     return sdcard_cd_pin_deinit();
 }
 
-static void sdcard_mount_task(void *params)
+static void sdcard_monitor_task(void *params)
 {
     (void)params;
 
@@ -107,11 +130,11 @@ static void sdcard_mount_task(void *params)
         ret = xTaskNotifyWait(0, 0, &notification, portMAX_DELAY);
         assert(ret);
 
-        if ((uint32_t)SDCARD_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED == notification)
+        if ((uint32_t)SDCARD_MONITOR_TASK_NOTIFICATION_CARD_DETECT_CHANGED == notification)
         {
             wait_for_stable_cd_pin_signal(SDCARD_CD_PIN_DEBOUNCE_TIMEOUT_MS, &card_presence_state);
 
-            switch(card_presence_state)
+            switch (card_presence_state)
             {
                 case (uint32_t)SDCARD_CARD_PRESENCE_STATE_INSERTED :
                 {
@@ -203,11 +226,11 @@ static int sdcard_unmount(void)
     return 0;
 }
 
-static void exti_sdcard_cd_pin_callback(void)
+static void sdcard_cd_pin_exti_callback(void)
 {
     BaseType_t higher_priority_task_woken = pdFALSE;
-    xTaskNotifyFromISR(h_sdcard_mount_task,
-                       (uint32_t)SDCARD_MOUNT_TASK_NOTIFICATION_CARD_DETECT_CHANGED,
+    xTaskNotifyFromISR(h_sdcard_monitor_task,
+                       (uint32_t)SDCARD_MONITOR_TASK_NOTIFICATION_CARD_DETECT_CHANGED,
                        eSetBits,
                        &higher_priority_task_woken);
     portYIELD_FROM_ISR(higher_priority_task_woken);

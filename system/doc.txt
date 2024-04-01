@@ -55,6 +55,20 @@
  * @ingroup     system
  */ 
  
+/**
+ * @defgroup    system_sdcard SD Card Management 
+ * @ingroup     system
+ */  
+
+/**
+ * @defgroup    system_sdcard_monitor SD Card Monitor
+ * @ingroup     system_sdcard
+ */   
+
+/**
+ * @defgroup    system_sdcard_driver SD Card Driver
+ * @ingroup     system_sdcard
+ */      
  
  
-   
+ 
