@@ -16,10 +16,7 @@
  */
 
 /**
- * @defgroup  sys_vfs Virtual File System (VFS) layer
- * @ingroup   sys
- * @brief     Provides an interface for accessing files and directories from
- *            different devices and file systems
+ * @ingroup   system_vfs
  *
  * This layer is modeled as a mix between POSIX syscalls (e.g. open) and the
  * Linux VFS layer implementation, with major reductions in the feature set, in

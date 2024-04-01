@@ -1,12 +1,31 @@
 /**
- ******************************************************************************
- * @file    rtc.c
- * @brief   This file provides code for the configuration
- *          of the RTC instances.
- ******************************************************************************
+ * MIT License
  *
+ * Copyright (c) 2024 Balint Kardos
  *
- ******************************************************************************
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_rtc
+ *
+ * @file        rtc.c
+ * @brief       Low-level RTC (Real Time Clock) peripheral driver
  */
 #include "rtc.h"
 #include "rcc.h"
@@ -22,7 +41,7 @@
 /* struct tm counts years since 1900 but RTC has only two-digit year, hence the offset */
 #define YEAR_OFFSET    (_EPOCH_YEAR - 1900)
 
-RTC_HandleTypeDef h_rtc;
+static RTC_HandleTypeDef h_rtc;
 static SemaphoreHandle_t _rtc_mutex = NULL;
 static StaticSemaphore_t _rtc_mutex_storage;
 static HAL_StatusTypeDef _error = HAL_OK; /**< for msp init/deinit error handling */
@@ -108,20 +127,6 @@ int rtc_init(void)
     return 0;
 }
 
-/**
- * @brief  Initializes the RTC MSP
- * @param  hrtc pointer to the RTC_HandleTypeDef structure
- * @retval None
- * @note   The RTC peripheral uses LSE as its clock source
- * @note   This function is called by the HAL library when
- *         rtc_init functions is called
- */
-static void rtc_msp_init(RTC_HandleTypeDef * hrtc)
-{
-    _error = rtc_clock_source_init();
-    __HAL_RCC_RTC_ENABLE();
-}
-
 int rtc_deinit(void)
 {
     HAL_StatusTypeDef ret;
@@ -168,14 +173,28 @@ int rtc_deinit(void)
 }
 
 /**
+ * @brief  Initializes the RTC MSP
+ * @param  hrtc pointer to the RTC_HandleTypeDef structure (unused).
+ * @note   The RTC peripheral uses LSE as its clock source
+ * @note   This function is called by the HAL library when
+ *         rtc_init functions is called
+ */
+static void rtc_msp_init(RTC_HandleTypeDef *hrtc)
+{
+    (void)hrtc;
+    _error = rtc_clock_source_init();
+    __HAL_RCC_RTC_ENABLE();
+}
+
+/**
  * @brief  Deinitializes the RTC MSP
- * @param  hrtc pointer to the RTC_HandleTypeDef structure
- * @retval None
+ * @param  hrtc pointer to the RTC_HandleTypeDef structure (unused).
  * @note   This function is called by the HAL library when
  *         rtc_deinit functions is called
  */
 static void rtc_msp_deinit(RTC_HandleTypeDef *hrtc)
 {
+    (void)hrtc;
     _error = rtc_clock_source_deinit();
     __HAL_RCC_RTC_DISABLE();
 }
@@ -183,6 +202,11 @@ static void rtc_msp_deinit(RTC_HandleTypeDef *hrtc)
 
 int rtc_set_time(struct tm *time)
 {
+    if (NULL == time)
+    {
+        return -EINVAL;
+    }
+
     rtc_tm_normalize(time);
 
     RTC_TimeTypeDef stime = {0};
@@ -241,7 +265,7 @@ int rtc_get_time_ms(struct tm *time, uint16_t *ms)
 {
     if (NULL == time)
     {
-        return -1;
+        return -EINVAL;
     }
 
     RTC_TimeTypeDef stime = {0};
@@ -291,8 +315,15 @@ int rtc_get_time_ms(struct tm *time, uint16_t *ms)
     return 0;
 }
 
+/**
+ * @brief RTC Wake up Timer Event Callback
+ *
+ * @param hrtc pointer to a RTC_HandleTypeDef structure that contains
+  *            the configuration information for RTC (unused).
+ */
 static void rtc_wakeuptimer_event_callback(RTC_HandleTypeDef *hrtc)
 {
+    (void)hrtc;
     _tick_count_previous = (uint32_t)xTaskGetTickCountFromISR();
 }
 
@@ -312,6 +343,9 @@ static inline void rtc_unlock(void)
     xSemaphoreGive(_rtc_mutex);
 }
 
+/**
+ * @brief RTC Wake up Interrupt Handler
+ */
 void RTC_WKUP_IRQHandler(void)
 {
     HAL_RTCEx_WakeUpTimerIRQHandler(&h_rtc);

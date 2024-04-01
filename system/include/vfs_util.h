@@ -15,8 +15,7 @@
  */
 
 /**
- * @defgroup    sys_vfs_util    VFS helper functions
- * @ingroup     sys_vfs
+ * @ingroup     system_vfs
  * @{
  *
  * @file        vfs_util.h

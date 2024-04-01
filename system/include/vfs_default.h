@@ -16,7 +16,7 @@
  */
 
 /**
- * @ingroup   sys_vfs
+ * @ingroup   system_vfs
  * @brief     VFS default mount points
  *
  * @{

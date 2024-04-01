@@ -18,8 +18,7 @@
  */
 
 /**
- * @defgroup    sys_stdio STDIO abstraction
- * @ingroup     sys
+ * @ingroup     system_stdio
  *
  * @brief       Simple standard input/output (STDIO) abstraction
  *
@@ -42,7 +41,7 @@ extern "C" {
 #endif
 
 /**
- * @brief initialize the module
+ * @brief Initialize the module
  */
 void stdio_init(void);
 

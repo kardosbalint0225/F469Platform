@@ -69,6 +69,17 @@
  * @defgroup    system_sdcard_driver SD Card Driver
  * @ingroup     system_sdcard
  */      
+
+/**
+ * @defgroup    system_stdio Standard Input and Output (STDIO)
+ * @ingroup     system
+ */  
  
+/**
+ * @defgroup    system_vfs Virtual File System (VFS) layer
+ * @ingroup     system
+ * @brief       Provides an interface for accessing files and directories from
+ *              different devices and file systems
+ */ 
  
  

@@ -16,7 +16,7 @@
  */
 
 /**
- * @ingroup     sys_rtc_utils
+ * @ingroup     system_rtc
  * @{
  *
  * @file        rtc_utils.c
