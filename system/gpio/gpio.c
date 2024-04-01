@@ -1,12 +1,31 @@
 /**
- ******************************************************************************
- * @file    gpio.c
- * @brief   This file provides code for the configuration
- *          of all used GPIO pins.
- ******************************************************************************
+ * MIT License
  *
+ * Copyright (c) 2024 Balint Kardos
  *
- ******************************************************************************
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_gpio
+ *
+ * @file        gpio.c
+ * @brief       GPIO Management for the peripherals used by the application
  */
 #include "gpio.h"
 #include "rcc.h"
@@ -19,8 +38,8 @@
 #include "stdio_uart_config.h"
 #include "usbh_conf.h"
 
-EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
-EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
+static EXTI_HandleTypeDef h_exti_sdcard_cd_pin;
+static EXTI_HandleTypeDef h_exti_usb_host_overcurrent_pin;
 
 void led1_pin_init(void)
 {
@@ -522,12 +541,20 @@ void usb_host_powerswitch_disable(void)
     HAL_GPIO_WritePin(USB_HOST_POWERSWITCH_PIN_GPIO_PORT, USB_HOST_POWERSWITCH_PIN, GPIO_PIN_RESET);
 }
 
+/**
+ * @brief USB Over-Current EXTI Interrupt Handler
+ */
 void USB_HOST_OVERCURRENT_PIN_EXTIx_IRQHandler(void)
 {
     HAL_EXTI_IRQHandler(&h_exti_usb_host_overcurrent_pin);
 }
 
+/**
+ * @brief SDCARD Card-Detect EXTI Interrupt Handler
+ */
 void SDCARD_CD_PIN_EXTIx_IRQHandler(void)
 {
     HAL_EXTI_IRQHandler(&h_exti_sdcard_cd_pin);
 }
+
+

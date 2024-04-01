@@ -15,8 +15,7 @@
  */
 
 /**
- * @defgroup    sys_rtc_utils RTC helpers
- * @ingroup     sys
+ * @ingroup     system_rtc
  * @brief       Common RTC helper functions
  * @{
  * @file        rtc_utils.h

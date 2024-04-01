@@ -16,8 +16,7 @@
  */
 
 /**
- * @defgroup    drivers_periph_rtc RTC
- * @ingroup     drivers_periph
+ * @ingroup     system_rtc
  * @brief       Low-level RTC (Real Time Clock) peripheral driver
  *
  * @note

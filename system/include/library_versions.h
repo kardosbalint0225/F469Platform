@@ -1,3 +1,8 @@
+/**
+ * @file        library_versions.h
+ * @brief       Header file containing the version numbers of the used
+ *              software components
+ */
 #ifndef __LIBRARY_VERSIONS_H__
 #define __LIBRARY_VERSIONS_H__
 
@@ -5,6 +10,8 @@
 #define STM32F4XX_HAL_DRIVER_VERSION   "V1.8.0"
 #define CMSIS_GCC_VERSION              "V5.0.4"
 #define EMBEDDED_CLI_VERSION           "v0.1.3"
+//TODO: FATFS
+//TODO: NEWLIB
 
 #endif /* __LIBRARY_VERSIONS_H__ */
 

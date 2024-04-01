@@ -16,8 +16,7 @@
  */
 
 /**
- * @defgroup    drivers_mtd_sdcard MTD wrapper for SD Cards
- * @ingroup     drivers_storage
+ * @ingroup     system_mtd_sdcard
  * @brief       Driver for SD Cards using the MTD interface
  *
  * @{

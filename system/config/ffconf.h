@@ -1,3 +1,11 @@
+/**
+ * @ingroup    system_config
+ *
+ * @{
+ * @file       ffconf.h
+ * @brief      FatFs configuration options
+ *
+ */
 /*---------------------------------------------------------------------------/
 /  Configurations of FatFs Module
 /---------------------------------------------------------------------------*/
@@ -304,3 +312,4 @@
 
 
 /*--- End of configuration options ---*/
+/** @} */

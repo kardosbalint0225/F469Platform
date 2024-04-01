@@ -16,7 +16,7 @@
  */
 
 /**
- * @ingroup     pkg_fatfs
+ * @ingroup     system_fs_fatfs
  * @{
  *
  * @file        fatfs_vfs.c

@@ -1,0 +1,60 @@
+/**
+ * @defgroup system System
+ * @brief System library containing tools and utilities for interacting with the
+ *        RTOS, file system and other system services
+ */
+
+/**
+ * @defgroup    system_config System Configuration
+ * @ingroup     system
+ * @brief       File system, Console, CLI and BSP configurations
+ */
+
+/**
+ * @defgroup    system_cli Command-Line Interface (CLI) and Commands
+ * @ingroup     system
+ */
+ 
+/**
+ * @defgroup    system_cwd Current Working Directory (CWD)
+ * @ingroup     system
+ */
+ 
+/**
+ * @defgroup    system_dma DMA (Direct Memory Access) Management 
+ * @ingroup     system
+ */ 
+ 
+/**
+ * @defgroup    system_fs File System
+ * @ingroup     system
+ */
+ 
+/**
+ * @defgroup    system_fs_fatfs FatFs File System
+ * @ingroup     system_fs
+ */
+ 
+/**
+ * @defgroup    system_gpio GPIO Management
+ * @ingroup     system
+ */ 
+ 
+/**
+ * @defgroup    system_mtd Memory Technology Device (MTD)
+ * @ingroup     system
+ */  
+ 
+/**
+ * @defgroup    system_mtd_sdcard MTD wrapper for SD Card
+ * @ingroup     system_mtd
+ */ 
+ 
+/**
+ * @defgroup    system_rtc Real-Time Clock (RTC) Management
+ * @ingroup     system
+ */ 
+ 
+ 
+ 
+   

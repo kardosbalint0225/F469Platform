@@ -1,3 +1,9 @@
+/**
+ * @ingroup     system_fs_fatfs
+ *
+ * @file        ffsystem.c
+ * @brief       OS Dependent functions for FatFs
+ */
 #include "fatfs/source/ff.h"
 #include "FreeRTOS.h"
 #include "semphr.h"

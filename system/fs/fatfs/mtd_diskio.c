@@ -16,14 +16,11 @@
  */
 
 /**
- * @ingroup  pkg_fatfs
- * @{
+ * @ingroup  system_fs_fatfs
  *
  * @file     mtd_diskio.c
  * @brief    Implementation of fatfs diskio interface that supports mtd driver
  *           based on low level disk I/O module example for FatFs by ChaN, 2016
- *
- * @}
  */
 
 #include "fatfs_diskio_mtd.h"

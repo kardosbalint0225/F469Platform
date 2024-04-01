@@ -15,8 +15,7 @@
  */
 
 /**
- * @defgroup    sys_fatfs  FatFs integration
- * @ingroup     sys_fs
+ * @ingroup     system_fs_fatfs
  * @{
  *
  * @file        fatfs.h

@@ -15,7 +15,7 @@
  */
 
 /**
- * @ingroup     pkg_fatfs
+ * @ingroup     system_fs_fatfs
  * @brief
  * @{
  * @file        fatfs_diskio_mtd.h
