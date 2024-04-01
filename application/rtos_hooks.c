@@ -38,7 +38,7 @@
 #include "cli.h"
 #include "vfs.h"
 #include "sdcard_monitor.h"
-#include "usb_host.h"
+#include "usb_host_monitor.h"
 #include "cwd.h"
 #include "panic.h"
 #include <stdio.h>
@@ -74,7 +74,7 @@ void vApplicationDaemonTaskStartupHook(void)
     vfs_bind_stdio();
     setvbuf(stdin, NULL, _IONBF, 0);
     sdcard_monitor_init();
-    usb_host_init();
+    usb_host_monitor_init();
     cli_init();
     cwd_init();
 #if RUN_TESTS

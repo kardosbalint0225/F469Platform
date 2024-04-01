@@ -133,7 +133,7 @@ USBH_StatusTypeDef USBH_Init(USBH_HandleTypeDef *phost,
   assert(phost->os_event);
 
   phost->thread = xTaskCreateStatic(USBH_Process_OS,
-		                            "USB Host",
+		                            "USB Host Monitor",
 		                            USB_HOST_TASK_STACK_SIZE,
 									(void *)phost,
 									USB_HOST_TASK_PRIORITY,

@@ -81,5 +81,20 @@
  * @brief       Provides an interface for accessing files and directories from
  *              different devices and file systems
  */ 
+
+/**
+ * @defgroup    system_usb USB Host (Full-Speed)
+ * @ingroup     system
+ */ 
+
+/**
+ * @defgroup    system_usb_host_monitor USB Host Monitor
+ * @ingroup     system_usb
+ */  
+ 
+ /**
+ * @defgroup    system_hcd HCD (Host Controller Driver)
+ * @ingroup     system_usb
+ */ 
  
  

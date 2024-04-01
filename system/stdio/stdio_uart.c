@@ -23,13 +23,12 @@
  */
 
 /**
- * @ingroup     system
+ * @ingroup     system_stdio
  * @{
  *
  * @file        stdio_uart.c
  * @brief       STDIO over UART implementation
- *
- * This file implements a UART callback and the STDIO read/write functions
+ *              This file implements UART callback and the STDIO read/write functions
  * @}
  */
 

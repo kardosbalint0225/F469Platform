@@ -1,18 +1,40 @@
-/*
- * usbh_monitor.c
+/**
+ * MIT License
  *
- *  Created on: Jan 4, 2024
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_usb_host_monitor
+ *
+ * @file        usb_host_monitor.c
+ * @brief       USB Host Monitor
  */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
 
-#include <assert.h>
 #include <errno.h>
 
-#include "usb_host.h"
+#include "usb_host_monitor.h"
 #include "usbh_core.h"
 #include "usbh_msc.h"
 #include "usbh_conf.h"
@@ -22,7 +44,7 @@ static USBH_HandleTypeDef h_usb_host;
 static void usb_host_event_callback(USBH_HandleTypeDef *phost, uint8_t id);
 static int usbh_status_to_errno(const USBH_StatusTypeDef status);
 
-int usb_host_init(void)
+int usb_host_monitor_init(void)
 {
     USBH_StatusTypeDef ret;
 
@@ -47,11 +69,17 @@ int usb_host_init(void)
     return 0;
 }
 
-int usb_host_deinit(void)
+int usb_host_monitor_deinit(void)
 {
     return 0;
 }
 
+/**
+ * @brief USB Host Event Callback.
+ *
+ * @param phost Pointer to the USBH_HandleTypeDef structure.
+ * @param id    Identifier of the USB Host Event.
+ */
 static void usb_host_event_callback(USBH_HandleTypeDef *phost, uint8_t id)
 {
     switch (id)
@@ -85,6 +113,14 @@ static void usb_host_event_callback(USBH_HandleTypeDef *phost, uint8_t id)
     }
 }
 
+/**
+ * @brief Convert USBH status to errno.
+ *
+ * This function maps USBH_StatusTypeDef values to corresponding POSIX errno codes.
+ *
+ * @param  status USBH status to be converted.
+ * @return Corresponding POSIX errno code.
+ */
 static int usbh_status_to_errno(const USBH_StatusTypeDef status)
 {
     switch (status)
