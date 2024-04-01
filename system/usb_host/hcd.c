@@ -9,7 +9,7 @@
 #include "usbh_conf.h"
 #include "usbh_core.h"
 
-HCD_HandleTypeDef h_hcd_fs;
+static HCD_HandleTypeDef h_hcd_fs;
 static HAL_StatusTypeDef _error = HAL_OK;
 
 static void hcd_msp_init(HCD_HandleTypeDef *hhcd);
@@ -24,12 +24,6 @@ static USBH_StatusTypeDef hal_status_to_usbh_status(HAL_StatusTypeDef hal_status
 
 static void hcd_msp_init(HCD_HandleTypeDef *hhcd)
 {
-//    RCC_PeriphCLKInitTypeDef RCC_PeriphClkInitStruct;
-//    RCC_PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CLK48;
-//    RCC_PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
-//    RCC_PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
-//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIN = 384;
-//    RCC_PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV8;
     _error = clk48_clock_init();//HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
     if (HAL_OK != _error)
     {

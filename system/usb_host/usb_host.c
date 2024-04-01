@@ -17,7 +17,7 @@
 #include "usbh_msc.h"
 #include "usbh_conf.h"
 
-USBH_HandleTypeDef h_usb_host;
+static USBH_HandleTypeDef h_usb_host;
 
 static void usb_host_event_callback(USBH_HandleTypeDef *phost, uint8_t id);
 static int usbh_status_to_errno(const USBH_StatusTypeDef status);
