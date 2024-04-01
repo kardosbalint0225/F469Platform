@@ -34,7 +34,24 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Initializes the SD Card Monitor.
+ *
+ * This function creates a FreeRTOS task for monitoring the SD card status.
+ *
+ * @return 0 on success,
+ * @return < 0 on failure.
+ */
 int sdcard_monitor_init(void);
+
+/**
+ * @brief De-initializes the SD Card Monitor.
+ *
+ * This function deletes the FreeRTOS task responsible for monitoring the SD card status.
+ *
+ * @return 0 on success,
+ * @return < 0 on failure.
+ */
 int sdcard_monitor_deinit(void);
 
 #ifdef __cplusplus

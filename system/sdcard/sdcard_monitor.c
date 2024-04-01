@@ -121,14 +121,10 @@ static void sdcard_monitor_task(void *params)
         }
     }
 
-    BaseType_t ret;
-
     for ( ;; )
     {
         uint32_t notification;
-
-        ret = xTaskNotifyWait(0, 0, &notification, portMAX_DELAY);
-        assert(ret);
+        xTaskNotifyWait(0, 0, &notification, portMAX_DELAY);
 
         if ((uint32_t)SDCARD_MONITOR_TASK_NOTIFICATION_CARD_DETECT_CHANGED == notification)
         {
@@ -173,12 +169,6 @@ static void sdcard_monitor_task(void *params)
                 case (uint32_t)SDCARD_CARD_PRESENCE_STATE_UNSTABLE :
                 {
                     printf("The memory card is not inserted properly.\r\n");
-                }
-                break;
-
-                default:
-                {
-                    assert(0);
                 }
                 break;
             }
