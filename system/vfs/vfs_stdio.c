@@ -17,7 +17,7 @@
  */
 
 /**
- * @ingroup     sys
+ * @ingroup     system_vfs
  * @{
  *
  * @file        vfs_stdio.c

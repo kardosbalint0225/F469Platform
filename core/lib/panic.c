@@ -40,9 +40,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-static void _panic_init(UART_HandleTypeDef *huart);
-static void _uart_periph_init(UART_HandleTypeDef *huart);
-static void _uart_msp_init(UART_HandleTypeDef *huart);
+static void panic_init(UART_HandleTypeDef *huart);
+static void uart_periph_init(UART_HandleTypeDef *huart);
+static void uart_msp_init(UART_HandleTypeDef *huart);
 
 /* flag preventing "recursive crash printing loop" */
 static int _crashed = 0;
@@ -56,7 +56,7 @@ __NORETURN void panic(const char *message, ...)
         _crashed = 1;
 
         UART_HandleTypeDef h_panic_uart = { 0 };
-        _panic_init(&h_panic_uart);
+        panic_init(&h_panic_uart);
 
         va_list va;
         va_start(va, message);
@@ -78,7 +78,7 @@ __NORETURN void panic(const char *message, ...)
     }
 }
 
-static void _panic_init(UART_HandleTypeDef *huart)
+static void panic_init(UART_HandleTypeDef *huart)
 {
     vTaskSuspendAll();
     __disable_irq();
@@ -86,10 +86,10 @@ static void _panic_init(UART_HandleTypeDef *huart)
     __HAL_RCC_DMA1_CLK_DISABLE();
     __HAL_RCC_DMA2_CLK_DISABLE();
 
-    _uart_periph_init(huart);
+    uart_periph_init(huart);
 }
 
-static void _uart_periph_init(UART_HandleTypeDef *huart)
+static void uart_periph_init(UART_HandleTypeDef *huart)
 {
     huart->Instance = PANIC_USARTx;
     huart->Init.BaudRate = 115200ul;
@@ -101,13 +101,13 @@ static void _uart_periph_init(UART_HandleTypeDef *huart)
     huart->Init.OverSampling = UART_OVERSAMPLING_16;
 
     HAL_StatusTypeDef ret;
-    ret = HAL_UART_RegisterCallback(huart, HAL_UART_MSPINIT_CB_ID, _uart_msp_init);
+    ret = HAL_UART_RegisterCallback(huart, HAL_UART_MSPINIT_CB_ID, uart_msp_init);
     (void)ret;
     ret = HAL_UART_Init(huart);
     (void)ret;
 }
 
-static void _uart_msp_init(UART_HandleTypeDef *huart)
+static void uart_msp_init(UART_HandleTypeDef *huart)
 {
     PANIC_UART_CLK_ENABLE();
     PANIC_UART_FORCE_RESET();

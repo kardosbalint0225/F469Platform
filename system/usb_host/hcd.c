@@ -1,8 +1,31 @@
-/*
- * hcd.c
+/**
+ * MIT License
  *
- *  Created on: Jan 9, 2024
- *      Author: Balint
+ * Copyright (c) 2024 Balint Kardos
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/**
+ * @ingroup     system_hcd
+ *
+ * @file        hcd.c
+ * @brief       Host Controller Driver (HCD)
  */
 #include "rcc.h"
 #include "gpio.h"
@@ -22,9 +45,16 @@ static void hcd_port_enabled_callback(HCD_HandleTypeDef *hhcd);
 static void hcd_port_disabled_callback(HCD_HandleTypeDef *hhcd);
 static USBH_StatusTypeDef hal_status_to_usbh_status(HAL_StatusTypeDef hal_status);
 
+/**
+ * @brief HCD (Host Controller Driver) low-level initialization.
+ *
+ * @param hhcd Pointer to the HCD handle (unused).
+ */
 static void hcd_msp_init(HCD_HandleTypeDef *hhcd)
 {
-    _error = clk48_clock_init();//HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphClkInitStruct);
+    (void)hhcd;
+
+    _error = clk48_clock_init();
     if (HAL_OK != _error)
     {
         return;
@@ -44,8 +74,15 @@ static void hcd_msp_init(HCD_HandleTypeDef *hhcd)
     HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
 }
 
+/**
+ * @brief HCD (Host Controller Driver) low-level de-initialization.
+ *
+ * @param hhcd Pointer to the HCD handle (unused).
+ */
 static void hcd_msp_deinit(HCD_HandleTypeDef *hhcd)
 {
+    (void)hhcd;
+
     _error = clk48_clock_deinit();
     if (HAL_OK != _error)
     {
@@ -535,6 +572,9 @@ static USBH_StatusTypeDef hal_status_to_usbh_status(const HAL_StatusTypeDef hal_
     return USBH_FAIL;
 }
 
+/**
+ * @brief OTG FS Interrupt Handler
+ */
 void OTG_FS_IRQHandler(void)
 {
     HAL_HCD_IRQHandler(&h_hcd_fs);

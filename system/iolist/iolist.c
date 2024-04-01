@@ -17,6 +17,7 @@
  */
 
 /**
+ * @ingroup     system_iolist
  * @{
  *
  * @file        iolist.c

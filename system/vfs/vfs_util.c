@@ -15,10 +15,10 @@
  */
 
 /**
- * @ingroup     sys_vfs_util
+ * @ingroup     system_vfs
  * @{
- * @file    vfs_util.c
- * @brief   VFS layer helper functions
+ * @file        vfs_util.c
+ * @brief       VFS layer helper functions
  * @}
  */
 

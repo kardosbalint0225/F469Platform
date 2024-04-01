@@ -20,8 +20,7 @@
  */
 
 /**
- * @defgroup    sys_newlib Newlib system call
- * @ingroup     sys
+ * @ingroup     system_newlib_syscalls
  * @brief       Newlib system call
  * @{
  *

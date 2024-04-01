@@ -92,9 +92,27 @@
  * @ingroup     system_usb
  */  
  
- /**
+/**
  * @defgroup    system_hcd HCD (Host Controller Driver)
  * @ingroup     system_usb
  */ 
+
+/**
+ * @defgroup    system_iolist iolist scatter / gather IO
+ * @ingroup     system
+ */ 
+
+/**
+ * @defgroup    system_libc libc
+ * @ingroup     system
+ */ 
  
- 
+/**
+ * @defgroup    system_newlib_syscalls Newlib System Calls
+ * @ingroup     system_libc
+ */  
+
+/**
+ * @defgroup    system_retarget_locks Newlib Retarget Locks
+ * @ingroup     system_libc
+ */ 

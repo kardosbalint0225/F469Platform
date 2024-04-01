@@ -16,10 +16,10 @@
  */
 
 /**
- * @ingroup     sys_vfs
+ * @ingroup     system_vfs
  * @{
- * @file    vfs.c
- * @brief   VFS layer implementation
+ * @file        vfs.c
+ * @brief       VFS layer implementation
  */
 
 #include <errno.h> /* for error codes */
