@@ -17,7 +17,7 @@
  */
 
 /**
- * @ingroup     drivers_mtd_sdcard
+ * @ingroup     system_mtd_sdcard
  * @{
  *
  * @file        mtd_sdcard.c
@@ -185,8 +185,6 @@ static int mtd_sdcard_power(mtd_dev_t *dev, enum mtd_power_state power)
     (void)dev;
     (void)power;
 
-    /* TODO: implement power down of sdcard in sdcard_spi
-    (make use of sdcard_spi_params_t.power pin) */
     return -ENOTSUP; /* currently not supported */
 }
 
