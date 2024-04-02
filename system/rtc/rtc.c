@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_rtc
- *
+ * @{
  * @file        rtc.c
  * @brief       Low-level RTC (Real Time Clock) peripheral driver
  */
@@ -351,6 +351,6 @@ void RTC_WKUP_IRQHandler(void)
     HAL_RTCEx_WakeUpTimerIRQHandler(&h_rtc);
 }
 
-
+/** @} */
 
 

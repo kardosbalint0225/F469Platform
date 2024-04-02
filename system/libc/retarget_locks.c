@@ -1,8 +1,9 @@
 /**
  * @ingroup     system_retarget_locks
- *
+ * @{
  * @file        retarget_locks.c
  * @brief       Newlib Retarget Locks
+ * @}
  */
 /**
  * The implementation of retarget_locks.c is based on thomask77's work

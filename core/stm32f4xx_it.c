@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     core
- *
+ * @{
  * @file        stm32f4xx_it.c
  * @brief       Cortex-M4 Interrupt and Exception Handlers
  */
@@ -156,5 +156,5 @@ void DebugMon_Handler(void)
 
     }
 }
-
+/** @} */
 

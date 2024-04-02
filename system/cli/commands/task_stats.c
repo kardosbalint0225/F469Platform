@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        task_stats.c
  * @brief       Task Statistics Commands
  */
@@ -153,3 +153,4 @@ void cli_command_task_stats(EmbeddedCli *cli, char *args, void *context)
 
     vPortFree(tasks);
 }
+/** @} */

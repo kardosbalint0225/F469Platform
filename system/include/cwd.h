@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cwd
- *
+ * @{
  * @file        cwd.h
  * @brief       Implementation of Current Working Directory (CWD),
  *              chdir and getcwd functions
@@ -59,3 +59,4 @@ void cwd_deinit(void);
 }
 #endif
 #endif /* __CWD_H__ */
+/** @} */

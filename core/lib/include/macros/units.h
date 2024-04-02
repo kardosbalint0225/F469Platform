@@ -17,10 +17,8 @@
 /**
  * @ingroup     core_util
  * @{
- *
  * @file        units.h
  * @brief       Unit helper macros
- *
  */
 
 #ifndef MACROS_UNITS_H

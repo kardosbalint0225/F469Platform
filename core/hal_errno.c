@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,8 +23,9 @@
  */
 /**
  * @ingroup     core_util
- *
+ * @{
  * @file        hal_errno.c
+ * @}
  */
 #include "hal_errno.h"
 #include <errno.h>

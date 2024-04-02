@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_dma
- *
+ * @{
  * @file        dma.h
  * @brief       DMA management for the peripherals used by the application
  */
@@ -107,3 +107,4 @@ HAL_StatusTypeDef sdcard_sdio_dma_tx_deinit(SD_HandleTypeDef *h_sd);
 }
 #endif
 #endif /* __DMA_H__ */
+/** @} */

@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     core
- *
+ * @{
  * @file        runtime_stats_timer.c
  * @brief       Timer for Runtime Statistics
  */
@@ -138,4 +138,4 @@ void RUNTIME_STATS_TIMER_IRQHandler(void)
 {
     HAL_TIM_IRQHandler(&h_runtime_stats_timer);
 }
-
+/** @} */

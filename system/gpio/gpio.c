@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_gpio
- *
+ * @{
  * @file        gpio.c
  * @brief       GPIO Management for the peripherals used by the application
  */
@@ -556,5 +556,5 @@ void SDCARD_CD_PIN_EXTIx_IRQHandler(void)
 {
     HAL_EXTI_IRQHandler(&h_exti_sdcard_cd_pin);
 }
-
+/** @} */
 

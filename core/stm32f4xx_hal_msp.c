@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     core
- *
+ * @{
  * @file        stm32f4xx_hal_msp.c
  * @brief       MSP Initialization
  */
@@ -36,4 +36,4 @@ void HAL_MspInit(void)
 {
     __HAL_RCC_SYSCFG_CLK_ENABLE();
 }
-
+/** @} */

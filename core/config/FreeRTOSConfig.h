@@ -1,8 +1,8 @@
 /**
  * @ingroup    core_config
- * @file       FreeRTOSConfig.h.h
+ * @{
+ * @file       FreeRTOSConfig.h
  * @brief      FreeRTOS configuration options
- *
  */
 
 #ifndef FREERTOS_CONFIG_H
@@ -129,5 +129,5 @@ extern uint32_t SystemCoreClock;
 #define INCLUDE_xQueueGetMutexHolder                  ( 1 )
 
 #endif /* FREERTOS_CONFIG_H */
-
+/** @} */
 

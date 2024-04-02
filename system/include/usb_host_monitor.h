@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_usb_host_monitor
- *
+ * @{
  * @file        usb_host_monitor.h
  * @brief       USB Host Monitor
  */
@@ -59,3 +59,4 @@ int usb_host_monitor_deinit(void);
 }
 #endif
 #endif /* __USB_HOST_MONITOR_H__ */
+/** @} */

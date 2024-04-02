@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        cli_commands.h
  * @brief       CLI Command Bindings
  */
@@ -68,4 +68,5 @@ extern void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *conte
 }
 #endif
 #endif /* __CLI_COMMANDS_H__ */
+/** @} */
 

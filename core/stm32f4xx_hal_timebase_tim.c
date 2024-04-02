@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     core
- *
+ * @{
  * @file        stm32f4xx_hal_timebase_tim.c
  * @brief       HAL Timebase Configuration
  */
@@ -157,4 +157,4 @@ void HAL_TIMEBASE_TIM_IRQHandler(void)
 {
     HAL_TIM_IRQHandler(&h_hal_timebase_tim);
 }
-
+/** @} */

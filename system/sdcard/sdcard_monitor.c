@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_sdcard_monitor
- *
+ * @{
  * @file        sdcard_monitor.c
  * @brief       SD Card Monitor
  */
@@ -319,6 +319,6 @@ static uint32_t wait_for_stable_cd_pin_signal(const uint32_t timeout_ms)
     return state;
 }
 
-
+/** @} */
 
 

@@ -49,11 +49,6 @@ typedef struct {
 } mtd_sdcard_t;
 
 /**
- * @defgroup drivers_mtd_sdcard_config     SDCard driver compile configuration
- * @ingroup config_drivers_storage
- * @{
- */
-/**
  * @brief   Enable SDCard Erase
  * @note    SDCards handle sector erase internally so it's
  *          possible to directly write to the card without erasing
@@ -66,7 +61,6 @@ typedef struct {
 #ifdef DOXYGEN
 #define CONFIG_MTD_SDCARD_ERASE
 #endif
-/** @} */
 
 /**
  * @brief   sdcard device operations table for mtd

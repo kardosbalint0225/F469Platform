@@ -17,6 +17,7 @@
 
 /**
  * @ingroup     system_cli
+ * @{
  * @file        vfs.c
  * @brief       CLI commands for the VFS module
  */
@@ -603,5 +604,5 @@ static void list_items_in_path(const char *path)
         return;
     }
 }
-
+/** @} */
 

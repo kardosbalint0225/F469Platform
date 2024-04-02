@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_sdcard_driver
- *
+ * @{
  * @file        sdcard.c
  * @brief       Driver for reading and writing SD Cards using the SDIO.
  */
@@ -606,4 +606,4 @@ void SDIO_IRQHandler(void)
 {
     HAL_SD_IRQHandler(&h_sdio);
 }
-
+/** @} */

@@ -20,11 +20,9 @@
 
 /**
  * @ingroup     core_util
- *
  * @{
  * @file        assert.h
  * @brief       POSIX.1-2008 compliant version of the assert macro
- *
  */
 
 #ifndef ASSERT_H

@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        cli.c
  * @brief       Command Line Interface (CLI) Module
  */
@@ -166,5 +166,5 @@ static void cli_write_char(EmbeddedCli *cli, char c)
     (void)cli;
     stdio_write((char *)&c, 1);
 }
-
+/** @} */
 

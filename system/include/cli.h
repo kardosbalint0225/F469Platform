@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        cli.h
  * @brief       Command Line Interface (CLI) Module
  */
@@ -57,4 +57,5 @@ void cli_deinit(void);
 }
 #endif
 #endif /* __CLI_H__ */
+/** @} */
 

@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        misc.c
  * @brief       Miscellaneous Commands
  */
@@ -52,5 +52,5 @@ void cli_command_clear_terminal(EmbeddedCli *cli, char *args, void *context)
     const char * const clear_string = "\33[2J";
     printf("%s\r\n", clear_string);
 }
-
+/** @} */
 

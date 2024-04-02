@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        sysinfo.c
  * @brief       System Information Command
  */
@@ -230,4 +230,4 @@ static uint32_t find(const uint32_t *array, const uint32_t size, const uint32_t 
 
     return index;
 }
-
+/** @} */

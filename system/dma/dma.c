@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_dma
- *
+ * @{
  * @file        dma.c
  * @brief       DMA management for the peripherals used by the application
  */
@@ -211,4 +211,5 @@ void SDCARD_DMAx_TX_STREAM_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(&h_sdio_dma_tx);
 }
+/** @} */
 

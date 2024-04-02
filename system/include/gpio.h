@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_gpio
- *
+ * @{
  * @file        gpio.h
  * @brief       GPIO Management for the peripherals used by the application
  */
@@ -114,4 +114,5 @@ void usb_host_powerswitch_disable(void);
 }
 #endif
 #endif /*__ GPIO_H__ */
+/** @} */
 

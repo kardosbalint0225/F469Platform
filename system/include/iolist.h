@@ -17,7 +17,6 @@
  */
 
 /**
- * @defgroup    system_iolist iolist scatter / gather IO
  * @ingroup     system
  * @brief       Provides linked-list scatter / gather IO
  *

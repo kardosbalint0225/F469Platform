@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_sdcard_monitor
- *
+ * @{
  * @file        sdcard_monitor.h
  * @brief       SD Card Monitor
  */
@@ -58,3 +58,4 @@ int sdcard_monitor_deinit(void);
 }
 #endif
 #endif /* __SDCARD_MONITOR_H__ */
+/** @} */

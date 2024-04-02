@@ -1,10 +1,8 @@
 /**
  * @ingroup    core_config
- *
  * @{
  * @file       core_config.h
  * @brief      Core configuration options
- *
  */
 
 #ifndef __CORE_CONFIG_H__

@@ -1,6 +1,7 @@
 /**
   ******************************************************************************
   * @ingroup core_config
+  * @{
   * @file    stm32f4xx_hal_conf.h
   * @author  MCD Application Team
   * @brief   HAL configuration file.
@@ -471,3 +472,4 @@
 #endif
 
 #endif /* __STM32F4xx_HAL_CONF_H */
+/** @} */

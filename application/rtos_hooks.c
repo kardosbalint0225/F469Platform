@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     application
- *
+ * @{
  * @file        rtos_hooks.c
  * @brief       RTOS Hooks
  */
@@ -124,4 +124,7 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
     *ppxTimerTaskStackBuffer = &uxTimerTaskStack[0];
     *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
+/** @} */
+
+
 

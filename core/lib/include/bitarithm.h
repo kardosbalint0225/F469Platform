@@ -20,10 +20,8 @@
 /**
  * @ingroup     core_util
  * @{
- *
  * @file        bitarithm.h
  * @brief       Helper functions for bit arithmetic
- *
  */
 
 #ifndef BITARITHM_H

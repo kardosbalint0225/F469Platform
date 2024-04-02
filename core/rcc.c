@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     core
- *
+ * @{
  * @file        rcc.h
  * @brief       System and Peripheral Clock Management
  */
@@ -493,5 +493,5 @@ static inline void periph_unlock(void)
 {
     xSemaphoreGive(_periph_mutex);
 }
-
+/** @} */
 

@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        rtc.c
  * @brief       Real-Time Clock (RTC) Commands
  */
@@ -364,4 +364,4 @@ static void convert_string_to_date(int *day, int *month, int *year, const char *
     *month = (int)((date_string[5] - '0') * 10) + (int)(date_string[6] - '0');
     *day = (int)((date_string[8] - '0') * 10) + (int)(date_string[9] - '0');
 }
-
+/** @} */

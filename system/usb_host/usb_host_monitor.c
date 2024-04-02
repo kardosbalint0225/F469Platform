@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_usb_host_monitor
- *
+ * @{
  * @file        usb_host_monitor.c
  * @brief       USB Host Monitor
  */
@@ -136,5 +136,5 @@ static int usbh_status_to_errno(const USBH_StatusTypeDef status)
 
     return (int)status;
 }
-
+/** @} */
 

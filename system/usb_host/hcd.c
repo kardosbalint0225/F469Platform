@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_hcd
- *
+ * @{
  * @file        hcd.c
  * @brief       Host Controller Driver (HCD)
  */
@@ -579,5 +579,5 @@ void OTG_FS_IRQHandler(void)
 {
     HAL_HCD_IRQHandler(&h_hcd_fs);
 }
-
+/** @} */
 

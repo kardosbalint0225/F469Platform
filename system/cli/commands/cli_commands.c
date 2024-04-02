@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,9 +23,10 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        cli_commands.c
  * @brief       CLI Command Bindings
+ * @}
  */
 #include "cli.h"
 #include "cli_commands.h"

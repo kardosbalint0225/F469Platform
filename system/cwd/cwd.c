@@ -35,6 +35,7 @@
  */
 /**
  * @ingroup    system_cwd
+ * @{
  * @file       cwd.c
  * @brief      Implementation of Current Working Directory (CWD),
  *             chdir and getcwd functions
@@ -370,6 +371,6 @@ static char *slash_slash(char *rpath, char *cpath)
 
     return cpath;
 }
-
+/** @} */
 
 

@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        memstat.c
  * @brief       Application and System Memory Statistics
  */
@@ -161,7 +161,7 @@ static void print_application_heap_statistics(void)
            100.0f * ((float)minfo.uordblks / (float)heap_size),
            100.0f * ((float)(heap_size - (uint32_t)minfo.uordblks) / (float)heap_size));
 }
-
+/** @} */
 
 
 

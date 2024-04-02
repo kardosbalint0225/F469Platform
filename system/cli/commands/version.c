@@ -1,4 +1,4 @@
-/**
+/*
  * MIT License
  *
  * Copyright (c) 2024 Balint Kardos
@@ -23,7 +23,7 @@
  */
 /**
  * @ingroup     system_cli
- *
+ * @{
  * @file        version.c
  * @brief       Version Information Command
  */
@@ -60,3 +60,4 @@ void cli_command_version(EmbeddedCli *cli, char *args, void *context)
     printf("    Embedded CLI Version    : %s\r\n", EMBEDDED_CLI_VERSION);
     printf("    CMSIS GCC Version       : %s\r\n", CMSIS_GCC_VERSION);
 }
+/** @} */
